@@ -6,6 +6,7 @@
       "name": "Favorite Pill Colors",
       "description": "Colors unread counters on Babeta favorites by unread count.",
       "file": "containers/favorite-pill-colors.container.js",
+      "sha256": "6205cab4f9b8bbcefef1d15f69a69464f81882dea63392f244369757f36cdda0",
       "match": ["/favorites"]
     }
   ]

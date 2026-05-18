@@ -51,6 +51,7 @@
     loadingCatalog = root.util.requestText(`${root.repoUrl}containers.json?v=${root.cacheBust}`)
       .then((text) => {
         catalog = JSON.parse(text);
+        validateCatalog(catalog);
         ctx.log.info("catalog loaded", `${catalog.containers.length} container(s)`);
         return catalog;
       })
@@ -131,9 +132,11 @@
       return loadedContainers.get(container.id);
     }
 
+    validateContainerEntry(container);
     ensureRegistry();
     const url = `${root.repoUrl}${container.file}?v=${root.cacheBust}`;
     const code = await root.util.requestText(url);
+    await verifySha256(code, container.sha256);
     root.util.execute(code, url);
 
     const api = window.CudlounContainerRegistry.get(container.id);
@@ -165,8 +168,20 @@
   }
 
   function consoleLoader(container) {
+    validateContainerEntry(container);
     const url = `${root.repoUrl}${container.file}?v=${Date.now()}`;
-    return `fetch(${JSON.stringify(url)}).then(r=>r.text()).then(code=>new Function(code)()).then(()=>window.CudlounFavoritePillColors&&window.CudlounFavoritePillColors.run());`;
+    return [
+      "(async()=>{",
+      `const url=${JSON.stringify(url)};`,
+      `const expected=${JSON.stringify(normalizeSha256(container.sha256))};`,
+      "const code=await fetch(url).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();});",
+      "const bytes=new TextEncoder().encode(code);",
+      "const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');",
+      "if(hash!==expected)throw new Error('Cudloun container hash mismatch');",
+      "new Function(code)();",
+      "window.CudlounFavoritePillColors&&window.CudlounFavoritePillColors.run();",
+      "})();",
+    ].join("");
   }
 
   function copyConsoleLoader(container, ctx, card) {
@@ -190,5 +205,54 @@
     element.className = variant === "secondary" ? "cudloun-button cudloun-button-secondary" : "cudloun-button";
     element.textContent = text;
     return element;
+  }
+
+  function validateCatalog(nextCatalog) {
+    if (!nextCatalog || !Array.isArray(nextCatalog.containers)) {
+      throw new Error("Invalid container catalog");
+    }
+
+    nextCatalog.containers.forEach(validateContainerEntry);
+  }
+
+  function validateContainerEntry(container) {
+    if (!container || !container.id || !container.file || !container.sha256) {
+      throw new Error("Invalid container entry");
+    }
+
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(container.id)) {
+      throw new Error(`Invalid container id: ${container.id}`);
+    }
+
+    if (!/^containers\/[a-z0-9][a-z0-9-]*\.container\.js$/.test(container.file)) {
+      throw new Error(`Refusing non-local container path: ${container.file}`);
+    }
+
+    normalizeSha256(container.sha256);
+  }
+
+  function normalizeSha256(value) {
+    const hash = String(value || "").toLowerCase().replace(/^sha256-/, "");
+    if (!/^[a-f0-9]{64}$/.test(hash)) {
+      throw new Error("Invalid container sha256");
+    }
+    return hash;
+  }
+
+  async function verifySha256(text, expected) {
+    if (!crypto || !crypto.subtle || typeof TextEncoder === "undefined") {
+      throw new Error("SHA-256 verification is not available in this browser");
+    }
+
+    const bytes = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const actual = Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+    const wanted = normalizeSha256(expected);
+
+    if (actual !== wanted) {
+      throw new Error(`Container hash mismatch for ${wanted.slice(0, 12)}`);
+    }
   }
 })();
