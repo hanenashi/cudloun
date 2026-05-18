@@ -25,3 +25,21 @@ The first skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a modu
 ```text
 https://babeta.okoun.cz/boards/nepotrebny_pokus
 ```
+
+## Containers
+
+Containers are small standalone UI experiments. They are useful for trying a tweak on a live Babeta page before deciding whether it should become a full Cudloun module or an upstream Babeta change.
+
+A container can be:
+
+- run from the Cudloun `Containers` module
+- stopped again from the same panel
+- shared as a one-line console loader, so someone can preview the tweak without installing a userscript
+
+The first container is `favorite-pill-colors`, which colors unread counters on:
+
+```text
+https://babeta.okoun.cz/favorites
+```
+
+Container files live in `containers/` and are listed in `containers.json`.
