@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.3.8
+// @version      0.3.9
 // @description  Modular userscript hub for Babeta.
 // @author       hanenashi
 // @match        https://babeta.okoun.cz/*
@@ -17,7 +17,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.3.8";
+  const VERSION = "0.3.9";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const COMMIT_API_URL = "https://api.github.com/repos/hanenashi/cudloun/commits/main";
   const CACHE_BUST = String(Date.now());
@@ -47,15 +47,38 @@
       }
 
       if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") {
-        const result = GM.xmlHttpRequest({ method: "GET", url });
-        Promise.resolve(result).then((response) => {
+        let settled = false;
+        const settleResolve = (response) => {
+          if (settled) return;
+          settled = true;
           if (response.status >= 200 && response.status < 300) {
             resolve(response.responseText);
             return;
           }
 
           reject(new Error(`HTTP ${response.status} for ${url}`));
-        }).catch(reject);
+        };
+        const settleReject = (error) => {
+          if (settled) return;
+          settled = true;
+          reject(error instanceof Error ? error : new Error(`Request failed for ${url}`));
+        };
+
+        try {
+          const result = GM.xmlHttpRequest({
+            method: "GET",
+            url,
+            onload: settleResolve,
+            onerror: settleReject,
+            ontimeout: () => settleReject(new Error(`Request timed out for ${url}`)),
+          });
+
+          if (result && typeof result.then === "function") {
+            result.then(settleResolve).catch(settleReject);
+          }
+        } catch (error) {
+          settleReject(error);
+        }
         return;
       }
 
