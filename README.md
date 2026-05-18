@@ -1,5 +1,9 @@
 # cudloun
 
+<p align="center">
+  <img src="cudloun.png" alt="Cudloun" width="360">
+</p>
+
 Babeta extensions framework for Okoun userscripts.
 
 Install:

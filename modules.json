@@ -1,5 +1,5 @@
 {
-  "version": "0.3.4",
+  "version": "0.3.5",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-menu", "file": "modules/sys-menu.js", "required": true }
