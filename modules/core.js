@@ -3,6 +3,7 @@
   "use strict";
 
   const seed = CUDLOUN_SEED;
+  const CORE_VERSION = "0.3.1";
   const STORAGE_KEY = "cudloun.settings.v1";
   const MAX_LOGS = 500;
   const LEVELS = { off: 0, error: 1, warn: 2, info: 3, debug: 4, trace: 5 };
@@ -13,7 +14,10 @@
   const settings = loadSettings();
 
   const Cudloun = {
-    version: seed.version,
+    version: CORE_VERSION,
+    seedVersion: seed.version,
+    coreVersion: CORE_VERSION,
+    manifestVersion: "unknown",
     repoUrl: seed.repoUrl,
     cacheBust: seed.cacheBust,
     loadedFiles,
@@ -46,7 +50,7 @@
   };
 
   window.Cudloun = Cudloun;
-  Cudloun.log.info("boot", "core initialized", seed.version);
+  Cudloun.log.info("boot", "core initialized", CORE_VERSION, `seed=${seed.version}`);
   boot();
 
   async function boot() {
@@ -55,6 +59,7 @@
       Cudloun.log.debug("boot", "loading manifest", manifestUrl);
       const manifest = JSON.parse(await seed.requestText(manifestUrl));
       Cudloun.manifest = manifest;
+      Cudloun.manifestVersion = manifest.version || "unversioned";
       Cudloun.log.info("boot", "manifest loaded", manifest.version || "unversioned");
 
       await loadManifestGroup(manifest.system || [], "system");

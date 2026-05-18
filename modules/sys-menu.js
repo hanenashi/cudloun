@@ -53,7 +53,7 @@
   }
 
   function injectIntoAvatarMenu() {
-    const menu = document.querySelector(".MuiMenu-paper ul[role='menu']");
+    const menu = visibleAvatarMenu();
     if (!menu) {
       root.log.trace("menu", "avatar menu not present");
       return;
@@ -71,11 +71,44 @@
     }
 
     const divider = menu.querySelector("hr");
-    const item = firstItem.cloneNode(false);
+    const item = makeMenuItem(firstItem);
+    item.addEventListener("click", openHub);
+
+    if (divider) divider.before(item);
+    else menu.appendChild(item);
+
+    root.log.info("menu", "avatar menu item injected", divider ? "before divider" : "at end", menuDebug(menu));
+  }
+
+  function visibleAvatarMenu() {
+    const menus = Array.from(document.querySelectorAll(".MuiMenu-paper ul[role='menu']"));
+    const visibleMenus = menus.filter((menu) => {
+      const rect = menu.getBoundingClientRect();
+      const style = window.getComputedStyle(menu);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+    });
+
+    if (menus.length > 1) {
+      root.log.debug("menu", "candidate avatar menus", menus.map(menuDebug));
+    }
+
+    return visibleMenus[visibleMenus.length - 1] || menus[menus.length - 1] || null;
+  }
+
+  function makeMenuItem(firstItem) {
+    const item = document.createElement("li");
+    item.className = firstItem.className || "";
     item.setAttribute(MENU_ITEM_ATTR, "true");
     item.setAttribute("tabindex", "-1");
     item.setAttribute("role", "menuitem");
-    item.style.cursor = "pointer";
+    item.style.cssText = [
+      firstItem.getAttribute("style") || "",
+      "cursor:pointer;",
+      "display:flex;",
+      "align-items:center;",
+      "gap:16px;",
+      "min-height:48px;",
+    ].join("");
 
     const icon = document.createElement("div");
     icon.className = firstItem.querySelector("div")?.className || "";
@@ -88,14 +121,22 @@
       </svg>
     `;
 
+    const label = document.createElement("span");
+    label.textContent = "Cudloun";
+
     item.appendChild(icon);
-    item.appendChild(document.createTextNode("Cudloun"));
-    item.addEventListener("click", openHub);
+    item.appendChild(label);
+    return item;
+  }
 
-    if (divider) divider.before(item);
-    else menu.appendChild(item);
-
-    root.log.info("menu", "avatar menu item injected", divider ? "before divider" : "at end");
+  function menuDebug(menu) {
+    const rect = menu.getBoundingClientRect();
+    return {
+      text: menu.textContent.trim().replace(/\s+/g, " ").slice(0, 120),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      className: menu.className,
+    };
   }
 
   function openHub(eventOrModuleId) {
@@ -157,7 +198,7 @@
 
     const subtitle = document.createElement("div");
     subtitle.className = "cudloun-subtitle";
-    subtitle.textContent = `Babeta module hub ${root.version}`;
+    subtitle.textContent = `Babeta module hub core ${root.coreVersion} / seed ${root.seedVersion} / manifest ${root.manifestVersion}`;
 
     titleWrap.appendChild(title);
     titleWrap.appendChild(subtitle);
@@ -354,7 +395,12 @@
 
     const meta = document.createElement("div");
     meta.className = "cudloun-debug-meta";
-    meta.textContent = `Loaded files: ${root.loadedFiles.map((file) => file.id).join(", ") || "none"}`;
+    meta.textContent = [
+      `Seed: ${root.seedVersion}`,
+      `Core: ${root.coreVersion}`,
+      `Manifest: ${root.manifestVersion}`,
+      `Loaded files: ${root.loadedFiles.map((file) => file.id).join(", ") || "none"}`,
+    ].join(" | ");
 
     const logBox = document.createElement("div");
     logBox.className = "cudloun-log-box";
