@@ -3,7 +3,7 @@
   "use strict";
 
   const seed = CUDLOUN_SEED;
-  const CORE_VERSION = "0.3.1";
+  const CORE_VERSION = "0.3.2";
   const STORAGE_KEY = "cudloun.settings.v1";
   const MAX_LOGS = 500;
   const LEVELS = { off: 0, error: 1, warn: 2, info: 3, debug: 4, trace: 5 };

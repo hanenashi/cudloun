@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.3.1
+// @version      0.3.2
 // @description  Modular userscript hub for Babeta.
 // @author       hanenashi
 // @match        https://babeta.okoun.cz/*
@@ -10,15 +10,16 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
 // @connect      raw.githubusercontent.com
+// @connect      api.github.com
 // ==/UserScript==
 
 (function () {
   "use strict";
 
-  const VERSION = "0.3.1";
-  const REPO_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
+  const VERSION = "0.3.2";
+  const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
+  const COMMIT_API_URL = "https://api.github.com/repos/hanenashi/cudloun/commits/main";
   const CACHE_BUST = String(Date.now());
-  const CORE_URL = `${REPO_URL}modules/core.js?v=${CACHE_BUST}`;
 
   function requestText(url) {
     return new Promise((resolve, reject) => {
@@ -74,15 +75,33 @@
     run(seed);
   }
 
+  async function resolveRepoUrl() {
+    try {
+      const raw = await requestText(`${COMMIT_API_URL}?v=${CACHE_BUST}`);
+      const payload = JSON.parse(raw);
+      if (payload && payload.sha) {
+        return `https://raw.githubusercontent.com/hanenashi/cudloun/${payload.sha}/`;
+      }
+    } catch (error) {
+      console.warn("[cudloun:seed] commit lookup failed; falling back to main", error);
+    }
+
+    return RAW_MAIN_URL;
+  }
+
   const seed = {
     version: VERSION,
-    repoUrl: REPO_URL,
+    repoUrl: RAW_MAIN_URL,
     cacheBust: CACHE_BUST,
     requestText,
     execute,
   };
 
-  requestText(CORE_URL)
-    .then((code) => execute(code, CORE_URL))
+  resolveRepoUrl()
+    .then((repoUrl) => {
+      seed.repoUrl = repoUrl;
+      const coreUrl = `${repoUrl}modules/core.js?v=${CACHE_BUST}`;
+      return requestText(coreUrl).then((code) => execute(code, coreUrl));
+    })
     .catch((error) => console.error("[cudloun:seed] core load failed", error));
 })();
