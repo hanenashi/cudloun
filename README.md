@@ -4,9 +4,8 @@ Babeta extensions framework for Okoun userscripts.
 
 Install:
 
-```text
 https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
-```
+
 
 ## Current shape
 
