@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "containers": [
+    {
+      "id": "favorite-pill-colors",
+      "name": "Favorite Pill Colors",
+      "description": "Colors unread counters on Babeta favorites by unread count.",
+      "file": "containers/favorite-pill-colors.container.js",
+      "match": ["/favorites"]
+    }
+  ]
+}

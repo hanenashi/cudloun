@@ -352,6 +352,14 @@
     panel.appendChild(description);
     panel.appendChild(enabled);
     panel.appendChild(actions);
+
+    if (typeof module.renderSettings === "function") {
+      const custom = module.renderSettings(root.makeModuleContext(module));
+      if (custom) {
+        panel.appendChild(custom);
+      }
+    }
+
     panel.appendChild(help);
     return panel;
   }
@@ -467,6 +475,12 @@
       .cudloun-help{max-width:62ch;padding-top:14px;border-top:1px solid rgba(79,102,134,.18);color:#4b5565}
       .cudloun-help h3{margin:0 0 8px;color:#243041;font-size:.95rem;letter-spacing:0}
       .cudloun-help p{margin:0 0 8px;line-height:1.45}
+      .cudloun-container-list{max-width:680px;margin:0 0 18px;display:flex;flex-direction:column;gap:10px}
+      .cudloun-container-card{border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff;padding:12px}
+      .cudloun-container-card h3{margin:0 0 6px;color:#243041;font-size:1rem;letter-spacing:0}
+      .cudloun-container-card p{margin:0 0 10px;color:#4b5565;line-height:1.4}
+      .cudloun-container-actions{display:flex;flex-wrap:wrap;gap:8px}
+      .cudloun-code-box{max-width:680px;margin:8px 0 16px;padding:10px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#101828;color:#e4e7ec;font:12px/1.45 Consolas,monospace;white-space:pre-wrap;word-break:break-word}
       .cudloun-debug-meta{margin:0 0 12px;color:#697586;font-size:.82rem;line-height:1.35}
       .cudloun-log-box{max-height:430px;overflow:auto;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#101828;color:#e4e7ec;font:12px/1.45 Consolas,monospace}
       .cudloun-log-entry{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.07);white-space:pre-wrap;word-break:break-word}
