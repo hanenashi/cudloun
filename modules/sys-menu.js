@@ -142,10 +142,15 @@
     const visibleMenus = menus.filter((menu) => {
       const rect = menu.getBoundingClientRect();
       const style = window.getComputedStyle(menu);
+      const rootNode = menu.closest(".MuiDrawer-root");
+      const rootClass = String(rootNode?.className || "");
       const text = menu.textContent.replace(/\s+/g, "");
+      const onscreen = rect.top < window.innerHeight && rect.bottom > 0;
       return (
         rect.width > 0 &&
         rect.height > 0 &&
+        onscreen &&
+        !rootClass.includes("MuiModal-hidden") &&
         style.visibility !== "hidden" &&
         style.display !== "none" &&
         text.includes("Barevnéschéma") &&
@@ -157,7 +162,7 @@
       root.log.debug("menu", "candidate mobile drawer menus", menus.map(menuDebug));
     }
 
-    return visibleMenus[visibleMenus.length - 1] || null;
+    return visibleMenus.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0] || null;
   }
 
   function makeMenuItem(firstItem) {
