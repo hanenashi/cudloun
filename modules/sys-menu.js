@@ -8,6 +8,7 @@
   const BACKDROP_CLASS = "cudloun-backdrop";
 
   let observer = null;
+  let observerDebounceTimer = null;
   let routeTimer = null;
   let lastRoute = root.currentRoute();
 
@@ -31,18 +32,31 @@
 
   function observeAvatarMenu() {
     if (observer) return;
-
+  
     observer = new MutationObserver((mutations) => {
-      const hasAddedNodes = mutations.some((mutation) => mutation.addedNodes.length);
-      if (hasAddedNodes) {
+      const shouldRecheck = mutations.some((mutation) =>
+        mutation.addedNodes.length || mutation.type === "attributes"
+      );
+  
+      if (!shouldRecheck) return;
+  
+      window.clearTimeout(observerDebounceTimer);
+      observerDebounceTimer = window.setTimeout(() => {
         injectIntoAvatarMenu();
         injectIntoMobileDrawerMenu();
-      }
+      }, 40);
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    root.log.debug("menu", "avatar/menu observer attached");
-  }
-
+  
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "style", "aria-hidden"],
+    });
+  
+  root.log.debug("menu", "avatar/menu observer attached");
+}
+  
   function observeRouteChanges() {
     const check = () => {
       const route = root.currentRoute();
