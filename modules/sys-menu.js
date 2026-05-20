@@ -7,6 +7,8 @@
   const FULLSCREEN_ITEM_ATTR = "data-cudloun-fullscreen-menu-item";
   const STYLE_ATTR = "data-cudloun-style";
   const BACKDROP_CLASS = "cudloun-backdrop";
+  const RESTORE_FULLSCREEN_KEY = "cudloun.restoreFullscreenAfterRefresh";
+  const RESTORE_FULLSCREEN_CLASS = "cudloun-restore-fullscreen";
 
   let observer = null;
   let observerDebounceTimer = null;
@@ -25,6 +27,7 @@
 
   function start() {
     installStyles();
+    maybeShowRestoreFullscreenPrompt();
     observeAvatarMenu();
     observeRouteChanges();
     injectIntoAvatarMenu();
@@ -299,6 +302,9 @@
     const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
     if (menuPaper) menuPaper.style.display = "none";
     dismissBabetaMenu(event?.currentTarget);
+    if (document.fullscreenElement) {
+      root.storage.set(RESTORE_FULLSCREEN_KEY, true);
+    }
     root.log.info("menu", "refresh requested");
     window.location.reload();
   }
@@ -312,6 +318,43 @@
       .forEach((item) => item.remove());
     injectIntoAvatarMenu();
     injectIntoMobileDrawerMenu();
+  }
+
+  function maybeShowRestoreFullscreenPrompt() {
+    if (root.storage.get(RESTORE_FULLSCREEN_KEY, false) !== true) return;
+    root.storage.set(RESTORE_FULLSCREEN_KEY, false);
+    if (document.fullscreenElement) return;
+
+    window.setTimeout(() => {
+      if (document.fullscreenElement || document.querySelector(`.${RESTORE_FULLSCREEN_CLASS}`)) return;
+
+      const prompt = document.createElement("div");
+      prompt.className = RESTORE_FULLSCREEN_CLASS;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Restore fullscreen";
+      button.addEventListener("click", async () => {
+        try {
+          await document.documentElement.requestFullscreen();
+          root.log.info("fullscreen", "restored after refresh");
+        } catch (error) {
+          root.log.warn("fullscreen", "restore failed", error);
+        } finally {
+          prompt.remove();
+        }
+      });
+
+      const dismiss = document.createElement("button");
+      dismiss.type = "button";
+      dismiss.setAttribute("aria-label", "Dismiss");
+      dismiss.textContent = "x";
+      dismiss.addEventListener("click", () => prompt.remove());
+
+      prompt.appendChild(button);
+      prompt.appendChild(dismiss);
+      document.body.appendChild(prompt);
+    }, 600);
   }
 
   function menuIconSvg() {
@@ -714,6 +757,9 @@
       .cudloun-menu-action-button:hover{background:#eef2f7}
       .cudloun-menu-action-button svg{width:18px;height:18px;flex:0 0 auto;fill:currentColor}
       .cudloun-menu-action-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .cudloun-restore-fullscreen{position:fixed;left:50%;top:14px;z-index:1900;display:flex;align-items:center;gap:8px;transform:translateX(-50%);padding:8px;border:1px solid rgba(79,102,134,.28);border-radius:8px;background:#fff;box-shadow:0 10px 28px rgba(18,27,43,.22);font-family:inherit}
+      .cudloun-restore-fullscreen button{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .86rem/1.2 inherit;padding:8px 10px}
+      .cudloun-restore-fullscreen button:hover{background:#eef2f7}
       .cudloun-body{min-height:390px;display:grid;grid-template-columns:minmax(190px,250px) 1fr;overflow:hidden}
       .cudloun-module-list{overflow:auto;padding:12px;border-right:1px solid rgba(79,102,134,.18);background:#edf2f7}
       .cudloun-module-row{appearance:none;width:100%;min-height:42px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:0 0 8px;padding:9px 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:#243041;cursor:pointer;font:inherit;text-align:left}
