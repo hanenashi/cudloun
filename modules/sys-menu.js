@@ -18,6 +18,7 @@
     openHub,
     closeHub,
     renderHub,
+    refreshMenuItems,
     injectIntoAvatarMenu,
     injectIntoMobileDrawerMenu,
   };
@@ -77,7 +78,7 @@
       return;
     }
 
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`) || menu.querySelector(`[${FULLSCREEN_ITEM_ATTR}]`)) {
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
       root.log.trace("menu", "avatar menu items already present");
       return;
     }
@@ -92,17 +93,14 @@
     const item = makeMenuItem(firstItem, "Cudloun");
     item.addEventListener("click", openHub);
 
-    const fullscreenItem = makeMenuItem(firstItem, "Fullscreen");
-    fullscreenItem.removeAttribute(MENU_ITEM_ATTR);
-    fullscreenItem.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
-    fullscreenItem.addEventListener("click", toggleFullscreen);
+    const controlsItem = showFullscreenControls() ? makeMenuActionRow(firstItem) : null;
 
     if (divider) {
       divider.before(item);
-      item.after(fullscreenItem);
+      if (controlsItem) item.after(controlsItem);
     } else {
       menu.appendChild(item);
-      menu.appendChild(fullscreenItem);
+      if (controlsItem) menu.appendChild(controlsItem);
     }
 
     root.log.info("menu", "avatar menu items injected", divider ? "before divider" : "at end", menuDebug(menu));
@@ -115,7 +113,7 @@
       return;
     }
 
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`) || menu.querySelector(`[${FULLSCREEN_ITEM_ATTR}]`)) {
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
       root.log.trace("menu", "mobile drawer menu items already present");
       return;
     }
@@ -134,20 +132,17 @@
       openHub();
     });
 
-    const fullscreenItem = makeMobileMenuItem(firstItem, "Fullscreen");
-    fullscreenItem.removeAttribute(MENU_ITEM_ATTR);
-    fullscreenItem.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
-    fullscreenItem.addEventListener("click", toggleFullscreen);
+    const controlsItem = showFullscreenControls() ? makeMenuActionRow(firstItem, true) : null;
 
     const logout = Array.from(menu.querySelectorAll("li[role='menuitem']"))
       .find((li) => li.textContent.includes("Odhlásit"));
 
     if (logout) {
       logout.before(item);
-      item.after(fullscreenItem);
+      if (controlsItem) item.after(controlsItem);
     } else {
       menu.appendChild(item);
-      menu.appendChild(fullscreenItem);
+      if (controlsItem) menu.appendChild(controlsItem);
     }
 
     root.log.info("menu", "mobile drawer menu items injected", menuDebug(menu));
@@ -239,6 +234,38 @@
     return item;
   }
 
+  function makeMenuActionRow(firstItem, mobile = false) {
+    const item = document.createElement("li");
+    item.className = firstItem.className || "";
+    item.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
+    item.setAttribute("tabindex", "-1");
+    item.setAttribute("role", "menuitem");
+    item.style.cssText = [
+      firstItem.getAttribute("style") || "",
+      "cursor:default;",
+      "display:flex;",
+      "align-items:center;",
+      "gap:8px;",
+      "min-height:48px;",
+      mobile ? "padding:8px 16px;" : "padding:8px 16px;",
+    ].join("");
+
+    item.appendChild(makeMenuActionButton("Full", fullscreenIconSvg(), toggleFullscreen, "Fullscreen"));
+    item.appendChild(makeMenuActionButton("Refresh", refreshPageIconSvg(), refreshPage));
+    return item;
+  }
+
+  function makeMenuActionButton(labelText, iconSvg, handler, ariaLabel = labelText) {
+    const button = document.createElement("button");
+    button.className = "cudloun-menu-action-button";
+    button.type = "button";
+    button.setAttribute("aria-label", ariaLabel);
+    button.title = ariaLabel;
+    button.innerHTML = `${iconSvg}<span>${labelText}</span>`;
+    button.addEventListener("click", handler);
+    return button;
+  }
+
   async function toggleFullscreen(event) {
     if (event) {
       event.preventDefault();
@@ -263,6 +290,30 @@
     }
   }
 
+  function refreshPage(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
+    if (menuPaper) menuPaper.style.display = "none";
+    dismissBabetaMenu(event?.currentTarget);
+    root.log.info("menu", "refresh requested");
+    window.location.reload();
+  }
+
+  function showFullscreenControls() {
+    return root.storage.get("module.settoun.showFullscreen", true) !== false;
+  }
+
+  function refreshMenuItems() {
+    document.querySelectorAll(`[${MENU_ITEM_ATTR}], [${FULLSCREEN_ITEM_ATTR}]`)
+      .forEach((item) => item.remove());
+    injectIntoAvatarMenu();
+    injectIntoMobileDrawerMenu();
+  }
+
   function menuIconSvg() {
     return `
       <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"
@@ -281,6 +332,17 @@
            aria-hidden="true"
            viewBox="0 0 24 24">
         <path d="M5 5h6v2H7v4H5zm8 0h6v6h-2V7h-4zm4 8h2v6h-6v-2h4zm-12 0h2v4h4v2H5z"></path>
+      </svg>
+    `;
+  }
+
+  function refreshPageIconSvg() {
+    return `
+      <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"
+           focusable="false"
+           aria-hidden="true"
+           viewBox="0 0 24 24">
+        <path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.45 5.05h-2.13A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h8V3z"></path>
       </svg>
     `;
   }
@@ -648,6 +710,10 @@
       .cudloun-subtitle,.cudloun-eyebrow{margin-top:3px;color:#697586;font-size:.78rem;letter-spacing:0}
       .cudloun-icon-button{appearance:none;width:32px;height:32px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#fff;color:#4b5565;cursor:pointer;font:700 1rem/1 inherit;flex:0 0 auto}
       .cudloun-icon-button:hover{background:#eef2f7}
+      .cudloun-menu-action-button{appearance:none;min-width:0;flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:600 .8rem/1.2 inherit;padding:7px 5px}
+      .cudloun-menu-action-button:hover{background:#eef2f7}
+      .cudloun-menu-action-button svg{width:18px;height:18px;flex:0 0 auto;fill:currentColor}
+      .cudloun-menu-action-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .cudloun-body{min-height:390px;display:grid;grid-template-columns:minmax(190px,250px) 1fr;overflow:hidden}
       .cudloun-module-list{overflow:auto;padding:12px;border-right:1px solid rgba(79,102,134,.18);background:#edf2f7}
       .cudloun-module-row{appearance:none;width:100%;min-height:42px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:0 0 8px;padding:9px 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:#243041;cursor:pointer;font:inherit;text-align:left}
@@ -673,6 +739,9 @@
       .cudloun-container-card h3{margin:0 0 6px;color:#243041;font-size:1rem;letter-spacing:0}
       .cudloun-container-card p{margin:0 0 10px;color:#4b5565;line-height:1.4}
       .cudloun-container-actions{display:flex;flex-wrap:wrap;gap:8px}
+      .cudloun-settings-list{max-width:520px;margin:0 0 18px}
+      .cudloun-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:44px;padding:10px 12px;border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff;color:#243041;font-weight:650}
+      .cudloun-setting-text{min-width:0}
       .cudloun-code-box{max-width:680px;margin:8px 0 16px;padding:10px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#101828;color:#e4e7ec;font:12px/1.45 Consolas,monospace;white-space:pre-wrap;word-break:break-word}
       .cudloun-debug-meta{margin:0 0 12px;color:#697586;font-size:.82rem;line-height:1.35}
       .cudloun-log-box{max-height:430px;overflow:auto;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#101828;color:#e4e7ec;font:12px/1.45 Consolas,monospace}

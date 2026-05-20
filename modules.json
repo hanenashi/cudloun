@@ -1,11 +1,11 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.2",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-menu", "file": "modules/sys-menu.js", "required": true }
   ],
   "modules": [
-    { "id": "containers", "file": "modules/containers.js", "defaultEnabled": true },
-    { "id": "nepotrebny-pokus", "file": "modules/nepotrebny-pokus.js", "defaultEnabled": true }
+    { "id": "settoun", "file": "modules/settoun.js", "defaultEnabled": true },
+    { "id": "containers", "file": "modules/containers.js", "defaultEnabled": true }
   ]
 }
