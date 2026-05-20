@@ -130,8 +130,7 @@
     item.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const drawerRoot = item.closest(".MuiDrawer-root");
-      if (drawerRoot) drawerRoot.style.display = "none";
+      dismissBabetaMenu(event.currentTarget);
       openHub();
     });
 
@@ -247,9 +246,8 @@
     }
 
     const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
-    const drawerRoot = event?.currentTarget?.closest(".MuiDrawer-root");
     if (menuPaper) menuPaper.style.display = "none";
-    if (drawerRoot) drawerRoot.style.display = "none";
+    dismissBabetaMenu(event?.currentTarget);
 
     try {
       if (document.fullscreenElement) {
@@ -305,9 +303,8 @@
       eventOrModuleId.preventDefault();
       eventOrModuleId.stopPropagation();
       const menuPaper = eventOrModuleId.currentTarget?.closest(".MuiMenu-paper");
-      const drawerRoot = eventOrModuleId.currentTarget?.closest(".MuiDrawer-root");
       if (menuPaper) menuPaper.style.display = "none";
-      if (drawerRoot) drawerRoot.style.display = "none";
+      dismissBabetaMenu(eventOrModuleId.currentTarget);
     }
 
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
@@ -326,6 +323,28 @@
   function closeHub() {
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
     root.log.info("hub", "closed");
+  }
+
+  function dismissBabetaMenu(target) {
+    const drawerRoot = target?.closest?.(".MuiDrawer-root");
+    if (!drawerRoot) return;
+
+    drawerRoot.style.removeProperty("display");
+
+    const backdrop = drawerRoot.querySelector(".MuiBackdrop-root");
+    if (backdrop && window.getComputedStyle(backdrop).display !== "none") {
+      backdrop.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      return;
+    }
+
+    document.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "Escape",
+      code: "Escape",
+      keyCode: 27,
+      which: 27,
+      bubbles: true,
+      cancelable: true,
+    }));
   }
 
   function renderHub(selectedId) {
