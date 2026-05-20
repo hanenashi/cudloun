@@ -17,6 +17,7 @@
     closeHub,
     renderHub,
     injectIntoAvatarMenu,
+    injectIntoMobileDrawerMenu,
   };
 
   function start() {
@@ -24,6 +25,7 @@
     observeAvatarMenu();
     observeRouteChanges();
     injectIntoAvatarMenu();
+    injectIntoMobileDrawerMenu();
     root.log.info("menu", "started", lastRoute);
   }
 
@@ -32,10 +34,13 @@
 
     observer = new MutationObserver((mutations) => {
       const hasAddedNodes = mutations.some((mutation) => mutation.addedNodes.length);
-      if (hasAddedNodes) injectIntoAvatarMenu();
+      if (hasAddedNodes) {
+        injectIntoAvatarMenu();
+        injectIntoMobileDrawerMenu();
+      }
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    root.log.debug("menu", "avatar menu observer attached");
+    root.log.debug("menu", "avatar/menu observer attached");
   }
 
   function observeRouteChanges() {
@@ -45,6 +50,7 @@
         lastRoute = route;
         root.log.info("router", "route changed", route);
         injectIntoAvatarMenu();
+        injectIntoMobileDrawerMenu();
       }
       routeTimer = window.setTimeout(check, 500);
     };
@@ -80,6 +86,42 @@
     root.log.info("menu", "avatar menu item injected", divider ? "before divider" : "at end", menuDebug(menu));
   }
 
+  function injectIntoMobileDrawerMenu() {
+    const menu = visibleMobileDrawerMenu();
+    if (!menu) {
+      root.log.trace("menu", "mobile drawer menu not present");
+      return;
+    }
+
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
+      root.log.trace("menu", "mobile drawer menu item already present");
+      return;
+    }
+
+    const firstItem = menu.querySelector("li[role='menuitem']");
+    if (!firstItem) {
+      root.log.warn("menu", "mobile drawer found without menuitem");
+      return;
+    }
+
+    const item = makeMobileMenuItem(firstItem);
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const drawerRoot = item.closest(".MuiDrawer-root");
+      if (drawerRoot) drawerRoot.style.display = "none";
+      openHub();
+    });
+
+    const logout = Array.from(menu.querySelectorAll("li[role='menuitem']"))
+      .find((li) => li.textContent.includes("Odhlásit"));
+
+    if (logout) logout.before(item);
+    else menu.appendChild(item);
+
+    root.log.info("menu", "mobile drawer menu item injected", menuDebug(menu));
+  }
+
   function visibleAvatarMenu() {
     const menus = Array.from(document.querySelectorAll(".MuiMenu-paper ul[role='menu']"));
     const visibleMenus = menus.filter((menu) => {
@@ -93,6 +135,29 @@
     }
 
     return visibleMenus[visibleMenus.length - 1] || menus[menus.length - 1] || null;
+  }
+
+  function visibleMobileDrawerMenu() {
+    const menus = Array.from(document.querySelectorAll(".MuiDrawer-paperAnchorBottom ul.MuiList-root"));
+    const visibleMenus = menus.filter((menu) => {
+      const rect = menu.getBoundingClientRect();
+      const style = window.getComputedStyle(menu);
+      const text = menu.textContent.replace(/\s+/g, "");
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== "hidden" &&
+        style.display !== "none" &&
+        text.includes("Barevnéschéma") &&
+        (text.includes("Nastavení") || text.includes("Přihlásit"))
+      );
+    });
+
+    if (menus.length > 1) {
+      root.log.debug("menu", "candidate mobile drawer menus", menus.map(menuDebug));
+    }
+
+    return visibleMenus[visibleMenus.length - 1] || null;
   }
 
   function makeMenuItem(firstItem) {
@@ -112,14 +177,7 @@
 
     const icon = document.createElement("div");
     icon.className = firstItem.querySelector("div")?.className || "";
-    icon.innerHTML = `
-      <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"
-           focusable="false"
-           aria-hidden="true"
-           viewBox="0 0 24 24">
-        <path d="M12 3c4.97 0 9 3.36 9 7.5 0 2.08-1.02 3.96-2.67 5.32L19 21l-4.63-2.32c-.76.21-1.56.32-2.37.32-4.97 0-9-3.36-9-7.5S7.03 3 12 3m-4 8h2V9H8zm3 0h2V9h-2zm3 0h2V9h-2z"></path>
-      </svg>
-    `;
+    icon.innerHTML = menuIconSvg();
 
     const label = document.createElement("span");
     label.textContent = "Cudloun";
@@ -127,6 +185,33 @@
     item.appendChild(icon);
     item.appendChild(label);
     return item;
+  }
+
+  function makeMobileMenuItem(firstItem) {
+    const item = firstItem.cloneNode(true);
+    item.setAttribute(MENU_ITEM_ATTR, "true");
+    item.setAttribute("tabindex", "-1");
+    item.setAttribute("role", "menuitem");
+    item.style.cursor = "pointer";
+
+    const iconWrap = item.querySelector(".MuiListItemIcon-root") || item.querySelector("svg")?.parentElement;
+    if (iconWrap) iconWrap.innerHTML = menuIconSvg();
+
+    const label = item.querySelector(".MuiListItemText-root span") || item.querySelector(".MuiListItemText-root") || item;
+    label.textContent = "Cudloun";
+
+    return item;
+  }
+
+  function menuIconSvg() {
+    return `
+      <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"
+           focusable="false"
+           aria-hidden="true"
+           viewBox="0 0 24 24">
+        <path d="M12 3c4.97 0 9 3.36 9 7.5 0 2.08-1.02 3.96-2.67 5.32L19 21l-4.63-2.32c-.76.21-1.56.32-2.37.32-4.97 0-9-3.36-9-7.5S7.03 3 12 3m-4 8h2V9H8zm3 0h2V9h-2zm3 0h2V9h-2z"></path>
+      </svg>
+    `;
   }
 
   function menuDebug(menu) {
@@ -147,7 +232,9 @@
       eventOrModuleId.preventDefault();
       eventOrModuleId.stopPropagation();
       const menuPaper = eventOrModuleId.currentTarget?.closest(".MuiMenu-paper");
+      const drawerRoot = eventOrModuleId.currentTarget?.closest(".MuiDrawer-root");
       if (menuPaper) menuPaper.style.display = "none";
+      if (drawerRoot) drawerRoot.style.display = "none";
     }
 
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
@@ -467,7 +554,7 @@
       .cudloun-title-wrap{min-width:0}
       .cudloun-title{font-size:1.15rem;font-weight:750;letter-spacing:0}
       .cudloun-subtitle,.cudloun-eyebrow{margin-top:3px;color:#697586;font-size:.78rem;letter-spacing:0}
-      .cudloun-icon-button{appearance:none;width:32px;height:32px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#fff;color:#4b5565;cursor:pointer;font:700 1rem/1 inherit}
+      .cudloun-icon-button{appearance:none;width:32px;height:32px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#fff;color:#4b5565;cursor:pointer;font:700 1rem/1 inherit;flex:0 0 auto}
       .cudloun-icon-button:hover{background:#eef2f7}
       .cudloun-body{min-height:390px;display:grid;grid-template-columns:minmax(190px,250px) 1fr;overflow:hidden}
       .cudloun-module-list{overflow:auto;padding:12px;border-right:1px solid rgba(79,102,134,.18);background:#edf2f7}
@@ -502,7 +589,7 @@
       .cudloun-log-entry[data-level=warn]{color:#ffd18a}
       .cudloun-log-entry[data-level=debug]{color:#9fd0ff}
       .cudloun-log-entry[data-level=trace]{color:#d8c4ff}
-      @media (max-width:680px){.cudloun-backdrop{align-items:stretch;padding:34px 10px 10px}.cudloun-dialog{width:100%;max-height:none}.cudloun-mascot{left:-70px;width:82px;max-width:30vw;transform:translateY(-45%)}.cudloun-title-wrap{padding-left:0}.cudloun-body{grid-template-columns:1fr}.cudloun-module-list{max-height:150px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}}
+      @media (max-width:680px){.cudloun-backdrop{align-items:stretch;justify-content:stretch;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:100%;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;flex:1;display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
     `;
     document.head.appendChild(style);
   }
