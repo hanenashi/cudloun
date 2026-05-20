@@ -4,6 +4,7 @@
 
   const root = window.Cudloun;
   const MENU_ITEM_ATTR = "data-cudloun-menu-item";
+  const FULLSCREEN_ITEM_ATTR = "data-cudloun-fullscreen-menu-item";
   const STYLE_ATTR = "data-cudloun-style";
   const BACKDROP_CLASS = "cudloun-backdrop";
 
@@ -32,31 +33,28 @@
 
   function observeAvatarMenu() {
     if (observer) return;
-  
+
     observer = new MutationObserver((mutations) => {
-      const shouldRecheck = mutations.some((mutation) =>
-        mutation.addedNodes.length || mutation.type === "attributes"
-      );
-  
+      const shouldRecheck = mutations.some((mutation) => mutation.addedNodes.length || mutation.type === "attributes");
       if (!shouldRecheck) return;
-  
+
       window.clearTimeout(observerDebounceTimer);
       observerDebounceTimer = window.setTimeout(() => {
         injectIntoAvatarMenu();
         injectIntoMobileDrawerMenu();
       }, 40);
     });
-  
+
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ["class", "style", "aria-hidden"],
     });
-  
-  root.log.debug("menu", "avatar/menu observer attached");
-}
-  
+
+    root.log.debug("menu", "avatar/menu observer attached");
+  }
+
   function observeRouteChanges() {
     const check = () => {
       const route = root.currentRoute();
@@ -79,8 +77,8 @@
       return;
     }
 
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
-      root.log.trace("menu", "avatar menu item already present");
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`) || menu.querySelector(`[${FULLSCREEN_ITEM_ATTR}]`)) {
+      root.log.trace("menu", "avatar menu items already present");
       return;
     }
 
@@ -91,13 +89,23 @@
     }
 
     const divider = menu.querySelector("hr");
-    const item = makeMenuItem(firstItem);
+    const item = makeMenuItem(firstItem, "Cudloun");
     item.addEventListener("click", openHub);
 
-    if (divider) divider.before(item);
-    else menu.appendChild(item);
+    const fullscreenItem = makeMenuItem(firstItem, "Fullscreen");
+    fullscreenItem.removeAttribute(MENU_ITEM_ATTR);
+    fullscreenItem.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
+    fullscreenItem.addEventListener("click", toggleFullscreen);
 
-    root.log.info("menu", "avatar menu item injected", divider ? "before divider" : "at end", menuDebug(menu));
+    if (divider) {
+      divider.before(item);
+      item.after(fullscreenItem);
+    } else {
+      menu.appendChild(item);
+      menu.appendChild(fullscreenItem);
+    }
+
+    root.log.info("menu", "avatar menu items injected", divider ? "before divider" : "at end", menuDebug(menu));
   }
 
   function injectIntoMobileDrawerMenu() {
@@ -107,8 +115,8 @@
       return;
     }
 
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
-      root.log.trace("menu", "mobile drawer menu item already present");
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`) || menu.querySelector(`[${FULLSCREEN_ITEM_ATTR}]`)) {
+      root.log.trace("menu", "mobile drawer menu items already present");
       return;
     }
 
@@ -118,7 +126,7 @@
       return;
     }
 
-    const item = makeMobileMenuItem(firstItem);
+    const item = makeMobileMenuItem(firstItem, "Cudloun");
     item.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -127,13 +135,23 @@
       openHub();
     });
 
+    const fullscreenItem = makeMobileMenuItem(firstItem, "Fullscreen");
+    fullscreenItem.removeAttribute(MENU_ITEM_ATTR);
+    fullscreenItem.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
+    fullscreenItem.addEventListener("click", toggleFullscreen);
+
     const logout = Array.from(menu.querySelectorAll("li[role='menuitem']"))
       .find((li) => li.textContent.includes("Odhlásit"));
 
-    if (logout) logout.before(item);
-    else menu.appendChild(item);
+    if (logout) {
+      logout.before(item);
+      item.after(fullscreenItem);
+    } else {
+      menu.appendChild(item);
+      menu.appendChild(fullscreenItem);
+    }
 
-    root.log.info("menu", "mobile drawer menu item injected", menuDebug(menu));
+    root.log.info("menu", "mobile drawer menu items injected", menuDebug(menu));
   }
 
   function visibleAvatarMenu() {
@@ -179,7 +197,7 @@
     return visibleMenus.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0] || null;
   }
 
-  function makeMenuItem(firstItem) {
+  function makeMenuItem(firstItem, labelText = "Cudloun") {
     const item = document.createElement("li");
     item.className = firstItem.className || "";
     item.setAttribute(MENU_ITEM_ATTR, "true");
@@ -196,17 +214,17 @@
 
     const icon = document.createElement("div");
     icon.className = firstItem.querySelector("div")?.className || "";
-    icon.innerHTML = menuIconSvg();
+    icon.innerHTML = labelText === "Fullscreen" ? fullscreenIconSvg() : menuIconSvg();
 
     const label = document.createElement("span");
-    label.textContent = "Cudloun";
+    label.textContent = labelText;
 
     item.appendChild(icon);
     item.appendChild(label);
     return item;
   }
 
-  function makeMobileMenuItem(firstItem) {
+  function makeMobileMenuItem(firstItem, labelText = "Cudloun") {
     const item = firstItem.cloneNode(true);
     item.setAttribute(MENU_ITEM_ATTR, "true");
     item.setAttribute("tabindex", "-1");
@@ -214,12 +232,37 @@
     item.style.cursor = "pointer";
 
     const iconWrap = item.querySelector(".MuiListItemIcon-root") || item.querySelector("svg")?.parentElement;
-    if (iconWrap) iconWrap.innerHTML = menuIconSvg();
+    if (iconWrap) iconWrap.innerHTML = labelText === "Fullscreen" ? fullscreenIconSvg() : menuIconSvg();
 
     const label = item.querySelector(".MuiListItemText-root span") || item.querySelector(".MuiListItemText-root") || item;
-    label.textContent = "Cudloun";
+    label.textContent = labelText;
 
     return item;
+  }
+
+  async function toggleFullscreen(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
+    const drawerRoot = event?.currentTarget?.closest(".MuiDrawer-root");
+    if (menuPaper) menuPaper.style.display = "none";
+    if (drawerRoot) drawerRoot.style.display = "none";
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        root.log.info("fullscreen", "exited");
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+      root.log.info("fullscreen", "entered");
+    } catch (error) {
+      root.log.warn("fullscreen", "toggle failed", error);
+    }
   }
 
   function menuIconSvg() {
@@ -229,6 +272,17 @@
            aria-hidden="true"
            viewBox="0 0 24 24">
         <path d="M12 3c4.97 0 9 3.36 9 7.5 0 2.08-1.02 3.96-2.67 5.32L19 21l-4.63-2.32c-.76.21-1.56.32-2.37.32-4.97 0-9-3.36-9-7.5S7.03 3 12 3m-4 8h2V9H8zm3 0h2V9h-2zm3 0h2V9h-2z"></path>
+      </svg>
+    `;
+  }
+
+  function fullscreenIconSvg() {
+    return `
+      <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"
+           focusable="false"
+           aria-hidden="true"
+           viewBox="0 0 24 24">
+        <path d="M5 5h6v2H7v4H5zm8 0h6v6h-2V7h-4zm4 8h2v6h-6v-2h4zm-12 0h2v4h4v2H5z"></path>
       </svg>
     `;
   }
