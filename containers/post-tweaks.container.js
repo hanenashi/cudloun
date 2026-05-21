@@ -29,6 +29,7 @@
     background: false,
     backgroundColor: "#ffffff",
     avatarSize: 28,
+    cardInset: 0,
     sidePadding: 4,
     postSpacing: 4,
     headerScale: 88,
@@ -211,6 +212,11 @@
 
       @media (max-width: 700px) {
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
+          box-sizing: border-box !important;
+          width: calc(100% - var(--cudloun-post-tweaks-card-inset, 0px) - var(--cudloun-post-tweaks-card-inset, 0px)) !important;
+          max-width: calc(100% - var(--cudloun-post-tweaks-card-inset, 0px) - var(--cudloun-post-tweaks-card-inset, 0px)) !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
           padding-left: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           padding-right: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           padding-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
@@ -323,6 +329,17 @@
           grid-row: 2 !important;
         }
 
+        html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-inline="true"] [${MARK_CONTENT}] > :not([${MARK_HEADER}]) {
+          grid-column: 1 / -1 !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}] {
           width: 100% !important;
           max-width: 100% !important;
@@ -373,6 +390,11 @@
           <span>Avatar</span>
           <output data-output="avatarSize"></output>
           <input data-setting="avatarSize" type="range" min="18" max="40" step="1">
+        </label>
+        <label>
+          <span>Card inset</span>
+          <output data-output="cardInset"></output>
+          <input data-setting="cardInset" type="range" min="0" max="36" step="1">
         </label>
         <label>
           <span>Side padding</span>
@@ -446,6 +468,7 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-divider", settings.divider ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-background", settings.background ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-post-spacing", `${settings.postSpacing}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-header-scale", String(settings.headerScale));
@@ -461,11 +484,13 @@
     setInput(panel, "background", settings.background);
     setInput(panel, "backgroundColor", settings.backgroundColor);
     setInput(panel, "avatarSize", settings.avatarSize);
+    setInput(panel, "cardInset", settings.cardInset);
     setInput(panel, "sidePadding", settings.sidePadding);
     setInput(panel, "postSpacing", settings.postSpacing);
     setInput(panel, "headerScale", settings.headerScale);
     setInput(panel, "fontScale", settings.fontScale);
     setOutput(panel, "avatarSize", `${settings.avatarSize}px`);
+    setOutput(panel, "cardInset", `${settings.cardInset}px`);
     setOutput(panel, "sidePadding", `${settings.sidePadding}px`);
     setOutput(panel, "postSpacing", `${settings.postSpacing}px`);
     setOutput(panel, "headerScale", `${settings.headerScale}%`);
