@@ -30,6 +30,7 @@
     backgroundColor: "#ffffff",
     avatarSize: 28,
     sidePadding: 4,
+    postSpacing: 4,
     headerScale: 88,
     fontScale: 100,
   };
@@ -212,11 +213,14 @@
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
           padding-left: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           padding-right: var(--cudloun-post-tweaks-side-padding, 4px) !important;
+          padding-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
+          margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
           font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
           border-bottom: 1px solid rgba(79,102,134,.32) !important;
+          box-shadow: inset 0 -1px 0 rgba(79,102,134,.32) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
@@ -304,7 +308,14 @@
           max-width: 100% !important;
           margin-left: 0 !important;
           padding-left: 0 !important;
+          font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+          line-height: 1.5 !important;
           overflow-wrap: anywhere !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}] * {
+          font-size: inherit !important;
+          line-height: inherit !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-inline="true"] [${MARK_BODY}] {
@@ -317,6 +328,7 @@
           max-width: 100% !important;
           margin-left: 0 !important;
           padding-left: 0 !important;
+          font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
         }
       }
     `;
@@ -368,6 +380,11 @@
           <input data-setting="sidePadding" type="range" min="0" max="16" step="1">
         </label>
         <label>
+          <span>Space between posts</span>
+          <output data-output="postSpacing"></output>
+          <input data-setting="postSpacing" type="range" min="0" max="28" step="1">
+        </label>
+        <label>
           <span>Header size</span>
           <output data-output="headerScale"></output>
           <input data-setting="headerScale" type="range" min="72" max="105" step="1">
@@ -405,8 +422,8 @@
         });
       }
 
-        saveSettings();
-        applySettings();
+      saveSettings();
+      applySettings();
     }
 
     panel.querySelector("[data-action='reset']").addEventListener("click", () => {
@@ -430,6 +447,7 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-background", settings.background ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-post-spacing", `${settings.postSpacing}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-header-scale", String(settings.headerScale));
     rootStyle.setProperty("--cudloun-post-tweaks-font-scale", String(settings.fontScale));
     rootStyle.setProperty("--cudloun-post-tweaks-background-color", settings.backgroundColor);
@@ -444,10 +462,12 @@
     setInput(panel, "backgroundColor", settings.backgroundColor);
     setInput(panel, "avatarSize", settings.avatarSize);
     setInput(panel, "sidePadding", settings.sidePadding);
+    setInput(panel, "postSpacing", settings.postSpacing);
     setInput(panel, "headerScale", settings.headerScale);
     setInput(panel, "fontScale", settings.fontScale);
     setOutput(panel, "avatarSize", `${settings.avatarSize}px`);
     setOutput(panel, "sidePadding", `${settings.sidePadding}px`);
+    setOutput(panel, "postSpacing", `${settings.postSpacing}px`);
     setOutput(panel, "headerScale", `${settings.headerScale}%`);
     setOutput(panel, "fontScale", `${settings.fontScale}%`);
   }

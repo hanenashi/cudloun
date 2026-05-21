@@ -14,7 +14,7 @@
       "name": "Post Tweaks",
       "description": "Lets mobile users tune board post layout, spacing, dividers, background, and font size.",
       "file": "containers/post-tweaks.container.js",
-      "sha256": "7004517f86c159d65e390c54b1e8c72a54557a1901dbd1d3478e836f3bd48f74",
+      "sha256": "be0cc086bbb45b7d17386c5d6204b91653e08f7ecdc293ba22bf1cb0f5a1f3d0",
       "match": ["/boards/"]
     }
   ]
