@@ -14,6 +14,11 @@
   const MARK_HEADER = "data-cudloun-post-tweaks-header";
   const MARK_BODY = "data-cudloun-post-tweaks-body";
   const MARK_ACTIONS = "data-cudloun-post-tweaks-actions";
+  const MARK_REPLY = "data-cudloun-post-tweaks-reply";
+  const MARK_REPLY_MENU = "data-cudloun-post-tweaks-reply-menu";
+  const MARK_REPLY_MENU_OPEN = "data-cudloun-post-tweaks-reply-menu-open";
+  const MARK_REPLY_META = "data-cudloun-post-tweaks-reply-meta";
+  const MARK_DATE_WRAP = "data-cudloun-post-tweaks-date-wrap";
   const COLOR_OPTIONS = [
     { value: "#ffffff", label: "White" },
     { value: "#f8fafc", label: "Soft gray" },
@@ -34,10 +39,13 @@
     postSpacing: 4,
     headerScale: 88,
     fontScale: 100,
+    replyPlacement: "bottom",
+    replyMetaInHeader: false,
   };
 
   let observer = null;
   let settings = loadSettings();
+  const postState = new WeakMap();
 
   const api = {
     id: ID,
@@ -79,6 +87,8 @@
       observer = null;
     }
 
+    document.querySelectorAll(`[${MARK_POST}]`).forEach(restorePost);
+
     document.querySelectorAll([
       `[${MARK_POST}]`,
       `[${MARK_ROW}]`,
@@ -87,6 +97,10 @@
       `[${MARK_HEADER}]`,
       `[${MARK_BODY}]`,
       `[${MARK_ACTIONS}]`,
+      `[${MARK_REPLY}]`,
+      `[${MARK_REPLY_MENU}]`,
+      `[${MARK_REPLY_META}]`,
+      `[${MARK_DATE_WRAP}]`,
     ].join(",")).forEach((node) => {
       node.removeAttribute(MARK_POST);
       node.removeAttribute(MARK_ROW);
@@ -95,8 +109,14 @@
       node.removeAttribute(MARK_HEADER);
       node.removeAttribute(MARK_BODY);
       node.removeAttribute(MARK_ACTIONS);
+      node.removeAttribute(MARK_REPLY);
+      node.removeAttribute(MARK_REPLY_MENU);
+      node.removeAttribute(MARK_REPLY_MENU_OPEN);
+      node.removeAttribute(MARK_REPLY_META);
+      node.removeAttribute(MARK_DATE_WRAP);
     });
 
+    document.querySelectorAll(`[${MARK_REPLY_MENU}]`).forEach((node) => node.remove());
     document.getElementById(PANEL_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
     [
@@ -104,12 +124,17 @@
       "data-cudloun-post-tweaks-avatar-inline",
       "data-cudloun-post-tweaks-divider",
       "data-cudloun-post-tweaks-background",
+      "data-cudloun-post-tweaks-reply-placement",
+      "data-cudloun-post-tweaks-reply-meta-header",
     ].forEach((name) => document.documentElement.removeAttribute(name));
     console.log("[cudloun-container] post tweaks stopped");
   }
 
   function scan() {
-    document.querySelectorAll(".content-item.board-post").forEach(markPost);
+    document.querySelectorAll(".content-item.board-post").forEach((post) => {
+      markPost(post);
+      arrangePost(post);
+    });
   }
 
   function markPost(post) {
@@ -122,7 +147,12 @@
 
     const header = content.firstElementChild;
     const body = Array.from(content.children).find((child) => child !== header && child.textContent.trim());
-    const actions = Array.from(post.children).find((child) => child.textContent.includes("ODPOV"));
+    const actions =
+      post.querySelector(`[${MARK_ACTIONS}]`) ||
+      Array.from(post.children).find((child) => child.querySelector(".reply-button"));
+    const reply = post.querySelector(`[${MARK_REPLY}]`) || actions?.querySelector(".reply-button");
+    const replyMeta = post.querySelector(`[${MARK_REPLY_META}]`) || (actions ? findReplyMeta(actions) : null);
+    const dateWrap = findDateWrap(header);
 
     post.setAttribute(MARK_POST, "true");
     row.setAttribute(MARK_ROW, "true");
@@ -131,6 +161,136 @@
     if (header) header.setAttribute(MARK_HEADER, "true");
     if (body) body.setAttribute(MARK_BODY, "true");
     if (actions) actions.setAttribute(MARK_ACTIONS, "true");
+    if (reply) reply.setAttribute(MARK_REPLY, "true");
+    if (replyMeta) replyMeta.setAttribute(MARK_REPLY_META, "true");
+    if (dateWrap) dateWrap.setAttribute(MARK_DATE_WRAP, "true");
+  }
+
+  function findReplyMeta(actions) {
+    return Array.from(actions.querySelectorAll("span")).find((node) => /^Re:\s*/.test(node.textContent.trim())) || null;
+  }
+
+  function findDateWrap(header) {
+    if (!header) return null;
+    return Array.from(header.children).find((child) => child.textContent.trim().match(/\d{1,2}\.\d{1,2}\.\d{4}/)) || null;
+  }
+
+  function arrangePost(post) {
+    const header = post.querySelector(`[${MARK_HEADER}]`);
+    const actions = post.querySelector(`[${MARK_ACTIONS}]`);
+    const reply = post.querySelector(`[${MARK_REPLY}]`);
+    const replyMeta = post.querySelector(`[${MARK_REPLY_META}]`);
+    const dateWrap = post.querySelector(`[${MARK_DATE_WRAP}]`);
+    if (!header || !actions) return;
+
+    const state = getPostState(post, { reply, replyMeta });
+    const key = `${settings.enabled}|${settings.replyPlacement}|${settings.replyMetaInHeader}`;
+    if (state.appliedKey === key) return;
+
+    restorePost(post);
+    state.appliedKey = key;
+    if (!settings.enabled) return;
+
+    if (settings.replyPlacement === "header" && reply) {
+      const wrap = ensureHeaderReplySlot(post, header);
+      wrap.appendChild(reply);
+    } else if (settings.replyPlacement === "menu" && reply) {
+      const menu = ensureReplyMenu(post, header);
+      menu.querySelector(".cudloun-post-tweaks-reply-menu-panel").appendChild(reply);
+    }
+
+    if (settings.replyMetaInHeader && replyMeta && dateWrap) {
+      dateWrap.appendChild(replyMeta);
+    }
+
+    updateActionsVisibility(actions, state);
+  }
+
+  function getPostState(post, nodes) {
+    let state = postState.get(post);
+    if (!state) {
+      state = {};
+      postState.set(post, state);
+    }
+
+    if (nodes.reply && !state.replyParent) {
+      state.replyParent = nodes.reply.parentNode;
+      state.replyNext = nodes.reply.nextSibling;
+    }
+
+    if (nodes.replyMeta && !state.replyMetaParent) {
+      state.replyMetaParent = nodes.replyMeta.parentNode;
+      state.replyMetaNext = nodes.replyMeta.nextSibling;
+    }
+
+    return state;
+  }
+
+  function restorePost(post) {
+    const state = postState.get(post);
+    if (!state) return;
+
+    const reply = post.querySelector(`[${MARK_REPLY}]`);
+    if (reply && state.replyParent && reply.parentNode !== state.replyParent) {
+      state.replyParent.insertBefore(reply, state.replyNext && state.replyNext.parentNode === state.replyParent ? state.replyNext : null);
+    }
+
+    const replyMeta = post.querySelector(`[${MARK_REPLY_META}]`);
+    if (replyMeta && state.replyMetaParent && replyMeta.parentNode !== state.replyMetaParent) {
+      state.replyMetaParent.insertBefore(
+        replyMeta,
+        state.replyMetaNext && state.replyMetaNext.parentNode === state.replyMetaParent ? state.replyMetaNext : null,
+      );
+    }
+
+    post.querySelectorAll(".cudloun-post-tweaks-header-reply").forEach((node) => node.remove());
+    post.querySelectorAll(`[${MARK_REPLY_MENU}]`).forEach((node) => node.remove());
+    updateActionsVisibility(post.querySelector(`[${MARK_ACTIONS}]`), state);
+    state.appliedKey = "";
+  }
+
+  function ensureHeaderReplySlot(post, header) {
+    let slot = post.querySelector(".cudloun-post-tweaks-header-reply");
+    if (!slot) {
+      slot = document.createElement("span");
+      slot.className = "cudloun-post-tweaks-header-reply";
+      header.appendChild(slot);
+    }
+    return slot;
+  }
+
+  function ensureReplyMenu(post, header) {
+    let menu = post.querySelector(`[${MARK_REPLY_MENU}]`);
+    if (menu) return menu;
+
+    menu = document.createElement("span");
+    menu.className = "cudloun-post-tweaks-reply-menu";
+    menu.setAttribute(MARK_REPLY_MENU, "true");
+    menu.innerHTML = `
+      <button type="button" class="cudloun-post-tweaks-reply-menu-button" aria-label="Reply actions" title="Reply actions">...</button>
+      <span class="cudloun-post-tweaks-reply-menu-panel"></span>
+    `;
+    menu.querySelector("button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      const open = menu.getAttribute(MARK_REPLY_MENU_OPEN) === "true";
+      closeReplyMenus();
+      menu.setAttribute(MARK_REPLY_MENU_OPEN, open ? "false" : "true");
+    });
+    header.appendChild(menu);
+    return menu;
+  }
+
+  function closeReplyMenus() {
+    document.querySelectorAll(`[${MARK_REPLY_MENU_OPEN}="true"]`).forEach((node) => {
+      node.setAttribute(MARK_REPLY_MENU_OPEN, "false");
+    });
+  }
+
+  function updateActionsVisibility(actions, state) {
+    if (!actions || !state) return;
+    const hasLocalReply = !!actions.querySelector(`[${MARK_REPLY}]`);
+    const hasLocalMeta = !!actions.querySelector(`[${MARK_REPLY_META}]`);
+    actions.toggleAttribute("data-cudloun-post-tweaks-empty", !hasLocalReply && !hasLocalMeta);
   }
 
   function installStyles() {
@@ -219,7 +379,7 @@
           margin-right: auto !important;
           padding-left: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           padding-right: var(--cudloun-post-tweaks-side-padding, 4px) !important;
-          padding-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
+          padding-bottom: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
           font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
         }
@@ -270,10 +430,17 @@
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] {
+          box-sizing: border-box !important;
           width: 100% !important;
           max-width: 100% !important;
           min-width: 0 !important;
           margin-left: 0 !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] > * {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          max-width: 100% !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-inline="true"] [${MARK_CONTENT}] {
@@ -281,6 +448,7 @@
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] {
+          position: relative !important;
           width: 100% !important;
           min-width: 0 !important;
           display: flex !important;
@@ -307,6 +475,30 @@
           line-height: 1.18 !important;
           overflow-wrap: anywhere !important;
           white-space: normal !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_DATE_WRAP}] {
+          display: inline-flex !important;
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 1px !important;
+          min-width: 0 !important;
+          max-width: calc(100% - 34px) !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_META}] {
+          display: inline-block !important;
+          max-width: 100% !important;
+          color: rgba(54,65,82,.8) !important;
+          font-size: .82em !important;
+          line-height: 1.14 !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_META}] a {
+          color: inherit !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}] {
@@ -340,12 +532,77 @@
           height: auto !important;
         }
 
+        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-header-reply {
+          position: absolute !important;
+          right: 28px !important;
+          top: 0 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          margin-left: 0 !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-header-reply [${MARK_REPLY}] {
+          min-width: 0 !important;
+          padding: 2px 6px !important;
+          font-size: .82em !important;
+          line-height: 1.1 !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu {
+          position: absolute !important;
+          right: 28px !important;
+          top: 0 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          margin-left: 0 !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu-button {
+          appearance: none !important;
+          width: 28px !important;
+          height: 28px !important;
+          border: 0 !important;
+          border-radius: 999px !important;
+          background: transparent !important;
+          color: currentColor !important;
+          cursor: pointer !important;
+          font: 700 20px/1 system-ui, sans-serif !important;
+          padding: 0 !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu-panel {
+          position: absolute !important;
+          right: 0 !important;
+          top: calc(100% + 4px) !important;
+          z-index: 6 !important;
+          display: none !important;
+          min-width: 118px !important;
+          padding: 4px !important;
+          border: 1px solid rgba(79,102,134,.26) !important;
+          border-radius: 7px !important;
+          background: #fff !important;
+          box-shadow: 0 8px 20px rgba(18,27,43,.2) !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_MENU_OPEN}="true"] .cudloun-post-tweaks-reply-menu-panel {
+          display: inline-flex !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_MENU}] [${MARK_REPLY}] {
+          width: 100% !important;
+          justify-content: flex-start !important;
+        }
+
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}] {
           width: 100% !important;
           max-width: 100% !important;
           margin-left: 0 !important;
           padding-left: 0 !important;
           font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}][data-cudloun-post-tweaks-empty] {
+          display: none !important;
         }
       }
     `;
@@ -367,6 +624,18 @@
         <label>
           <span>Avatar in header</span>
           <input data-setting="avatarInline" type="checkbox">
+        </label>
+        <label>
+          <span>Reply button</span>
+          <select data-setting="replyPlacement">
+            <option value="bottom">Bottom</option>
+            <option value="header">Header</option>
+            <option value="menu">Header menu</option>
+          </select>
+        </label>
+        <label>
+          <span>Reply link in header</span>
+          <input data-setting="replyMetaInHeader" type="checkbox">
         </label>
         <label>
           <span>Dividing lines</span>
@@ -467,6 +736,8 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-avatar-inline", settings.avatarInline ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-divider", settings.divider ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-background", settings.background ? "true" : "false");
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-placement", settings.replyPlacement);
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-meta-header", settings.replyMetaInHeader ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
@@ -480,6 +751,8 @@
 
     setInput(panel, "enabled", settings.enabled);
     setInput(panel, "avatarInline", settings.avatarInline);
+    setInput(panel, "replyPlacement", settings.replyPlacement);
+    setInput(panel, "replyMetaInHeader", settings.replyMetaInHeader);
     setInput(panel, "divider", settings.divider);
     setInput(panel, "background", settings.background);
     setInput(panel, "backgroundColor", settings.backgroundColor);
@@ -495,6 +768,8 @@
     setOutput(panel, "postSpacing", `${settings.postSpacing}px`);
     setOutput(panel, "headerScale", `${settings.headerScale}%`);
     setOutput(panel, "fontScale", `${settings.fontScale}%`);
+
+    scan();
   }
 
   function setInput(panel, name, value) {
