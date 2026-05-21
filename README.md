@@ -36,11 +36,10 @@ A container can be:
 - stopped again from the same panel
 - shared as a one-line console loader, so someone can preview the tweak without installing a userscript
 
-The first container is `favorite-pill-colors`, which colors unread counters on:
+Current containers:
 
-```text
-https://babeta.okoun.cz/favorites
-```
+- `favorite-pill-colors`: colors unread counters on `https://babeta.okoun.cz/favorites`.
+- `text-width`: lets mobile users tune board post layout so the text body can use the full message width.
 
 Container files live in `containers/` and are listed in `containers.json`.
 
