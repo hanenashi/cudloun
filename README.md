@@ -39,7 +39,7 @@ A container can be:
 Current containers:
 
 - `favorite-pill-colors`: colors unread counters on `https://babeta.okoun.cz/favorites`.
-- `text-width`: lets mobile users tune board post layout so the text body can use the full message width.
+- `post-tweaks`: lets mobile users tune board post layout, spacing, dividers, background, and font size.
 
 Container files live in `containers/` and are listed in `containers.json`.
 
