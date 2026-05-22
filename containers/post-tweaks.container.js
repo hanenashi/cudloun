@@ -16,7 +16,8 @@
   const MARK_ACTIONS = "data-cudloun-post-tweaks-actions";
   const MARK_REPLY = "data-cudloun-post-tweaks-reply";
   const MARK_REPLY_MENU = "data-cudloun-post-tweaks-reply-menu";
-  const MARK_REPLY_MENU_OPEN = "data-cudloun-post-tweaks-reply-menu-open";
+  const MARK_NATIVE_MENU_HOOK = "data-cudloun-post-tweaks-native-menu-hook";
+  const MARK_NATIVE_REPLY_ITEM = "data-cudloun-post-tweaks-native-reply-item";
   const MARK_REPLY_META = "data-cudloun-post-tweaks-reply-meta";
   const MARK_DATE_WRAP = "data-cudloun-post-tweaks-date-wrap";
   const COLOR_OPTIONS = [
@@ -111,12 +112,14 @@
       node.removeAttribute(MARK_ACTIONS);
       node.removeAttribute(MARK_REPLY);
       node.removeAttribute(MARK_REPLY_MENU);
-      node.removeAttribute(MARK_REPLY_MENU_OPEN);
+      node.removeAttribute(MARK_NATIVE_MENU_HOOK);
+      node.removeAttribute(MARK_NATIVE_REPLY_ITEM);
       node.removeAttribute(MARK_REPLY_META);
       node.removeAttribute(MARK_DATE_WRAP);
     });
 
     document.querySelectorAll(`[${MARK_REPLY_MENU}]`).forEach((node) => node.remove());
+    document.querySelectorAll(`[${MARK_NATIVE_REPLY_ITEM}]`).forEach((node) => node.remove());
     document.getElementById(PANEL_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
     [
@@ -195,8 +198,8 @@
       const wrap = ensureHeaderReplySlot(post, header);
       wrap.appendChild(reply);
     } else if (settings.replyPlacement === "menu" && reply) {
-      const menu = ensureReplyMenu(post, header);
-      menu.querySelector(".cudloun-post-tweaks-reply-menu-panel").appendChild(reply);
+      const store = ensureReplyMenu(post, header);
+      store.appendChild(reply);
     }
 
     if (settings.replyMetaInHeader && replyMeta && dateWrap) {
@@ -245,6 +248,7 @@
 
     post.querySelectorAll(".cudloun-post-tweaks-header-reply").forEach((node) => node.remove());
     post.querySelectorAll(`[${MARK_REPLY_MENU}]`).forEach((node) => node.remove());
+    document.querySelectorAll(`[${MARK_NATIVE_REPLY_ITEM}]`).forEach((node) => node.remove());
     updateActionsVisibility(post.querySelector(`[${MARK_ACTIONS}]`), state);
     state.appliedKey = "";
   }
@@ -260,30 +264,83 @@
   }
 
   function ensureReplyMenu(post, header) {
-    let menu = post.querySelector(`[${MARK_REPLY_MENU}]`);
-    if (menu) return menu;
+    let store = post.querySelector(`[${MARK_REPLY_MENU}]`);
+    if (!store) {
+      store = document.createElement("span");
+      store.className = "cudloun-post-tweaks-reply-store";
+      store.setAttribute(MARK_REPLY_MENU, "true");
+      post.appendChild(store);
+    }
 
-    menu = document.createElement("span");
-    menu.className = "cudloun-post-tweaks-reply-menu";
-    menu.setAttribute(MARK_REPLY_MENU, "true");
-    menu.innerHTML = `
-      <button type="button" class="cudloun-post-tweaks-reply-menu-button" aria-label="Reply actions" title="Reply actions">...</button>
-      <span class="cudloun-post-tweaks-reply-menu-panel"></span>
-    `;
-    menu.querySelector("button").addEventListener("click", (event) => {
-      event.stopPropagation();
-      const open = menu.getAttribute(MARK_REPLY_MENU_OPEN) === "true";
-      closeReplyMenus();
-      menu.setAttribute(MARK_REPLY_MENU_OPEN, open ? "false" : "true");
-    });
-    header.appendChild(menu);
-    return menu;
+    const nativeMenu = findNativePostMenuButton(header);
+    if (nativeMenu && nativeMenu.getAttribute(MARK_NATIVE_MENU_HOOK) !== "true") {
+      nativeMenu.setAttribute(MARK_NATIVE_MENU_HOOK, "true");
+      nativeMenu.addEventListener("click", () => {
+        scheduleNativeReplyItem(post);
+      });
+    }
+
+    return store;
   }
 
-  function closeReplyMenus() {
-    document.querySelectorAll(`[${MARK_REPLY_MENU_OPEN}="true"]`).forEach((node) => {
-      node.setAttribute(MARK_REPLY_MENU_OPEN, "false");
+  function findNativePostMenuButton(header) {
+    if (!header) return null;
+    return Array.from(header.querySelectorAll('button[aria-label="menu"]')).find(
+      (button) => !button.closest(`[${MARK_REPLY_MENU}]`),
+    ) || null;
+  }
+
+  function scheduleNativeReplyItem(post) {
+    [0, 40, 120, 260].forEach((delay) => {
+      window.setTimeout(() => injectNativeReplyItem(post), delay);
     });
+  }
+
+  function injectNativeReplyItem(post) {
+    const reply = post.querySelector(`[${MARK_REPLY}]`);
+    if (!reply) return;
+
+    const menu = findOpenPostMenu();
+    if (!menu || menu.querySelector(`[${MARK_NATIVE_REPLY_ITEM}]`)) return;
+
+    const template = menu.querySelector('li[role="menuitem"]');
+    if (!template) return;
+
+    const item = document.createElement("li");
+    item.className = template.className;
+    item.setAttribute("role", "menuitem");
+    item.setAttribute("tabindex", "-1");
+    item.setAttribute(MARK_NATIVE_REPLY_ITEM, "true");
+    item.innerHTML = `
+      <div class="${template.querySelector(".MuiListItemIcon-root")?.className || "MuiListItemIcon-root"}">
+        <svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall" focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-.9-5-4-10-11-11z"></path>
+        </svg>
+      </div>
+      <div class="${template.querySelector(".MuiListItemText-root")?.className || "MuiListItemText-root"}">
+        <span class="${template.querySelector(".MuiListItemText-primary")?.className || "MuiTypography-root MuiTypography-body1 MuiListItemText-primary"}">ODPOVĚDĚT</span>
+      </div>
+    `;
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      reply.click();
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+
+    const divider = Array.from(menu.children).find((child) => child.tagName === "HR");
+    menu.insertBefore(item, divider || template.nextSibling);
+  }
+
+  function findOpenPostMenu() {
+    return Array.from(document.querySelectorAll('[role="menu"]'))
+      .filter((menu) => {
+        const rect = menu.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        const text = menu.textContent || "";
+        return text.includes("Označit jako nejstarší nový") || text.includes("Smazat příspěvek");
+      })
+      .pop() || null;
   }
 
   function updateActionsVisibility(actions, state) {
@@ -368,6 +425,10 @@
         cursor: pointer;
         font: 700 12px/1.2 inherit;
         padding: 7px 9px;
+      }
+
+      .cudloun-post-tweaks-reply-store {
+        display: none !important;
       }
 
       @media (max-width: 700px) {
@@ -546,51 +607,6 @@
           padding: 2px 6px !important;
           font-size: .82em !important;
           line-height: 1.1 !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu {
-          position: absolute !important;
-          right: 28px !important;
-          top: 0 !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          margin-left: 0 !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu-button {
-          appearance: none !important;
-          width: 28px !important;
-          height: 28px !important;
-          border: 0 !important;
-          border-radius: 999px !important;
-          background: transparent !important;
-          color: currentColor !important;
-          cursor: pointer !important;
-          font: 700 20px/1 system-ui, sans-serif !important;
-          padding: 0 !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-reply-menu-panel {
-          position: absolute !important;
-          right: 0 !important;
-          top: calc(100% + 4px) !important;
-          z-index: 6 !important;
-          display: none !important;
-          min-width: 118px !important;
-          padding: 4px !important;
-          border: 1px solid rgba(79,102,134,.26) !important;
-          border-radius: 7px !important;
-          background: #fff !important;
-          box-shadow: 0 8px 20px rgba(18,27,43,.2) !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_MENU_OPEN}="true"] .cudloun-post-tweaks-reply-menu-panel {
-          display: inline-flex !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_REPLY_MENU}] [${MARK_REPLY}] {
-          width: 100% !important;
-          justify-content: flex-start !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}] {
