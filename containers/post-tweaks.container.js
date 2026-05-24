@@ -17,6 +17,7 @@
   const MARK_REPLY = "data-cudloun-post-tweaks-reply";
   const MARK_REPLY_MENU = "data-cudloun-post-tweaks-reply-menu";
   const MARK_NATIVE_MENU_HOOK = "data-cudloun-post-tweaks-native-menu-hook";
+  const MARK_NATIVE_MENU_POPOUT = "data-cudloun-post-tweaks-native-menu-popout";
   const MARK_NATIVE_REPLY_ITEM = "data-cudloun-post-tweaks-native-reply-item";
   const MARK_REPLY_META = "data-cudloun-post-tweaks-reply-meta";
   const MARK_DATE_WRAP = "data-cudloun-post-tweaks-date-wrap";
@@ -42,9 +43,11 @@
     fontScale: 100,
     replyPlacement: "bottom",
     replyMetaInHeader: false,
+    nativeMenuPopout: false,
   };
 
   let observer = null;
+  let nativePopoutListenerInstalled = false;
   let settings = loadSettings();
   const postState = new WeakMap();
 
@@ -70,6 +73,10 @@
   function run() {
     installStyles();
     installPanel();
+    if (!nativePopoutListenerInstalled) {
+      document.addEventListener("pointerdown", handleNativePopoutOutside, true);
+      nativePopoutListenerInstalled = true;
+    }
     applySettings();
     scan();
 
@@ -87,6 +94,8 @@
       observer.disconnect();
       observer = null;
     }
+    document.removeEventListener("pointerdown", handleNativePopoutOutside, true);
+    nativePopoutListenerInstalled = false;
 
     document.querySelectorAll(`[${MARK_POST}]`).forEach(restorePost);
 
@@ -100,6 +109,7 @@
       `[${MARK_ACTIONS}]`,
       `[${MARK_REPLY}]`,
       `[${MARK_REPLY_MENU}]`,
+      `[${MARK_NATIVE_MENU_POPOUT}]`,
       `[${MARK_REPLY_META}]`,
       `[${MARK_DATE_WRAP}]`,
     ].join(",")).forEach((node) => {
@@ -113,6 +123,7 @@
       node.removeAttribute(MARK_REPLY);
       node.removeAttribute(MARK_REPLY_MENU);
       node.removeAttribute(MARK_NATIVE_MENU_HOOK);
+      node.removeAttribute(MARK_NATIVE_MENU_POPOUT);
       node.removeAttribute(MARK_NATIVE_REPLY_ITEM);
       node.removeAttribute(MARK_REPLY_META);
       node.removeAttribute(MARK_DATE_WRAP);
@@ -129,6 +140,7 @@
       "data-cudloun-post-tweaks-background",
       "data-cudloun-post-tweaks-reply-placement",
       "data-cudloun-post-tweaks-reply-meta-header",
+      "data-cudloun-post-tweaks-native-menu-popout",
     ].forEach((name) => document.documentElement.removeAttribute(name));
     console.log("[cudloun-container] post tweaks stopped");
   }
@@ -276,7 +288,7 @@
     if (nativeMenu && nativeMenu.getAttribute(MARK_NATIVE_MENU_HOOK) !== "true") {
       nativeMenu.setAttribute(MARK_NATIVE_MENU_HOOK, "true");
       nativeMenu.addEventListener("click", () => {
-        scheduleNativeReplyItem(post);
+        scheduleNativeMenuTweaks(post, nativeMenu);
       });
     }
 
@@ -290,21 +302,38 @@
     ) || null;
   }
 
-  function scheduleNativeReplyItem(post) {
+  function scheduleNativeMenuTweaks(post, button) {
+    const rect = button.getBoundingClientRect();
+    const anchor = {
+      top: Math.round(rect.bottom + 4),
+      right: Math.max(8, Math.round(window.innerWidth - rect.right)),
+    };
+
     [0, 40, 120, 260].forEach((delay) => {
-      window.setTimeout(() => injectNativeReplyItem(post), delay);
+      window.setTimeout(() => tweakNativePostMenu(post, anchor), delay);
     });
   }
 
-  function injectNativeReplyItem(post) {
+  function tweakNativePostMenu(post, anchor) {
+    const menu = findOpenPostMenu();
+    if (!menu) return;
+
+    applyNativeMenuPopout(menu, anchor);
+    injectNativeReplyItem(post, menu);
+  }
+
+  function injectNativeReplyItem(post, menu) {
     const reply = post.querySelector(`[${MARK_REPLY}]`);
     if (!reply) return;
 
-    const menu = findOpenPostMenu();
-    if (!menu || menu.querySelector(`[${MARK_NATIVE_REPLY_ITEM}]`)) return;
+    document.querySelectorAll(`[${MARK_NATIVE_REPLY_ITEM}]`).forEach((node) => {
+      if (!menu.contains(node)) node.remove();
+    });
+    if (menu.querySelector(`[${MARK_NATIVE_REPLY_ITEM}]`)) return;
 
     const template = menu.querySelector('li[role="menuitem"]');
     if (!template) return;
+    const itemParent = template.parentElement || menu;
 
     const item = document.createElement("li");
     item.className = template.className;
@@ -328,19 +357,108 @@
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
 
-    const divider = Array.from(menu.children).find((child) => child.tagName === "HR");
-    menu.insertBefore(item, divider || template.nextSibling);
+    const divider = Array.from(itemParent.children).find((child) => child.tagName === "HR");
+    itemParent.insertBefore(item, divider || template.nextSibling);
+  }
+
+  function applyNativeMenuPopout(menu, anchor) {
+    if (!settings.nativeMenuPopout) return;
+
+    document.querySelectorAll(`[${MARK_NATIVE_MENU_POPOUT}]`).forEach(clearNativeMenuPopout);
+
+    const surface = findMenuPopoutSurface(menu);
+    surface.setAttribute(MARK_NATIVE_MENU_POPOUT, "true");
+    surface.style.setProperty("--cudloun-post-tweaks-menu-top", `${anchor.top}px`);
+    surface.style.setProperty("--cudloun-post-tweaks-menu-right", `${anchor.right}px`);
+    surface.style.setProperty("position", "fixed", "important");
+    surface.style.setProperty("top", `${anchor.top}px`, "important");
+    surface.style.setProperty("right", `${anchor.right}px`, "important");
+    surface.style.setProperty("bottom", "auto", "important");
+    surface.style.setProperty("left", "auto", "important");
+    surface.style.setProperty("width", "max-content", "important");
+    surface.style.setProperty("min-width", "196px", "important");
+    surface.style.setProperty("max-width", "calc(100vw - 16px)", "important");
+    surface.style.setProperty("max-height", `calc(100vh - ${anchor.top}px - 8px)`, "important");
+    surface.style.setProperty("margin", "0", "important");
+    surface.style.setProperty("transform", "none", "important");
+    surface.style.setProperty("overflow", "auto", "important");
+    surface.style.setProperty("border-radius", "8px", "important");
+    surface.style.setProperty("visibility", "visible", "important");
+    surface.style.setProperty("pointer-events", "auto", "important");
+  }
+
+  function handleNativePopoutOutside(event) {
+    if (!settings.nativeMenuPopout) return;
+
+    const surface = document.querySelector(`[${MARK_NATIVE_MENU_POPOUT}]`);
+    if (!surface) return;
+    if (surface.contains(event.target)) return;
+    if (event.target instanceof Element && event.target.closest(`[${MARK_NATIVE_MENU_HOOK}]`)) return;
+
+    const modal = surface.closest('[role="presentation"]');
+    const backdrop = modal?.querySelector(".MuiBackdrop-root");
+    if (backdrop instanceof HTMLElement) {
+      backdrop.click();
+    }
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    window.setTimeout(() => {
+      clearNativeMenuPopout(surface);
+      document.querySelectorAll(`[${MARK_NATIVE_REPLY_ITEM}]`).forEach((node) => node.remove());
+    }, 80);
+  }
+
+  function clearNativeMenuPopout(node) {
+    node.removeAttribute(MARK_NATIVE_MENU_POPOUT);
+    [
+      "--cudloun-post-tweaks-menu-top",
+      "--cudloun-post-tweaks-menu-right",
+      "position",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "width",
+      "min-width",
+      "max-width",
+      "max-height",
+      "margin",
+      "transform",
+      "overflow",
+      "border-radius",
+      "visibility",
+      "pointer-events",
+    ].forEach((name) => node.style.removeProperty(name));
+  }
+
+  function findMenuPopoutSurface(menu) {
+    const candidates = [menu, ...Array.from(menu.querySelectorAll("*"))]
+      .filter((node) => node instanceof HTMLElement)
+      .filter((node) => {
+        const text = node.textContent || "";
+        if (!text.includes("Označit jako nejstarší nový") && !text.includes("Smazat příspěvek")) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && node.querySelector('li[role="menuitem"]');
+      })
+      .map((node) => ({ node, area: node.getBoundingClientRect().width * node.getBoundingClientRect().height }))
+      .sort((a, b) => a.area - b.area);
+
+    const content = candidates[0]?.node || menu;
+    return content.closest('[role="dialog"]') || content;
   }
 
   function findOpenPostMenu() {
-    return Array.from(document.querySelectorAll('[role="menu"]'))
-      .filter((menu) => {
+    return Array.from(document.querySelectorAll('[role="menu"], [role="dialog"], [role="presentation"]'))
+      .map((menu) => {
         const rect = menu.getBoundingClientRect();
-        if (rect.width <= 0 || rect.height <= 0) return false;
+        if (rect.width <= 0 || rect.height <= 0) return null;
         const text = menu.textContent || "";
-        return text.includes("Označit jako nejstarší nový") || text.includes("Smazat příspěvek");
+        const isPostMenu = text.includes("Označit jako nejstarší nový") || text.includes("Smazat příspěvek");
+        if (!isPostMenu || !menu.querySelector('li[role="menuitem"]')) return null;
+        return { menu, area: rect.width * rect.height };
       })
-      .pop() || null;
+      .filter(Boolean)
+      .sort((a, b) => a.area - b.area)
+      .map((entry) => entry.menu)[0] || null;
   }
 
   function updateActionsVisibility(actions, state) {
@@ -429,6 +547,23 @@
 
       .cudloun-post-tweaks-reply-store {
         display: none !important;
+      }
+
+      html[data-cudloun-post-tweaks-native-menu-popout="true"] [${MARK_NATIVE_MENU_POPOUT}] {
+        position: fixed !important;
+        top: var(--cudloun-post-tweaks-menu-top, 48px) !important;
+        right: var(--cudloun-post-tweaks-menu-right, 8px) !important;
+        bottom: auto !important;
+        left: auto !important;
+        width: max-content !important;
+        min-width: 196px !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - var(--cudloun-post-tweaks-menu-top, 48px) - 8px) !important;
+        margin: 0 !important;
+        transform: none !important;
+        overflow: auto !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 28px rgba(18,27,43,.24) !important;
       }
 
       @media (max-width: 700px) {
@@ -654,6 +789,10 @@
           <input data-setting="replyMetaInHeader" type="checkbox">
         </label>
         <label>
+          <span>Pop out post menu</span>
+          <input data-setting="nativeMenuPopout" type="checkbox">
+        </label>
+        <label>
           <span>Dividing lines</span>
           <input data-setting="divider" type="checkbox">
         </label>
@@ -754,6 +893,7 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-background", settings.background ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-placement", settings.replyPlacement);
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-meta-header", settings.replyMetaInHeader ? "true" : "false");
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-native-menu-popout", settings.nativeMenuPopout ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
@@ -769,6 +909,7 @@
     setInput(panel, "avatarInline", settings.avatarInline);
     setInput(panel, "replyPlacement", settings.replyPlacement);
     setInput(panel, "replyMetaInHeader", settings.replyMetaInHeader);
+    setInput(panel, "nativeMenuPopout", settings.nativeMenuPopout);
     setInput(panel, "divider", settings.divider);
     setInput(panel, "background", settings.background);
     setInput(panel, "backgroundColor", settings.backgroundColor);
