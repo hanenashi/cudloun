@@ -159,19 +159,6 @@ Then update:
 containers.json
 ```
 
-## Gateway Check
-
-Use `okoun-gateway` for account-backed read-only Babeta inspection:
-
-```text
-GET http://127.0.0.1:8765/babeta/auth?login=true
-GET http://127.0.0.1:8765/babeta/url?target=https://babeta.okoun.cz/boards/nepotrebny_pokus
-```
-
-For deeper DOM scans, use the Babeta Playwright profile and inject local files read-only.
-
-Mobile scan gotcha: authenticate at desktop size first, then switch viewport. The gateway login helper can otherwise see an invisible mobile `/login` menu item and try to click it.
-
 ## Useful Console Snippets
 
 Inspect current page:
