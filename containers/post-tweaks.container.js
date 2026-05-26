@@ -500,31 +500,47 @@
         right: 10px;
         bottom: 10px;
         z-index: 1800;
-        width: min(330px, calc(100vw - 20px));
+        width: min(310px, calc(100vw - 16px));
+        max-height: min(560px, calc(100dvh - 16px));
         border: 1px solid rgba(79,102,134,.28);
         border-radius: 8px;
         background: #fff;
         color: #182230;
         box-shadow: 0 12px 34px rgba(18,27,43,.24);
         font: 13px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: hidden;
       }
 
       #${PANEL_ID} details {
-        padding: 8px 10px 10px;
+        max-height: inherit;
+        overflow: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        touch-action: pan-y;
+        padding: 0 8px 8px;
       }
 
       #${PANEL_ID} summary {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        margin: 0 -8px 4px;
+        padding: 8px 10px;
+        background: #fff;
+        border-bottom: 1px solid rgba(79,102,134,.16);
         cursor: pointer;
         font-weight: 750;
         letter-spacing: 0;
+        user-select: none;
+        touch-action: none;
       }
 
       #${PANEL_ID} label {
         display: grid;
         grid-template-columns: 1fr auto;
-        gap: 8px;
+        gap: 6px;
         align-items: center;
-        margin-top: 9px;
+        margin-top: 7px;
       }
 
       #${PANEL_ID} input[type="range"] {
@@ -540,19 +556,19 @@
         background: #fff;
         color: #243041;
         font: inherit;
-        padding: 4px 6px;
+        padding: 3px 6px;
       }
 
       #${PANEL_ID} input[type="color"] {
         width: 112px;
-        height: 30px;
+        height: 28px;
         padding: 2px;
       }
 
       #${PANEL_ID} .cudloun-post-tweaks-actions {
         display: flex;
         gap: 8px;
-        margin-top: 10px;
+        margin-top: 8px;
       }
 
       #${PANEL_ID} button {
@@ -563,7 +579,41 @@
         color: #243041;
         cursor: pointer;
         font: 700 12px/1.2 inherit;
-        padding: 7px 9px;
+        padding: 6px 8px;
+      }
+
+      @media (max-width: 700px) {
+        #${PANEL_ID} {
+          right: 8px;
+          bottom: 8px;
+          width: min(288px, calc(100vw - 16px));
+          max-height: min(430px, calc(100dvh - 18px));
+          font-size: 12px;
+        }
+
+        #${PANEL_ID} details {
+          padding: 0 7px 7px;
+        }
+
+        #${PANEL_ID} summary {
+          margin: 0 -7px 3px;
+          padding: 7px 9px;
+        }
+
+        #${PANEL_ID} label {
+          gap: 5px;
+          margin-top: 6px;
+        }
+
+        #${PANEL_ID} select,
+        #${PANEL_ID} input[type="color"] {
+          min-width: 92px;
+          max-width: 128px;
+        }
+
+        #${PANEL_ID} input[type="color"] {
+          width: 112px;
+        }
       }
 
       .cudloun-post-tweaks-reply-store {
@@ -873,6 +923,8 @@
       input.addEventListener("change", () => updateFromInput(input));
     });
 
+    installPanelDrag(panel);
+
     function updateFromInput(input) {
       const name = input.dataset.setting;
       if (input.type === "checkbox") {
@@ -904,6 +956,76 @@
     });
 
     document.body.appendChild(panel);
+  }
+
+  function installPanelDrag(panel) {
+    const handle = panel.querySelector("summary");
+    if (!handle) return;
+
+    let drag = null;
+    let suppressClick = false;
+
+    handle.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || event.target.closest("input, select, button, a")) return;
+
+      const rect = panel.getBoundingClientRect();
+      drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        left: rect.left,
+        top: rect.top,
+        moved: false,
+      };
+      handle.setPointerCapture?.(event.pointerId);
+    });
+
+    handle.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+
+      const dx = event.clientX - drag.startX;
+      const dy = event.clientY - drag.startY;
+      if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+
+      drag.moved = true;
+      suppressClick = true;
+      event.preventDefault();
+      movePanel(panel, drag.left + dx, drag.top + dy);
+    });
+
+    handle.addEventListener("pointerup", (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      handle.releasePointerCapture?.(event.pointerId);
+      drag = null;
+      window.setTimeout(() => {
+        suppressClick = false;
+      }, 0);
+    });
+
+    handle.addEventListener("click", (event) => {
+      if (!suppressClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+
+    window.addEventListener("resize", () => {
+      const rect = panel.getBoundingClientRect();
+      movePanel(panel, rect.left, rect.top);
+    });
+  }
+
+  function movePanel(panel, left, top) {
+    const rect = panel.getBoundingClientRect();
+    const margin = 8;
+    const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+    const nextLeft = Math.min(Math.max(margin, left), maxLeft);
+    const nextTop = Math.min(Math.max(margin, top), maxTop);
+
+    panel.style.left = `${Math.round(nextLeft)}px`;
+    panel.style.top = `${Math.round(nextTop)}px`;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
   }
 
   function applySettings() {
