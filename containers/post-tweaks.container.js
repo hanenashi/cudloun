@@ -44,6 +44,7 @@
     replyPlacement: "bottom",
     replyMetaInHeader: false,
     nativeMenuPopout: false,
+    avatarMenu: true,
   };
 
   let observer = null;
@@ -97,7 +98,10 @@
     document.removeEventListener("pointerdown", handleNativePopoutOutside, true);
     nativePopoutListenerInstalled = false;
 
-    document.querySelectorAll(`[${MARK_POST}]`).forEach(restorePost);
+    document.querySelectorAll(`[${MARK_POST}]`).forEach((post) => {
+      cleanupNativeMenuHooks(post);
+      restorePost(post);
+    });
 
     document.querySelectorAll([
       `[${MARK_POST}]`,
@@ -109,7 +113,9 @@
       `[${MARK_ACTIONS}]`,
       `[${MARK_REPLY}]`,
       `[${MARK_REPLY_MENU}]`,
+      `[${MARK_NATIVE_MENU_HOOK}]`,
       `[${MARK_NATIVE_MENU_POPOUT}]`,
+      `[${MARK_NATIVE_REPLY_ITEM}]`,
       `[${MARK_REPLY_META}]`,
       `[${MARK_DATE_WRAP}]`,
     ].join(",")).forEach((node) => {
@@ -141,6 +147,7 @@
       "data-cudloun-post-tweaks-reply-placement",
       "data-cudloun-post-tweaks-reply-meta-header",
       "data-cudloun-post-tweaks-native-menu-popout",
+      "data-cudloun-post-tweaks-avatar-menu",
     ].forEach((name) => document.documentElement.removeAttribute(name));
     console.log("[cudloun-container] post tweaks stopped");
   }
@@ -181,6 +188,8 @@
     if (reply) reply.setAttribute(MARK_REPLY, "true");
     if (replyMeta) replyMeta.setAttribute(MARK_REPLY_META, "true");
     if (dateWrap) dateWrap.setAttribute(MARK_DATE_WRAP, "true");
+
+    ensureNativeMenuHooks(post, header, avatar);
   }
 
   function findReplyMeta(actions) {
@@ -223,7 +232,7 @@
     updateActionsVisibility(actions, state);
   }
 
-  function getPostState(post, nodes) {
+  function getPostState(post, nodes = {}) {
     let state = postState.get(post);
     if (!state) {
       state = {};
@@ -286,15 +295,62 @@
       post.appendChild(store);
     }
 
+    return store;
+  }
+
+  function ensureNativeMenuHooks(post, header, avatar) {
     const nativeMenu = findNativePostMenuButton(header);
-    if (nativeMenu && nativeMenu.getAttribute(MARK_NATIVE_MENU_HOOK) !== "true") {
-      nativeMenu.setAttribute(MARK_NATIVE_MENU_HOOK, "true");
-      nativeMenu.addEventListener("click", () => {
+    const state = getPostState(post);
+
+    if (nativeMenu && state.nativeMenuButton !== nativeMenu) {
+      if (state.nativeMenuButton && state.nativeMenuHandler) {
+        state.nativeMenuButton.removeEventListener("click", state.nativeMenuHandler);
+      }
+
+      state.nativeMenuButton = nativeMenu;
+      state.nativeMenuHandler = () => {
         scheduleNativeMenuTweaks(post, nativeMenu);
-      });
+      };
+      nativeMenu.setAttribute(MARK_NATIVE_MENU_HOOK, "true");
+      nativeMenu.addEventListener("click", state.nativeMenuHandler);
     }
 
-    return store;
+    if (avatar && state.avatar !== avatar) {
+      if (state.avatar && state.avatarMenuHandler) {
+        state.avatar.removeEventListener("click", state.avatarMenuHandler);
+      }
+
+      state.avatar = avatar;
+      state.avatarMenuHandler = (event) => {
+        if (!settings.enabled || !settings.avatarMenu) return;
+
+        const menuButton = findNativePostMenuButton(header);
+        if (!menuButton) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        scheduleNativeMenuTweaks(post, avatar, true, "left");
+        menuButton.click();
+      };
+      avatar.addEventListener("click", state.avatarMenuHandler);
+    }
+  }
+
+  function cleanupNativeMenuHooks(post) {
+    const state = postState.get(post);
+    if (!state) return;
+
+    if (state.nativeMenuButton && state.nativeMenuHandler) {
+      state.nativeMenuButton.removeEventListener("click", state.nativeMenuHandler);
+    }
+    if (state.avatar && state.avatarMenuHandler) {
+      state.avatar.removeEventListener("click", state.avatarMenuHandler);
+    }
+
+    state.nativeMenuButton = null;
+    state.nativeMenuHandler = null;
+    state.avatar = null;
+    state.avatarMenuHandler = null;
   }
 
   function findNativePostMenuButton(header) {
@@ -304,12 +360,18 @@
     ) || null;
   }
 
-  function scheduleNativeMenuTweaks(post, button) {
+  function scheduleNativeMenuTweaks(post, button, forcePopout = false, align = "right") {
     const rect = button.getBoundingClientRect();
     const anchor = {
       top: Math.round(rect.bottom + 4),
-      right: Math.max(8, Math.round(window.innerWidth - rect.right)),
+      forcePopout,
     };
+
+    if (align === "left") {
+      anchor.left = Math.max(8, Math.min(Math.round(rect.left), window.innerWidth - 204));
+    } else {
+      anchor.right = Math.max(8, Math.round(window.innerWidth - rect.right));
+    }
 
     [0, 40, 120, 260].forEach((delay) => {
       window.setTimeout(() => tweakNativePostMenu(post, anchor), delay);
@@ -364,19 +426,30 @@
   }
 
   function applyNativeMenuPopout(menu, anchor) {
-    if (!settings.nativeMenuPopout) return;
+    if (!settings.nativeMenuPopout && !anchor.forcePopout) return;
 
     document.querySelectorAll(`[${MARK_NATIVE_MENU_POPOUT}]`).forEach(clearNativeMenuPopout);
 
     const surface = findMenuPopoutSurface(menu);
     surface.setAttribute(MARK_NATIVE_MENU_POPOUT, "true");
     surface.style.setProperty("--cudloun-post-tweaks-menu-top", `${anchor.top}px`);
-    surface.style.setProperty("--cudloun-post-tweaks-menu-right", `${anchor.right}px`);
+    if (typeof anchor.left === "number") {
+      surface.style.setProperty("--cudloun-post-tweaks-menu-left", `${anchor.left}px`);
+      surface.style.removeProperty("--cudloun-post-tweaks-menu-right");
+    } else {
+      surface.style.setProperty("--cudloun-post-tweaks-menu-right", `${anchor.right}px`);
+      surface.style.removeProperty("--cudloun-post-tweaks-menu-left");
+    }
     surface.style.setProperty("position", "fixed", "important");
     surface.style.setProperty("top", `${anchor.top}px`, "important");
-    surface.style.setProperty("right", `${anchor.right}px`, "important");
+    if (typeof anchor.left === "number") {
+      surface.style.setProperty("left", `${anchor.left}px`, "important");
+      surface.style.setProperty("right", "auto", "important");
+    } else {
+      surface.style.setProperty("right", `${anchor.right}px`, "important");
+      surface.style.setProperty("left", "auto", "important");
+    }
     surface.style.setProperty("bottom", "auto", "important");
-    surface.style.setProperty("left", "auto", "important");
     surface.style.setProperty("width", "max-content", "important");
     surface.style.setProperty("min-width", "196px", "important");
     surface.style.setProperty("max-width", "calc(100vw - 16px)", "important");
@@ -414,6 +487,7 @@
     [
       "--cudloun-post-tweaks-menu-top",
       "--cudloun-post-tweaks-menu-right",
+      "--cudloun-post-tweaks-menu-left",
       "position",
       "top",
       "right",
@@ -567,8 +641,36 @@
 
       #${PANEL_ID} .cudloun-post-tweaks-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         margin-top: 8px;
+      }
+
+      #${PANEL_ID} .cudloun-post-tweaks-share[hidden] {
+        display: none !important;
+      }
+
+      #${PANEL_ID} .cudloun-post-tweaks-share {
+        margin-top: 8px;
+      }
+
+      #${PANEL_ID} textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 104px;
+        max-height: 180px;
+        resize: vertical;
+        border: 1px solid rgba(79,102,134,.26);
+        border-radius: 6px;
+        background: #fff;
+        color: #243041;
+        font: 12px/1.4 Consolas, "SFMono-Regular", monospace;
+        padding: 7px;
+      }
+
+      #${PANEL_ID} textarea:focus {
+        outline: 2px solid rgba(8,126,164,.22);
+        outline-offset: 1px;
       }
 
       #${PANEL_ID} button {
@@ -614,6 +716,11 @@
         #${PANEL_ID} input[type="color"] {
           width: 112px;
         }
+
+        #${PANEL_ID} textarea {
+          min-height: 92px;
+          max-height: 150px;
+        }
       }
 
       .cudloun-post-tweaks-reply-store {
@@ -624,8 +731,8 @@
         position: fixed !important;
         top: var(--cudloun-post-tweaks-menu-top, 48px) !important;
         right: var(--cudloun-post-tweaks-menu-right, 8px) !important;
+        left: var(--cudloun-post-tweaks-menu-left, auto) !important;
         bottom: auto !important;
-        left: auto !important;
         width: max-content !important;
         min-width: 196px !important;
         max-width: calc(100vw - 16px) !important;
@@ -635,6 +742,14 @@
         overflow: auto !important;
         border-radius: 8px !important;
         box-shadow: 0 10px 28px rgba(18,27,43,.24) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-menu="true"] [${MARK_NATIVE_MENU_HOOK}] {
+        display: none !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-menu="true"] [${MARK_AVATAR}] {
+        cursor: pointer !important;
       }
 
       @media (max-width: 700px) {
@@ -860,6 +975,10 @@
           <input data-setting="replyMetaInHeader" type="checkbox">
         </label>
         <label>
+          <span>Avatar opens menu</span>
+          <input data-setting="avatarMenu" type="checkbox">
+        </label>
+        <label>
           <span>Pop out post menu</span>
           <input data-setting="nativeMenuPopout" type="checkbox">
         </label>
@@ -914,6 +1033,16 @@
         <div class="cudloun-post-tweaks-actions">
           <button type="button" data-action="reset">Reset</button>
           <button type="button" data-action="hide">Hide</button>
+          <button type="button" data-action="export">Export</button>
+          <button type="button" data-action="import">Import</button>
+        </div>
+        <div class="cudloun-post-tweaks-share" hidden>
+          <textarea data-share-box spellcheck="false"></textarea>
+          <div class="cudloun-post-tweaks-actions">
+            <button type="button" data-action="copy-share">Copy</button>
+            <button type="button" data-action="apply-share">Apply</button>
+            <button type="button" data-action="close-share">Close</button>
+          </div>
         </div>
       </details>
     `;
@@ -953,6 +1082,37 @@
 
     panel.querySelector("[data-action='hide']").addEventListener("click", () => {
       panel.remove();
+    });
+
+    panel.querySelector("[data-action='export']").addEventListener("click", () => {
+      const text = exportSettingsText();
+      showShareBox(panel, text);
+      copyText(text).catch(() => {});
+    });
+
+    panel.querySelector("[data-action='import']").addEventListener("click", () => {
+      showShareBox(panel, "");
+    });
+
+    panel.querySelector("[data-action='copy-share']").addEventListener("click", () => {
+      const text = panel.querySelector("[data-share-box]")?.value || "";
+      copyText(text).catch(() => {});
+    });
+
+    panel.querySelector("[data-action='apply-share']").addEventListener("click", () => {
+      const box = panel.querySelector("[data-share-box]");
+      if (!box) return;
+      try {
+        importSettingsText(box.value);
+        saveSettings();
+        applySettings();
+      } catch (error) {
+        window.alert(`Could not import Post Tweaks settings: ${error.message}`);
+      }
+    });
+
+    panel.querySelector("[data-action='close-share']").addEventListener("click", () => {
+      panel.querySelector(".cudloun-post-tweaks-share")?.setAttribute("hidden", "");
     });
 
     document.body.appendChild(panel);
@@ -1037,6 +1197,7 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-placement", settings.replyPlacement);
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-meta-header", settings.replyMetaInHeader ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-native-menu-popout", settings.nativeMenuPopout ? "true" : "false");
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-avatar-menu", settings.avatarMenu ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
@@ -1052,6 +1213,7 @@
     setInput(panel, "avatarInline", settings.avatarInline);
     setInput(panel, "replyPlacement", settings.replyPlacement);
     setInput(panel, "replyMetaInHeader", settings.replyMetaInHeader);
+    setInput(panel, "avatarMenu", settings.avatarMenu);
     setInput(panel, "nativeMenuPopout", settings.nativeMenuPopout);
     setInput(panel, "divider", settings.divider);
     setInput(panel, "background", settings.background);
@@ -1082,6 +1244,63 @@
   function setOutput(panel, name, value) {
     const output = panel.querySelector(`[data-output="${name}"]`);
     if (output) output.textContent = value;
+  }
+
+  function showShareBox(panel, text) {
+    const wrap = panel.querySelector(".cudloun-post-tweaks-share");
+    const box = panel.querySelector("[data-share-box]");
+    if (!wrap || !box) return;
+
+    wrap.removeAttribute("hidden");
+    box.value = text;
+    box.focus();
+    box.select();
+  }
+
+  function exportSettingsText() {
+    return JSON.stringify({
+      cudlounContainer: ID,
+      version: 1,
+      settings: sharedSettings(),
+    }, null, 2);
+  }
+
+  function sharedSettings() {
+    return Object.fromEntries(
+      Object.keys(defaults).map((name) => [name, settings[name]]),
+    );
+  }
+
+  function importSettingsText(text) {
+    const parsed = JSON.parse(String(text || "").trim());
+    const source = parsed && parsed.settings && typeof parsed.settings === "object" ? parsed.settings : parsed;
+    if (!source || typeof source !== "object" || Array.isArray(source)) {
+      throw new Error("expected a settings object");
+    }
+
+    const next = { ...settings };
+    Object.entries(defaults).forEach(([name, fallback]) => {
+      if (!Object.prototype.hasOwnProperty.call(source, name)) return;
+
+      const value = source[name];
+      if (typeof fallback === "boolean") {
+        next[name] = value === true || value === "true";
+      } else if (typeof fallback === "number") {
+        const number = Number(value);
+        if (!Number.isFinite(number)) throw new Error(`${name} must be a number`);
+        next[name] = number;
+      } else {
+        next[name] = String(value);
+      }
+    });
+
+    settings = next;
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    }
   }
 
   function loadSettings() {
