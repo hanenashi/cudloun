@@ -77,6 +77,85 @@ li[role="menuitem"]
 
 Do not treat generated MUI classes like `css-1ta6gwn` as stable hooks.
 
+## Other Page Species
+
+Live scan on 2026-05-26 covered home, Vzkaznik, and Oblibene.
+
+Home:
+
+```text
+path: /
+title: Okoun <...><
+content items: 0
+board posts: 0
+visible links: top nav plus board links
+visible buttons: user menu plus MUI tabs
+chips: unread counters
+```
+
+Useful home hooks:
+
+```text
+a[href="/"]
+a[href="/messages"]
+a[href^="/fav/topics"]
+.MuiTab-root
+.MuiListItem-root[href^="/boards/"]
+.MuiChip-root
+```
+
+Home board rows are link/list rows, not `.content-item` posts.
+
+Vzkaznik:
+
+```text
+path: /messages
+content items: message cards
+board posts: 0
+avatars: message avatars
+inputs: compose/reply fields
+```
+
+Useful Vzkaznik hooks:
+
+```text
+.content-item.message-item
+.content-item.outgoing.message-item
+.content-item.incoming.message-item
+.avatar-container
+.reply-button
+button[aria-label="menu"]
+```
+
+Do not quote Vzkaznik text into notes or logs. Treat it as private user content. Record structure, counts, selectors, and layout only.
+
+Oblibene:
+
+```text
+path: /fav/topics
+common query: ?unread
+content items: 0
+board posts: 0
+layout: expanded MUI accordions containing board list rows
+chips: unread counters
+tabs: theme/activity views
+```
+
+Useful Oblibene hooks:
+
+```text
+a[href^="/fav/topics"]
+a[href^="/mod/topics"]
+.MuiAccordion-root
+.MuiAccordionSummary-root
+.MuiListItem-container
+.MuiListItem-root[href^="/boards/"]
+.MuiChip-root
+button[aria-label="Odebrat z oblíbených"]
+```
+
+Oblibene is the right lab for chip/unread-counter work. `favorite-pill-colors` currently targets these unread chips.
+
 ## Post Parts
 
 Prefer:
