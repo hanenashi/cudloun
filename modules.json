@@ -1,7 +1,8 @@
 {
-  "version": "0.4.7",
+  "version": "0.4.8",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
+    { "id": "sys-babeguts", "file": "modules/sys-babeguts.js", "required": true },
     { "id": "sys-menu", "file": "modules/sys-menu.js", "required": true }
   ],
   "modules": [

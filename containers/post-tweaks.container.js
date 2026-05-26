@@ -146,28 +146,30 @@
   }
 
   function scan() {
-    document.querySelectorAll(".content-item.board-post").forEach((post) => {
+    getBabegutsPosts().forEach((post) => {
       markPost(post);
       arrangePost(post);
     });
   }
 
   function markPost(post) {
-    const avatar = post.querySelector(".avatar-container");
+    const parts = getBabegutsParts(post);
+    const avatar = parts?.avatar || post.querySelector(".avatar-container");
     if (!avatar) return;
 
-    const row = avatar.parentElement;
-    const content = avatar.nextElementSibling;
+    const row = parts?.row || avatar.parentElement;
+    const content = parts?.content || avatar.nextElementSibling;
     if (!row || !content) return;
 
-    const header = content.firstElementChild;
-    const body = Array.from(content.children).find((child) => child !== header && child.textContent.trim());
+    const header = parts?.header || content.firstElementChild;
+    const body = parts?.body || Array.from(content.children).find((child) => child !== header && child.textContent.trim());
     const actions =
+      parts?.actions ||
       post.querySelector(`[${MARK_ACTIONS}]`) ||
       Array.from(post.children).find((child) => child.querySelector(".reply-button"));
-    const reply = post.querySelector(`[${MARK_REPLY}]`) || actions?.querySelector(".reply-button");
-    const replyMeta = post.querySelector(`[${MARK_REPLY_META}]`) || (actions ? findReplyMeta(actions) : null);
-    const dateWrap = findDateWrap(header);
+    const reply = parts?.reply || post.querySelector(`[${MARK_REPLY}]`) || actions?.querySelector(".reply-button");
+    const replyMeta = parts?.replyMeta || post.querySelector(`[${MARK_REPLY_META}]`) || (actions ? findReplyMeta(actions) : null);
+    const dateWrap = parts?.dateWrap || findDateWrap(header);
 
     post.setAttribute(MARK_POST, "true");
     row.setAttribute(MARK_ROW, "true");
@@ -447,6 +449,9 @@
   }
 
   function findOpenPostMenu() {
+    const babegutsMenu = window.Cudloun?.babeguts?.smallestVisibleMenu?.("post");
+    if (babegutsMenu) return babegutsMenu;
+
     return Array.from(document.querySelectorAll('[role="menu"], [role="dialog"], [role="presentation"]'))
       .map((menu) => {
         const rect = menu.getBoundingClientRect();
@@ -459,6 +464,22 @@
       .filter(Boolean)
       .sort((a, b) => a.area - b.area)
       .map((entry) => entry.menu)[0] || null;
+  }
+
+  function getBabegutsPosts() {
+    const helper = window.Cudloun?.babeguts;
+    if (helper && typeof helper.allPosts === "function") {
+      return helper.allPosts();
+    }
+    return Array.from(document.querySelectorAll(".content-item.board-post"));
+  }
+
+  function getBabegutsParts(post) {
+    const helper = window.Cudloun?.babeguts;
+    if (helper && typeof helper.postParts === "function") {
+      return helper.postParts(post);
+    }
+    return null;
   }
 
   function updateActionsVisibility(actions, state) {
