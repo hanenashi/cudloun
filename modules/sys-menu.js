@@ -9,11 +9,16 @@
   const BACKDROP_CLASS = "cudloun-backdrop";
   const RESTORE_FULLSCREEN_KEY = "cudloun.restoreFullscreenAfterRefresh";
   const RESTORE_FULLSCREEN_CLASS = "cudloun-restore-fullscreen";
+  const HUB_POSITION_KEY = "cudloun.hubPosition";
+  const HUB_COLLAPSED_KEY = "cudloun.hubCollapsed";
 
   let observer = null;
   let observerDebounceTimer = null;
   let routeTimer = null;
   let lastRoute = root.currentRoute();
+  let hubPosition = null;
+  let hubCollapsed = false;
+  let hubSelectedId = null;
 
   root.ui = {
     start,
@@ -413,6 +418,8 @@
     }
 
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
+    hubPosition = validHubPosition(root.storage.get(HUB_POSITION_KEY, null));
+    hubCollapsed = root.storage.get(HUB_COLLAPSED_KEY, false) === true;
 
     const backdrop = document.createElement("div");
     backdrop.className = BACKDROP_CLASS;
@@ -458,17 +465,20 @@
 
     const selectedModule = root.modules.find((module) => module.id === selectedId) || root.modules[0];
     const mode = selectedId === "debug" ? "debug" : "module";
+    hubSelectedId = mode === "debug" ? "debug" : selectedModule?.id;
     backdrop.innerHTML = "";
 
     const dialog = document.createElement("section");
     dialog.className = "cudloun-dialog";
+    if (hubCollapsed) dialog.dataset.collapsed = "true";
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
     dialog.setAttribute("aria-labelledby", "cudloun-title");
     dialog.appendChild(renderMascot());
     dialog.appendChild(renderHeader());
-    dialog.appendChild(renderBody(mode, selectedModule));
+    if (!hubCollapsed) dialog.appendChild(renderBody(mode, selectedModule));
     backdrop.appendChild(dialog);
+    applyHubPosition(dialog);
   }
 
   function renderMascot() {
@@ -484,6 +494,7 @@
   function renderHeader() {
     const header = document.createElement("div");
     header.className = "cudloun-head";
+    header.addEventListener("pointerdown", startHubDrag);
 
     const titleWrap = document.createElement("div");
     titleWrap.className = "cudloun-title-wrap";
@@ -499,6 +510,21 @@
     titleWrap.appendChild(title);
     titleWrap.appendChild(subtitle);
 
+    const buttons = document.createElement("div");
+    buttons.className = "cudloun-head-actions";
+
+    const collapse = document.createElement("button");
+    collapse.className = "cudloun-icon-button";
+    collapse.type = "button";
+    collapse.setAttribute("aria-label", hubCollapsed ? "Expand" : "Collapse");
+    collapse.textContent = hubCollapsed ? "+" : "-";
+    collapse.addEventListener("click", () => {
+      hubCollapsed = !hubCollapsed;
+      root.storage.set(HUB_COLLAPSED_KEY, hubCollapsed);
+      root.log.info("hub", hubCollapsed ? "collapsed" : "expanded");
+      renderHub(hubSelectedId);
+    });
+
     const close = document.createElement("button");
     close.className = "cudloun-icon-button";
     close.type = "button";
@@ -507,8 +533,95 @@
     close.addEventListener("click", closeHub);
 
     header.appendChild(titleWrap);
-    header.appendChild(close);
+    buttons.appendChild(collapse);
+    buttons.appendChild(close);
+    header.appendChild(buttons);
     return header;
+  }
+
+  function startHubDrag(event) {
+    if (event.button !== 0) return;
+    if (event.target instanceof Element && event.target.closest("button,input,select,a,textarea")) return;
+
+    const dialog = event.currentTarget.closest(".cudloun-dialog");
+    if (!(dialog instanceof HTMLElement)) return;
+
+    const rect = dialog.getBoundingClientRect();
+    const origin = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    dialog.dataset.dragging = "true";
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+
+    const onMove = (moveEvent) => {
+      const next = clampHubPosition({
+        left: origin.left + moveEvent.clientX - origin.pointerX,
+        top: origin.top + moveEvent.clientY - origin.pointerY,
+        width: origin.width,
+        height: origin.height,
+      });
+      hubPosition = next;
+      applyHubPosition(dialog);
+    };
+
+    const onEnd = () => {
+      dialog.dataset.dragging = "false";
+      if (hubPosition) root.storage.set(HUB_POSITION_KEY, hubPosition);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onEnd);
+      window.removeEventListener("pointercancel", onEnd);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+  }
+
+  function applyHubPosition(dialog) {
+    if (!hubPosition) {
+      dialog.style.removeProperty("--cudloun-hub-left");
+      dialog.style.removeProperty("--cudloun-hub-top");
+      dialog.dataset.dragged = "false";
+      return;
+    }
+
+    const rect = dialog.getBoundingClientRect();
+    const clamped = clampHubPosition({
+      left: hubPosition.left,
+      top: hubPosition.top,
+      width: rect.width || 320,
+      height: rect.height || 72,
+    });
+    hubPosition = clamped;
+    dialog.style.setProperty("--cudloun-hub-left", `${Math.round(clamped.left)}px`);
+    dialog.style.setProperty("--cudloun-hub-top", `${Math.round(clamped.top)}px`);
+    dialog.dataset.dragged = "true";
+  }
+
+  function validHubPosition(value) {
+    if (!value || typeof value !== "object") return null;
+    if (!Number.isFinite(value.left) || !Number.isFinite(value.top)) return null;
+    return {
+      left: value.left,
+      top: value.top,
+    };
+  }
+
+  function clampHubPosition(position) {
+    const margin = 8;
+    const maxLeft = Math.max(margin, window.innerWidth - position.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - position.height - margin);
+    return {
+      left: Math.min(Math.max(margin, position.left), maxLeft),
+      top: Math.min(Math.max(margin, position.top), maxTop),
+    };
   }
 
   function renderBody(mode, selectedModule) {
@@ -804,11 +917,15 @@
     style.textContent = `
       .cudloun-backdrop{position:fixed;inset:0;z-index:1600;display:flex;align-items:center;justify-content:center;padding:42px 20px 20px;background:rgba(26,32,44,.34);backdrop-filter:blur(2px);box-sizing:border-box}
       .cudloun-dialog{position:relative;box-sizing:border-box;width:min(860px,calc(100vw - 28px));max-height:min(760px,calc(100vh - 62px));display:flex;flex-direction:column;overflow:visible;border:1px solid rgba(79,102,134,.34);border-radius:8px;background:#f6f8fb;box-shadow:0 18px 48px rgba(18,27,43,.24);color:#182230;font-family:inherit}
+      .cudloun-dialog[data-dragged=true]{position:fixed;left:var(--cudloun-hub-left);top:var(--cudloun-hub-top);margin:0}
+      .cudloun-dialog[data-collapsed=true]{width:min(430px,calc(100vw - 16px));overflow:hidden}
       .cudloun-mascot{position:absolute;left:-73px;top:0;width:100px;max-width:26vw;height:auto;transform:translateY(-48%);pointer-events:none;filter:drop-shadow(0 6px 5px rgba(18,27,43,.25));z-index:2}
-      .cudloun-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-top-left-radius:8px;border-top-right-radius:8px;border-bottom:1px solid rgba(79,102,134,.2);background:#fff}
+      .cudloun-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-top-left-radius:8px;border-top-right-radius:8px;border-bottom:1px solid rgba(79,102,134,.2);background:#fff;cursor:grab;touch-action:none;user-select:none}
+      .cudloun-dialog[data-dragging=true] .cudloun-head{cursor:grabbing}
       .cudloun-title-wrap{min-width:0}
       .cudloun-title{font-size:1.15rem;font-weight:750;letter-spacing:0}
       .cudloun-subtitle,.cudloun-eyebrow{margin-top:3px;color:#697586;font-size:.78rem;letter-spacing:0}
+      .cudloun-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
       .cudloun-icon-button{appearance:none;width:32px;height:32px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#fff;color:#4b5565;cursor:pointer;font:700 1rem/1 inherit;flex:0 0 auto}
       .cudloun-icon-button:hover{background:#eef2f7}
       .cudloun-menu-action-button{appearance:none;min-width:0;flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:600 .8rem/1.2 inherit;padding:7px 5px}
@@ -854,7 +971,7 @@
       .cudloun-log-entry[data-level=warn]{color:#ffd18a}
       .cudloun-log-entry[data-level=debug]{color:#9fd0ff}
       .cudloun-log-entry[data-level=trace]{color:#d8c4ff}
-      @media (max-width:680px){.cudloun-backdrop{align-items:stretch;justify-content:stretch;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:100%;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;flex:1;display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
+      @media (max-width:680px){.cudloun-backdrop{align-items:center;justify-content:center;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:calc(100vw - 16px);height:auto;max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-dialog[data-collapsed=true]{width:min(390px,calc(100vw - 16px))}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;max-height:calc(100dvh - 84px);display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
     `;
     document.head.appendChild(style);
   }
