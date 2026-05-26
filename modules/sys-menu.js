@@ -694,7 +694,30 @@
       renderHub("debug");
     });
 
+    const copy = document.createElement("button");
+    copy.className = "cudloun-button cudloun-button-secondary";
+    copy.type = "button";
+    copy.textContent = "Copy log";
+    copy.addEventListener("click", () => {
+      copyText(debugLogText()).then(() => {
+        root.log.info("debug", "log copied");
+        renderHub("debug");
+      }).catch((error) => root.log.warn("debug", "copy failed", error));
+    });
+
+    const exportLog = document.createElement("button");
+    exportLog.className = "cudloun-button cudloun-button-secondary";
+    exportLog.type = "button";
+    exportLog.textContent = "Export log";
+    exportLog.addEventListener("click", () => {
+      exportTextFile(`cudloun-debug-${new Date().toISOString().replace(/[:.]/g, "-")}.txt`, debugLogText());
+      root.log.info("debug", "log export prepared");
+      renderHub("debug");
+    });
+
     controls.appendChild(select);
+    controls.appendChild(copy);
+    controls.appendChild(exportLog);
     controls.appendChild(clear);
 
     const meta = document.createElement("div");
@@ -736,6 +759,41 @@
 
     row.textContent = `${time} [${entry.level}] ${entry.area}: ${args}`;
     return row;
+  }
+
+  function debugLogText() {
+    return root.logger.recent(500).map((entry) => {
+      const args = entry.args.map((arg) => {
+        if (arg instanceof Error) return arg.message;
+        if (typeof arg === "string") return arg;
+        try {
+          return JSON.stringify(arg);
+        } catch (error) {
+          return String(arg);
+        }
+      }).join(" ");
+
+      return `${entry.time} [${entry.level}] ${entry.area}: ${args}`;
+    }).join("\n");
+  }
+
+  async function copyText(text) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+      throw new Error("Clipboard API is not available");
+    }
+    await navigator.clipboard.writeText(text);
+  }
+
+  function exportTextFile(filename, text) {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function installStyles() {

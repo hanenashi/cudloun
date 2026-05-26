@@ -1,5 +1,5 @@
 {
-  "version": "0.1.8",
+  "version": "0.1.9",
   "containers": [
     {
       "id": "favorite-pill-colors",
@@ -14,7 +14,7 @@
       "name": "Post Tweaks",
       "description": "Lets mobile users tune board post layout, spacing, dividers, background, and font size.",
       "file": "containers/post-tweaks.container.js",
-      "sha256": "648399771c848dee0c540cc54bddd1fcbb80039770049e3f3ca2915fb74cbc21",
+      "sha256": "dba55ac721741e4d14b1ca93ddcceb0915af026507d2fa7540ad24db0d0415a2",
       "match": ["/boards/"]
     }
   ]

@@ -17,7 +17,9 @@
   const MARK_REPLY = "data-cudloun-post-tweaks-reply";
   const MARK_REPLY_MENU = "data-cudloun-post-tweaks-reply-menu";
   const MARK_NATIVE_MENU_HOOK = "data-cudloun-post-tweaks-native-menu-hook";
+  const MARK_NATIVE_MENU_MODAL = "data-cudloun-post-tweaks-native-menu-modal";
   const MARK_NATIVE_MENU_POPOUT = "data-cudloun-post-tweaks-native-menu-popout";
+  const MARK_NATIVE_MENU_SUPPRESSED = "data-cudloun-post-tweaks-native-menu-suppressed";
   const MARK_NATIVE_REPLY_ITEM = "data-cudloun-post-tweaks-native-reply-item";
   const MARK_REPLY_META = "data-cudloun-post-tweaks-reply-meta";
   const MARK_DATE_WRAP = "data-cudloun-post-tweaks-date-wrap";
@@ -114,7 +116,9 @@
       `[${MARK_REPLY}]`,
       `[${MARK_REPLY_MENU}]`,
       `[${MARK_NATIVE_MENU_HOOK}]`,
+      `[${MARK_NATIVE_MENU_MODAL}]`,
       `[${MARK_NATIVE_MENU_POPOUT}]`,
+      `[${MARK_NATIVE_MENU_SUPPRESSED}]`,
       `[${MARK_NATIVE_REPLY_ITEM}]`,
       `[${MARK_REPLY_META}]`,
       `[${MARK_DATE_WRAP}]`,
@@ -129,7 +133,9 @@
       node.removeAttribute(MARK_REPLY);
       node.removeAttribute(MARK_REPLY_MENU);
       node.removeAttribute(MARK_NATIVE_MENU_HOOK);
+      node.removeAttribute(MARK_NATIVE_MENU_MODAL);
       node.removeAttribute(MARK_NATIVE_MENU_POPOUT);
+      node.removeAttribute(MARK_NATIVE_MENU_SUPPRESSED);
       node.removeAttribute(MARK_NATIVE_REPLY_ITEM);
       node.removeAttribute(MARK_REPLY_META);
       node.removeAttribute(MARK_DATE_WRAP);
@@ -329,8 +335,10 @@
 
         event.preventDefault();
         event.stopPropagation();
-        scheduleNativeMenuTweaks(post, avatar, true, "left");
-        menuButton.click();
+        window.setTimeout(() => {
+          menuButton.click();
+          scheduleNativeMenuTweaks(post, avatar, true, "left");
+        }, 0);
       };
       avatar.addEventListener("click", state.avatarMenuHandler);
     }
@@ -431,6 +439,19 @@
     document.querySelectorAll(`[${MARK_NATIVE_MENU_POPOUT}]`).forEach(clearNativeMenuPopout);
 
     const surface = findMenuPopoutSurface(menu);
+    const modal = surface.closest('[role="presentation"], .MuiModal-root');
+    if (modal instanceof HTMLElement) {
+      modal.setAttribute(MARK_NATIVE_MENU_MODAL, "true");
+      modal.style.setProperty("pointer-events", "none", "important");
+      const backdrop = modal.querySelector(".MuiBackdrop-root");
+      if (backdrop instanceof HTMLElement) {
+        backdrop.style.setProperty("background", "transparent", "important");
+        backdrop.style.setProperty("opacity", "0", "important");
+        backdrop.style.setProperty("backdrop-filter", "none", "important");
+        backdrop.style.setProperty("pointer-events", "none", "important");
+      }
+    }
+
     surface.setAttribute(MARK_NATIVE_MENU_POPOUT, "true");
     surface.style.setProperty("--cudloun-post-tweaks-menu-top", `${anchor.top}px`);
     if (typeof anchor.left === "number") {
@@ -460,15 +481,17 @@
     surface.style.setProperty("border-radius", "8px", "important");
     surface.style.setProperty("visibility", "visible", "important");
     surface.style.setProperty("pointer-events", "auto", "important");
+    suppressOtherNativePostMenus(surface);
   }
 
   function handleNativePopoutOutside(event) {
-    if (!settings.nativeMenuPopout) return;
+    if (!settings.nativeMenuPopout && !settings.avatarMenu) return;
 
     const surface = document.querySelector(`[${MARK_NATIVE_MENU_POPOUT}]`);
     if (!surface) return;
     if (surface.contains(event.target)) return;
     if (event.target instanceof Element && event.target.closest(`[${MARK_NATIVE_MENU_HOOK}]`)) return;
+    if (event.target instanceof Element && event.target.closest(`[${MARK_AVATAR}]`)) return;
 
     const modal = surface.closest('[role="presentation"]');
     const backdrop = modal?.querySelector(".MuiBackdrop-root");
@@ -483,7 +506,25 @@
   }
 
   function clearNativeMenuPopout(node) {
+    const modal = node.closest(`[${MARK_NATIVE_MENU_MODAL}]`);
+    if (modal instanceof HTMLElement) {
+      modal.removeAttribute(MARK_NATIVE_MENU_MODAL);
+      modal.style.removeProperty("pointer-events");
+      const backdrop = modal.querySelector(".MuiBackdrop-root");
+      if (backdrop instanceof HTMLElement) {
+        ["background", "opacity", "backdrop-filter", "pointer-events"].forEach((name) => {
+          backdrop.style.removeProperty(name);
+        });
+      }
+    }
+
     node.removeAttribute(MARK_NATIVE_MENU_POPOUT);
+    document.querySelectorAll(`[${MARK_NATIVE_MENU_SUPPRESSED}]`).forEach((suppressed) => {
+      suppressed.removeAttribute(MARK_NATIVE_MENU_SUPPRESSED);
+      suppressed.style.removeProperty("display");
+      suppressed.style.removeProperty("visibility");
+      suppressed.style.removeProperty("pointer-events");
+    });
     [
       "--cudloun-post-tweaks-menu-top",
       "--cudloun-post-tweaks-menu-right",
@@ -504,6 +545,24 @@
       "visibility",
       "pointer-events",
     ].forEach((name) => node.style.removeProperty(name));
+  }
+
+  function suppressOtherNativePostMenus(activeSurface) {
+    Array.from(document.querySelectorAll('[role="menu"], [role="dialog"], [role="presentation"]'))
+      .filter((node) => node instanceof HTMLElement)
+      .filter((node) => node !== activeSurface && !node.contains(activeSurface) && !activeSurface.contains(node))
+      .filter((node) => {
+        const text = node.textContent || "";
+        if (!text.includes("Označit jako nejstarší nový") && !text.includes("Smazat příspěvek")) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      })
+      .forEach((node) => {
+        node.setAttribute(MARK_NATIVE_MENU_SUPPRESSED, "true");
+        node.style.setProperty("display", "none", "important");
+        node.style.setProperty("visibility", "hidden", "important");
+        node.style.setProperty("pointer-events", "none", "important");
+      });
   }
 
   function findMenuPopoutSurface(menu) {
@@ -742,6 +801,21 @@
         overflow: auto !important;
         border-radius: 8px !important;
         box-shadow: 0 10px 28px rgba(18,27,43,.24) !important;
+      }
+
+      [${MARK_NATIVE_MENU_MODAL}] {
+        pointer-events: none !important;
+      }
+
+      [${MARK_NATIVE_MENU_MODAL}] .MuiBackdrop-root {
+        background: transparent !important;
+        opacity: 0 !important;
+        backdrop-filter: none !important;
+        pointer-events: none !important;
+      }
+
+      [${MARK_NATIVE_MENU_MODAL}] [${MARK_NATIVE_MENU_POPOUT}] {
+        pointer-events: auto !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-avatar-menu="true"] [${MARK_NATIVE_MENU_HOOK}] {
