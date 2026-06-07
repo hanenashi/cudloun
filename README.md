@@ -32,7 +32,7 @@ The current skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a mo
 
 `modules/sys-babeguts.js` exposes a small Babeta DOM dictionary at `window.Cudloun.babeguts`. It starts with board-page helpers for visible posts, post parts, visible MUI menus, and a compact `inspect()` snapshot for live-page tweaking sessions.
 
-Keep `babegun.md` updated as the quick field guide for Babeta live-DOM tweaking sessions.
+Keep `babeguts.md` updated as the quick field guide for Babeta live-DOM tweaking sessions.
 
 ## Containers
 
