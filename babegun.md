@@ -156,6 +156,36 @@ button[aria-label="Odebrat z oblíbených"]
 
 Oblibene is the right lab for chip/unread-counter work. `favorite-pill-colors` currently targets these unread chips.
 
+## Feedback Backend Notes
+
+Firestore has been prepared for future Cudloun discussion threads in project:
+
+```text
+murkypond-vault-fc61c
+```
+
+Prepared roots:
+
+```text
+cudlounMeta/feedback
+cudlounThreads/{threadId}
+cudlounThreads/{threadId}/messages
+```
+
+Initial thread IDs:
+
+```text
+framework_cudloun
+module_settoun
+module_containers
+container_favorite-pill-colors
+container_post-tweaks
+```
+
+Use these threads for long-form per-feature feedback, not real-time coordination. Babeta username parsing should be treated as best-effort display identity only. Do not put service account keys, Firebase Admin credentials, Okoun credentials, or Babeta invite data into Cudloun client code.
+
+Before public use, tighten Firebase rules so clients can read threads and create message docs only. Client writes should validate allowed fields and length limits, and should not allow edits or deletes.
+
 ## Post Parts
 
 Prefer:
