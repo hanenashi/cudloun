@@ -16,6 +16,13 @@ Use Babeguts before inventing one-off selectors.
 window.Cudloun.babeguts.inspect()
 ```
 
+For logged-in display user parsing, prefer:
+
+```js
+window.Cudloun.babeguts.currentUser()
+window.Cudloun.babeguts.currentUserCandidates()
+```
+
 Babeguts lives in:
 
 ```text
@@ -25,6 +32,8 @@ modules/sys-babeguts.js
 It exposes:
 
 - `route()`
+- `currentUser()`
+- `currentUserCandidates()`
 - `isBoardPage()`
 - `allPosts()`
 - `visiblePosts()`
@@ -104,6 +113,14 @@ a[href^="/fav/topics"]
 .MuiChip-root
 ```
 
+Logged-in user signal on desktop:
+
+```text
+button[aria-label="Uživatelské menu"] img[alt]
+```
+
+Desktop avatar menu opens as a top-right MUI popover. The opened menu contains actions such as `Moderované kluby`, `Nastavení`, `Barevné schéma`, and `Odhlásit se`, but not the username itself.
+
 Home board rows are link/list rows, not `.content-item` posts.
 
 Vzkaznik:
@@ -155,6 +172,15 @@ button[aria-label="Odebrat z oblíbených"]
 ```
 
 Oblibene is the right lab for chip/unread-counter work. `favorite-pill-colors` currently targets these unread chips.
+
+Logged-in user signal on mobile:
+
+```text
+.MuiBottomNavigationAction-root
+.MuiBottomNavigationAction-root img[alt]
+```
+
+Mobile avatar menu opens as a bottom MUI drawer. Like desktop, the opened menu contains action labels but not the username. Parse the user from the bottom navigation avatar trigger before or after opening the drawer.
 
 ## Feedback Backend Notes
 

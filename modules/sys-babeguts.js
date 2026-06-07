@@ -24,6 +24,8 @@
     selectors: SELECTORS,
     text: TEXT,
     route,
+    currentUser,
+    currentUserCandidates,
     isBoardPage,
     isVisible,
     visibleElements,
@@ -56,6 +58,35 @@
 
   function isBoardPage() {
     return route().type === "board";
+  }
+
+  function currentUser() {
+    const candidates = currentUserCandidates();
+    return candidates.find((candidate) => candidate.confidence === "high")?.name ||
+      candidates.find((candidate) => candidate.name)?.name ||
+      "";
+  }
+
+  function currentUserCandidates() {
+    const candidates = [];
+
+    visibleElements('button[aria-label="Uživatelské menu"]').forEach((button) => {
+      addUserCandidate(candidates, button.querySelector("img[alt]")?.getAttribute("alt"), "desktop-avatar-alt", "high", button);
+      addUserCandidate(candidates, button.textContent, "desktop-avatar-text", "medium", button);
+    });
+
+    visibleElements(".MuiBottomNavigationAction-root").forEach((button) => {
+      const hasAvatar = !!button.querySelector(".MuiAvatar-root, img[alt]");
+      if (!hasAvatar) return;
+      addUserCandidate(candidates, button.querySelector("img[alt]")?.getAttribute("alt"), "mobile-bottom-avatar-alt", "high", button);
+      addUserCandidate(candidates, button.textContent, "mobile-bottom-text", "high", button);
+    });
+
+    visibleElements("header img[alt], nav img[alt]").forEach((img) => {
+      addUserCandidate(candidates, img.getAttribute("alt"), "header-nav-img-alt", "medium", img);
+    });
+
+    return candidates;
   }
 
   function allPosts(scope = document) {
@@ -128,6 +159,13 @@
     return {
       version: VERSION,
       route: route(),
+      currentUser: currentUser(),
+      currentUserCandidates: currentUserCandidates().map((candidate) => ({
+        name: candidate.name,
+        source: candidate.source,
+        confidence: candidate.confidence,
+        rect: candidate.rect,
+      })),
       viewport: { width: window.innerWidth, height: window.innerHeight },
       counts: {
         contentItems: document.querySelectorAll(SELECTORS.contentItem).length,
@@ -153,6 +191,28 @@
 
   function visibleElements(selector, scope = document) {
     return Array.from(scope.querySelectorAll(selector)).filter(isVisible);
+  }
+
+  function addUserCandidate(candidates, value, source, confidence, node) {
+    const name = normalizeUserName(value);
+    if (!name) return;
+    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;
+    candidates.push({
+      name,
+      source,
+      confidence,
+      node,
+      rect: node ? rectInfo(node) : null,
+    });
+  }
+
+  function normalizeUserName(value) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (!text || text.length > 40) return "";
+    if (/^(menu|close|search|hledat v klubu|nastaveni|nastavení|barevne schema|barevné schéma|odhlasit|odhlásit|domů|vzkazník|oblíbené)$/i.test(text)) {
+      return "";
+    }
+    return text;
   }
 
   function isVisible(node) {

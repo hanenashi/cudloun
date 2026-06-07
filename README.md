@@ -80,12 +80,18 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.13",
+  cudlounVersion: "0.4.15",
   userAgentHint: "mobile or desktop hint"
 }
 ```
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.15 TL;DR
+
+- Added `Cudloun.babeguts.currentUser()` and `currentUserCandidates()` for live Babeta username detection.
+- Updated feedback author detection to use desktop top avatar and mobile bottom navigation avatar instead of broad page controls.
+- Ignored bad author placeholders such as `Hledat v klubu` when restoring feedback author state.
 
 ## Version 0.4.14 TL;DR
 

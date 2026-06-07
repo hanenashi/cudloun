@@ -57,7 +57,7 @@
     author.name = "author";
     author.maxLength = 40;
     author.placeholder = "Name";
-    author.value = root.storage.get("feedback.author", detectAuthor());
+    author.value = initialAuthor();
 
     const textarea = document.createElement("textarea");
     textarea.name = "text";
@@ -258,24 +258,38 @@
   }
 
   function detectAuthor() {
-    const candidates = [
-      ...Array.from(document.querySelectorAll("button[aria-label], [title], img[alt]"))
-        .map((node) => node.getAttribute("aria-label") || node.getAttribute("title") || node.getAttribute("alt")),
-      ...Array.from(document.querySelectorAll(".MuiAvatar-root, .avatar-container"))
-        .map((node) => node.textContent),
-    ];
+    const fromBabeguts = root.babeguts && typeof root.babeguts.currentUser === "function"
+      ? root.babeguts.currentUser()
+      : "";
+    if (validAuthor(fromBabeguts)) return cleanAuthor(fromBabeguts);
 
-    const ignored = /^(menu|close|search|nastaveni|nastavení|barevne schema|barevné schéma|odhlasit|odhlásit|okoun)$/i;
-    const found = candidates
-      .map((value) => String(value || "").replace(/\s+/g, " ").trim())
-      .find((value) => value && value.length <= 40 && !ignored.test(value));
+    const desktopAvatar = document.querySelector('button[aria-label="Uživatelské menu"] img[alt]');
+    if (validAuthor(desktopAvatar?.getAttribute("alt"))) return cleanAuthor(desktopAvatar.getAttribute("alt"));
 
-    return cleanAuthor(found || "Unknown");
+    const mobileAvatar = Array.from(document.querySelectorAll(".MuiBottomNavigationAction-root"))
+      .find((button) => button.querySelector(".MuiAvatar-root, img[alt]"));
+    const mobileAlt = mobileAvatar?.querySelector("img[alt]")?.getAttribute("alt");
+    if (validAuthor(mobileAlt)) return cleanAuthor(mobileAlt);
+    if (validAuthor(mobileAvatar?.textContent)) return cleanAuthor(mobileAvatar.textContent);
+
+    return "Unknown";
   }
 
   function cleanAuthor(value) {
     const text = String(value || "").replace(/\s+/g, " ").trim().slice(0, 40);
     return text || "Unknown";
+  }
+
+  function initialAuthor() {
+    const stored = root.storage.get("feedback.author", "");
+    if (validAuthor(stored)) return cleanAuthor(stored);
+    return detectAuthor();
+  }
+
+  function validAuthor(value) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (!text || text.length > 40) return false;
+    return !/^(unknown|menu|close|search|hledat v klubu|nastaveni|nastavení|barevne schema|barevné schéma|odhlasit|odhlásit|okoun|domů|vzkazník|oblíbené)$/i.test(text);
   }
 
   function userAgentHint() {
