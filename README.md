@@ -20,6 +20,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/sys-feedback.js` owns Firestore-backed per-feature feedback threads.
 - `modules/sys-menu.js` owns the Babeta avatar menu and Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
+- `modules/post-tweaks.js` owns board post layout tweaks.
 - `modules/containers.js` lists standalone live demos from `containers.json`.
 - `containers/` holds standalone tweak demos that can run from Cudloun or from a console loader.
 
@@ -44,7 +45,6 @@ A container can be:
 Current containers:
 
 - `favorite-pill-colors`: colors unread counters on `https://babeta.okoun.cz/favorites`.
-- `post-tweaks`: lets mobile users tune board post layout, spacing, dividers, background, and font size.
 
 Container files live in `containers/` and are listed in `containers.json`.
 
@@ -67,8 +67,8 @@ cudlounMeta/feedback
 cudlounThreads/framework_cudloun
 cudlounThreads/module_settoun
 cudlounThreads/module_containers
+cudlounThreads/module_post-tweaks
 cudlounThreads/container_favorite-pill-colors
-cudlounThreads/container_post-tweaks
 ```
 
 Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The intended client message shape is:
@@ -80,12 +80,18 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.15",
+  cudlounVersion: "0.4.16",
   userAgentHint: "mobile or desktop hint"
 }
 ```
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.16 TL;DR
+
+- Moved `post-tweaks` out of `containers/` and into `modules/post-tweaks.js`.
+- Added Post Tweaks as a normal Cudloun module with the same floating control panel and existing local settings key.
+- Removed Post Tweaks from the container catalog and prepared its module feedback thread.
 
 ## Version 0.4.15 TL;DR
 

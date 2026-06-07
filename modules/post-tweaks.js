@@ -1,7 +1,8 @@
-// Standalone Cudloun container: tune mobile board post layout.
+// Cudloun module: tune mobile board post layout.
 (function () {
   "use strict";
 
+  const root = window.Cudloun;
   const ID = "post-tweaks";
   const STYLE_ID = "cudloun-container-post-tweaks-style";
   const PANEL_ID = "cudloun-container-post-tweaks-panel";
@@ -63,11 +64,45 @@
 
   window.CudlounPostTweaks = api;
 
-  if (window.CudlounContainerRegistry && typeof window.CudlounContainerRegistry.register === "function") {
-    window.CudlounContainerRegistry.register(api);
-  }
+  if (root && typeof root.registerModule === "function") {
+    root.registerModule({
+      id: ID,
+      name: "Post Tweaks",
+      description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
+      version: "0.2.0",
+      defaultEnabled: false,
+      actionLabel: "Show panel",
+      start() {
+        run();
+        return stop;
+      },
+      action() {
+        run();
+      },
+      renderSettings() {
+        const wrap = document.createElement("div");
+        wrap.className = "cudloun-settings-list";
 
-  if (!window.CudlounContainerRegistry) {
+        const row = document.createElement("div");
+        row.className = "cudloun-setting-row";
+
+        const text = document.createElement("div");
+        text.className = "cudloun-setting-text";
+        text.textContent = "Post Tweaks uses its floating control panel on board pages.";
+
+        row.appendChild(text);
+        wrap.appendChild(row);
+        return wrap;
+      },
+      renderHelp() {
+        return [
+          "Enable the module on a Babeta board page to show the Post Tweaks control panel.",
+          "Existing Post Tweaks settings are kept from the old container storage key.",
+          "Use Export and Import in the floating panel to share tuned layouts.",
+        ];
+      },
+    });
+  } else {
     run();
   }
 
@@ -88,7 +123,7 @@
       observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    console.log("[cudloun-container] post tweaks active");
+    console.log("[cudloun] post tweaks active");
     return api;
   }
 
@@ -1390,7 +1425,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
-      console.warn("[cudloun-container] post tweaks settings could not be saved", error);
+      console.warn("[cudloun] post tweaks settings could not be saved", error);
     }
   }
 })();

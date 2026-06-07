@@ -204,8 +204,8 @@ Initial thread IDs:
 framework_cudloun
 module_settoun
 module_containers
+module_post-tweaks
 container_favorite-pill-colors
-container_post-tweaks
 ```
 
 `modules/sys-feedback.js` renders these threads in the Cudloun hub. Module pages get their own Feedback panel, and container cards get container-specific Feedback panels.
@@ -274,7 +274,7 @@ On mobile, the post menu is a bottom drawer/dialog. When `post-tweaks` popout mo
 
 ## Post Tweaks Relationship
 
-`containers/post-tweaks.container.js` now uses Babeguts when Cudloun is present:
+`modules/post-tweaks.js` uses Babeguts when Cudloun is present:
 
 ```text
 getBabegutsPosts()
@@ -282,19 +282,7 @@ getBabegutsParts(post)
 smallestVisibleMenu("post")
 ```
 
-It still has standalone fallbacks so the console loader can run without Cudloun.
-
-Container edits require:
-
-```text
-sha256sum containers/post-tweaks.container.js
-```
-
-Then update:
-
-```text
-containers.json
-```
+It keeps standalone fallbacks for direct console development, but it is now shipped as a normal module, not through `containers.json`.
 
 ## Useful Console Snippets
 
