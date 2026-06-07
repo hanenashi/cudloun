@@ -2,6 +2,8 @@
 
 Working notes from live Babeta/Okoun discussions. Keep this as summarized product input, not a post archive.
 
+Action mapping lives in `USER_NEEDS_PLAN.md`.
+
 ## 2026-06-07 - Malovanky a mopedy
 
 Source:
