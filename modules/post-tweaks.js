@@ -71,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.3",
+      version: "0.2.4",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -221,9 +221,7 @@
     if (!row || !content) return;
 
     const header = parts?.header || content.firstElementChild;
-    const body = parts?.body || Array.from(content.children).find((child) => {
-      return child !== header && child.textContent.trim() && !isReplyMetaNode(child) && !isHiddenBodyHelper(child);
-    });
+    const body = parts?.body || findPostBody(content, header);
     const actions =
       parts?.actions ||
       post.querySelector(`[${MARK_ACTIONS}]`) ||
@@ -249,6 +247,13 @@
   function findReplyMeta(actions) {
     if (!actions) return null;
     return Array.from(actions.querySelectorAll("span")).find((node) => isReplyMetaText(node.textContent.trim())) || null;
+  }
+
+  function findPostBody(content, header) {
+    const candidates = Array.from(content.children).filter((child) => {
+      return child !== header && child.textContent.trim() && !isReplyMetaNode(child) && !isHiddenBodyHelper(child);
+    });
+    return candidates[candidates.length - 1] || null;
   }
 
   function isReplyMetaNode(node) {

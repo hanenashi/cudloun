@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.2";
+  const VERSION = "0.1.3";
   const SELECTORS = {
     boardPost: ".content-item.board-post",
     contentItem: ".content-item",
@@ -233,9 +233,10 @@
 
   function findPostBody(content, header) {
     if (!content) return null;
-    return Array.from(content.children).find((child) => {
+    const candidates = Array.from(content.children).filter((child) => {
       return child !== header && child.textContent.trim() && !isReplyMetaNode(child) && !isHiddenBodyHelper(child);
-    }) || null;
+    });
+    return candidates[candidates.length - 1] || null;
   }
 
   function findPostActions(post) {
