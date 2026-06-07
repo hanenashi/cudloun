@@ -61,7 +61,7 @@ Purpose: prototype image display fixes for image-heavy clubs.
 
 Why second: image handling is the largest repeated need cluster and can be prototyped mostly with CSS/DOM adjustments.
 
-### 3. `nav-tweaks`
+### 3. `nav-tweaks` - shipped in 0.4.20
 
 Purpose: reduce cross-device navigation friction.
 
@@ -130,7 +130,7 @@ Cudloun can collect feedback and sometimes prototype UI around these, but native
 1. Extend `post-tweaks` with dark/unread/landscape/image sizing presets.
 2. Use `performance-probe` reports to collect measurable slow-loading evidence.
 3. Build `image-tweaks` for image-heavy clubs.
-4. Build `nav-tweaks` for cross-device action consistency.
+4. Use `nav-tweaks` feedback to decide which shortcuts deserve native placement.
 5. Build `composer-helper` after live editor selectors are sampled carefully.
 6. Build `thread-context` and `search-context` once stable post/thread/search URLs are confirmed.
 7. Add `access-helper` when there is a clean pattern for detecting Babeta load errors.

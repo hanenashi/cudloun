@@ -1,5 +1,5 @@
 {
-  "version": "0.4.19",
+  "version": "0.4.20",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-babeguts", "file": "modules/sys-babeguts.js", "required": true },
@@ -10,6 +10,7 @@
     { "id": "settoun", "file": "modules/settoun.js", "defaultEnabled": true },
     { "id": "post-tweaks", "file": "modules/post-tweaks.js", "defaultEnabled": false },
     { "id": "performance-probe", "file": "modules/performance-probe.js", "defaultEnabled": false },
+    { "id": "nav-tweaks", "file": "modules/nav-tweaks.js", "defaultEnabled": false },
     { "id": "containers", "file": "modules/containers.js", "defaultEnabled": true }
   ]
 }

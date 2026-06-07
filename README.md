@@ -22,6 +22,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/post-tweaks.js` owns board post layout tweaks.
 - `modules/performance-probe.js` owns copyable Babeta performance diagnostics.
+- `modules/nav-tweaks.js` owns consistent quick navigation shortcuts.
 - `modules/containers.js` lists standalone live demos from `containers.json`.
 - `containers/` holds standalone tweak demos that can run from Cudloun or from a console loader.
 
@@ -70,6 +71,7 @@ cudlounThreads/module_settoun
 cudlounThreads/module_containers
 cudlounThreads/module_post-tweaks
 cudlounThreads/module_performance-probe
+cudlounThreads/module_nav-tweaks
 cudlounThreads/container_favorite-pill-colors
 ```
 
@@ -88,6 +90,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.20 TL;DR
+
+- Added `nav-tweaks`, a disabled-by-default shortcut rail for consistent Babeta navigation.
+- The first version adds Home, Vzkaznik, Oblibene, board search, contribute, top, and bottom actions.
+- Shortcuts prefer native Babeta buttons when visible and use route fallbacks only when needed.
 
 ## Version 0.4.19 TL;DR
 
