@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const SELECTORS = {
     boardPost: ".content-item.board-post",
     contentItem: ".content-item",
@@ -107,7 +107,7 @@
     const body = findPostBody(content, header);
     const actions = findPostActions(post);
     const reply = post.querySelector("[data-cudloun-post-tweaks-reply]") || actions?.querySelector(SELECTORS.replyButton) || null;
-    const replyMeta = post.querySelector("[data-cudloun-post-tweaks-reply-meta]") || findReplyMeta(actions);
+    const replyMeta = post.querySelector("[data-cudloun-post-tweaks-reply-meta]") || findReplyMeta(post);
     const dateWrap = findDateWrap(header);
     const postMenuButton = findPostMenuButton(header);
 
@@ -233,7 +233,7 @@
 
   function findPostBody(content, header) {
     if (!content) return null;
-    return Array.from(content.children).find((child) => child !== header && child.textContent.trim()) || null;
+    return Array.from(content.children).find((child) => child !== header && child.textContent.trim() && !isReplyMetaNode(child)) || null;
   }
 
   function findPostActions(post) {
@@ -248,8 +248,16 @@
     if (!actions) return null;
     return Array.from(actions.querySelectorAll("span")).find((node) => {
       const text = node.textContent.trim();
-      return /^Re:\s*/.test(text) || /^Reakce na\s+/i.test(text);
+      return isReplyMetaText(text);
     }) || null;
+  }
+
+  function isReplyMetaNode(node) {
+    return isReplyMetaText(node.textContent.trim());
+  }
+
+  function isReplyMetaText(text) {
+    return /^Re:\s*/.test(text) || /^Reakce na\s+/i.test(text);
   }
 
   function findDateWrap(header) {

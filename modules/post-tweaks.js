@@ -71,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.1",
+      version: "0.2.2",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -221,13 +221,13 @@
     if (!row || !content) return;
 
     const header = parts?.header || content.firstElementChild;
-    const body = parts?.body || Array.from(content.children).find((child) => child !== header && child.textContent.trim());
+    const body = parts?.body || Array.from(content.children).find((child) => child !== header && child.textContent.trim() && !isReplyMetaNode(child));
     const actions =
       parts?.actions ||
       post.querySelector(`[${MARK_ACTIONS}]`) ||
       Array.from(post.children).find((child) => child.querySelector(".reply-button"));
     const reply = parts?.reply || post.querySelector(`[${MARK_REPLY}]`) || actions?.querySelector(".reply-button");
-    const replyMeta = parts?.replyMeta || post.querySelector(`[${MARK_REPLY_META}]`) || (actions ? findReplyMeta(actions) : null);
+    const replyMeta = parts?.replyMeta || post.querySelector(`[${MARK_REPLY_META}]`) || findReplyMeta(post);
     const dateWrap = parts?.dateWrap || findDateWrap(header);
 
     post.setAttribute(MARK_POST, "true");
@@ -245,7 +245,16 @@
   }
 
   function findReplyMeta(actions) {
-    return Array.from(actions.querySelectorAll("span")).find((node) => /^Re:\s*/.test(node.textContent.trim())) || null;
+    if (!actions) return null;
+    return Array.from(actions.querySelectorAll("span")).find((node) => isReplyMetaText(node.textContent.trim())) || null;
+  }
+
+  function isReplyMetaNode(node) {
+    return isReplyMetaText(node.textContent.trim());
+  }
+
+  function isReplyMetaText(text) {
+    return /^Re:\s*/.test(text) || /^Reakce na\s+/i.test(text);
   }
 
   function findDateWrap(header) {
@@ -874,7 +883,7 @@
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
         margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
-        font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+        font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
@@ -887,7 +896,7 @@
       }
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] {
-        font-size: calc(var(--cudloun-post-tweaks-header-scale, 88) * 1%) !important;
+        font-size: var(--cudloun-post-tweaks-header-scale, 88%) !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] * {
@@ -896,7 +905,7 @@
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}],
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}] {
-        font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+        font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}] * {
@@ -937,7 +946,7 @@
           padding-right: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           padding-bottom: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
-          font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+          font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
@@ -982,7 +991,7 @@
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_AVATAR}] .MuiAvatar-root {
           width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
           height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
-          font-size: calc(var(--cudloun-post-tweaks-avatar-size, 28px) * .42) !important;
+          font-size: var(--cudloun-post-tweaks-avatar-font-size, 12px) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] {
@@ -1014,7 +1023,7 @@
           row-gap: 0 !important;
           min-height: 0 !important;
           height: auto !important;
-          font-size: calc(var(--cudloun-post-tweaks-header-scale, 88) * 1%) !important;
+          font-size: var(--cudloun-post-tweaks-header-scale, 88%) !important;
           line-height: 1.18 !important;
           overflow-wrap: anywhere !important;
         }
@@ -1062,7 +1071,7 @@
           max-width: 100% !important;
           margin-left: 0 !important;
           padding-left: 0 !important;
-          font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+          font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
           line-height: 1.5 !important;
           overflow-wrap: anywhere !important;
         }
@@ -1109,7 +1118,7 @@
           max-width: 100% !important;
           margin-left: 0 !important;
           padding-left: 0 !important;
-          font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+          font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}][data-cudloun-post-tweaks-empty] {
@@ -1375,11 +1384,12 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-native-menu-popout", settings.nativeMenuPopout ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-avatar-menu", settings.avatarMenu ? "true" : "false");
     rootStyle.setProperty("--cudloun-post-tweaks-avatar-size", `${settings.avatarSize}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-avatar-font-size", `${Math.round(settings.avatarSize * 0.42)}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-post-spacing", `${settings.postSpacing}px`);
-    rootStyle.setProperty("--cudloun-post-tweaks-header-scale", String(settings.headerScale));
-    rootStyle.setProperty("--cudloun-post-tweaks-font-scale", String(settings.fontScale));
+    rootStyle.setProperty("--cudloun-post-tweaks-header-scale", `${settings.headerScale}%`);
+    rootStyle.setProperty("--cudloun-post-tweaks-font-scale", `${settings.fontScale}%`);
     rootStyle.setProperty("--cudloun-post-tweaks-background-color", settings.backgroundColor);
 
     const panel = document.getElementById(PANEL_ID);
