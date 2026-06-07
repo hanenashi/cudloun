@@ -284,6 +284,31 @@ smallestVisibleMenu("post")
 
 It keeps standalone fallbacks for direct console development, but it is now shipped as a normal module, not through `containers.json`.
 
+Post Tweaks is mobile-first, but some settings intentionally apply on desktop:
+
+```text
+post spacing
+dividing lines
+background color
+header/body font scale
+image max-width guard
+reply button in header/menu
+reply metadata in header
+avatar opens menu
+pop out post menu
+hide empty action rows
+```
+
+Mobile-only settings:
+
+```text
+compact card reflow
+card inset
+side padding
+avatar size
+avatar in header
+```
+
 ## Useful Console Snippets
 
 Inspect current page:

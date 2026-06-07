@@ -87,6 +87,11 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
 
+## Version 0.4.17 TL;DR
+
+- Made shared Post Tweaks controls apply on desktop too: post spacing, dividers, background color, header/body font scaling, image bounds, reply-in-header styling, hidden empty action rows, avatar opens menu, and pop-out post menu.
+- Kept compact card reflow, card inset, side padding, and avatar-in-header layout mobile-only.
+
 ## Version 0.4.16 TL;DR
 
 - Moved `post-tweaks` out of `containers/` and into `modules/post-tweaks.js`.

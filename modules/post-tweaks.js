@@ -861,6 +861,60 @@
         cursor: pointer !important;
       }
 
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
+        margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
+        font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
+        border-bottom: 1px solid rgba(79,102,134,.32) !important;
+        box-shadow: inset 0 -1px 0 rgba(79,102,134,.32) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
+        background: var(--cudloun-post-tweaks-background-color, #fff) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] {
+        font-size: calc(var(--cudloun-post-tweaks-header-scale, 88) * 1%) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] * {
+        line-height: 1.18 !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}],
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}] {
+        font-size: calc(var(--cudloun-post-tweaks-font-scale, 100) * 1%) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_BODY}] * {
+        font-size: inherit !important;
+        line-height: inherit !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] img {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-header-reply {
+        display: inline-flex !important;
+        align-items: center !important;
+        margin-left: auto !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] .cudloun-post-tweaks-header-reply [${MARK_REPLY}] {
+        min-width: 0 !important;
+        padding: 2px 6px !important;
+        font-size: .82em !important;
+        line-height: 1.1 !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ACTIONS}][data-cudloun-post-tweaks-empty] {
+        display: none !important;
+      }
+
       @media (max-width: 700px) {
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
           box-sizing: border-box !important;
