@@ -182,6 +182,8 @@ container_favorite-pill-colors
 container_post-tweaks
 ```
 
+`modules/sys-feedback.js` renders these threads in the Cudloun hub. Module pages get their own Feedback panel, and container cards get container-specific Feedback panels.
+
 Use these threads for long-form per-feature feedback, not real-time coordination. Babeta username parsing should be treated as best-effort display identity only. Do not put service account keys, Firebase Admin credentials, Okoun credentials, or Babeta invite data into Cudloun client code.
 
 Before public use, tighten Firebase rules so clients can read threads and create message docs only. Client writes should validate allowed fields and length limits, and should not allow edits or deletes.

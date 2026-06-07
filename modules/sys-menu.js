@@ -769,6 +769,14 @@
       }
     }
 
+    if (root.feedback && typeof root.feedback.renderThread === "function") {
+      panel.appendChild(root.feedback.renderThread({
+        kind: "module",
+        id: module.id,
+        name: module.name,
+      }));
+    }
+
     panel.appendChild(help);
     return panel;
   }
@@ -960,6 +968,26 @@
       .cudloun-container-card h3{margin:0 0 6px;color:#243041;font-size:1rem;letter-spacing:0}
       .cudloun-container-card p{margin:0 0 10px;color:#4b5565;line-height:1.4}
       .cudloun-container-actions{display:flex;flex-wrap:wrap;gap:8px}
+      .cudloun-feedback{max-width:680px;margin:18px 0 18px;padding:12px;border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff}
+      .cudloun-feedback-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px}
+      .cudloun-feedback h3{margin:0;color:#243041;font-size:1rem;letter-spacing:0}
+      .cudloun-feedback-meta{margin:0 0 10px;color:#697586;font-size:.78rem;line-height:1.3}
+      .cudloun-feedback-refresh{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .78rem/1.2 inherit;padding:6px 8px}
+      .cudloun-feedback-refresh:hover{background:#eef2f7}
+      .cudloun-feedback-messages{max-height:260px;overflow:auto;margin:0 0 12px;border:1px solid rgba(79,102,134,.16);border-radius:6px;background:#f8fafc}
+      .cudloun-feedback-empty{padding:12px;color:#697586}
+      .cudloun-feedback-message{padding:10px 12px;border-bottom:1px solid rgba(79,102,134,.13);background:#fff}
+      .cudloun-feedback-message:last-child{border-bottom:0}
+      .cudloun-feedback-message-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 5px}
+      .cudloun-feedback-message-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#243041;font-size:.88rem}
+      .cudloun-feedback-message-head time{flex:0 0 auto;color:#697586;font-size:.74rem}
+      .cudloun-feedback-text{white-space:pre-wrap;word-break:break-word;color:#364152;line-height:1.42}
+      .cudloun-feedback-form{display:grid;gap:8px}
+      .cudloun-feedback-author,.cudloun-feedback textarea{box-sizing:border-box;width:100%;border:1px solid rgba(79,102,134,.28);border-radius:6px;background:#fff;color:#182230;font:inherit}
+      .cudloun-feedback-author{min-height:36px;padding:0 10px}
+      .cudloun-feedback textarea{min-height:82px;resize:vertical;padding:9px 10px;line-height:1.38}
+      .cudloun-feedback-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+      .cudloun-feedback-status{min-width:0;color:#697586;font-size:.82rem}
       .cudloun-settings-list{max-width:520px;margin:0 0 18px}
       .cudloun-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:44px;padding:10px 12px;border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff;color:#243041;font-weight:650}
       .cudloun-setting-text{min-width:0}
@@ -971,7 +999,7 @@
       .cudloun-log-entry[data-level=warn]{color:#ffd18a}
       .cudloun-log-entry[data-level=debug]{color:#9fd0ff}
       .cudloun-log-entry[data-level=trace]{color:#d8c4ff}
-      @media (max-width:680px){.cudloun-backdrop{align-items:center;justify-content:center;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:calc(100vw - 16px);height:auto;max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-dialog[data-collapsed=true]{width:min(390px,calc(100vw - 16px))}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;max-height:calc(100dvh - 84px);display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
+      @media (max-width:680px){.cudloun-backdrop{align-items:center;justify-content:center;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:calc(100vw - 16px);height:auto;max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-dialog[data-collapsed=true]{width:min(390px,calc(100vw - 16px))}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;max-height:calc(100dvh - 84px);display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-feedback{margin:14px 0;padding:10px}.cudloun-feedback-messages{max-height:220px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
     `;
     document.head.appendChild(style);
   }

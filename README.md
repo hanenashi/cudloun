@@ -17,6 +17,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/core.js` boots the framework from GitHub raw URLs.
 - `modules.json` lists system modules and feature modules.
 - `modules/sys-logger.js` owns logging controls.
+- `modules/sys-feedback.js` owns Firestore-backed per-feature feedback threads.
 - `modules/sys-menu.js` owns the Babeta avatar menu and Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/containers.js` lists standalone live demos from `containers.json`.
@@ -24,7 +25,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 
 The seed loader fetches modules with a `?v=Date.now()` cache buster while the framework is under active development.
 
-The current skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a module hub, stores module enable switches in `localStorage`, includes a Debug view with recent logs, and has Settoun for framework-level settings.
+The current skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a module hub, stores module enable switches in `localStorage`, includes a Debug view with recent logs, has Settoun for framework-level settings, and shows Firestore-backed feedback threads for modules and containers.
 
 `modules/sys-babeguts.js` exposes a small Babeta DOM dictionary at `window.Cudloun.babeguts`. It starts with board-page helpers for visible posts, post parts, visible MUI menus, and a compact `inspect()` snapshot for live-page tweaking sessions.
 
@@ -51,7 +52,7 @@ For safety, Cudloun only accepts repo-local container paths shaped like `contain
 
 ## Feedback Backend
 
-Cudloun feedback/discussion threads are planned as per-framework, per-module, and per-container boards where normal users can try UI changes and leave ideas before anything is proposed upstream.
+Cudloun feedback/discussion threads are per-framework, per-module, and per-container boards where normal users can try UI changes and leave ideas before anything is proposed upstream.
 
 Firebase project:
 
@@ -85,6 +86,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.14 TL;DR
+
+- Added `sys-feedback`, a Firestore REST client for Cudloun feedback threads.
+- Added Feedback panels to module detail pages and container cards.
+- Added `firestore.googleapis.com` to the userscript connect list.
 
 ## Version 0.4.13 TL;DR
 

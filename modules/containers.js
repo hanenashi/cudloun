@@ -103,6 +103,15 @@
     card.appendChild(description);
     card.appendChild(route);
     card.appendChild(actions);
+
+    if (root.feedback && typeof root.feedback.renderThread === "function") {
+      card.appendChild(root.feedback.renderThread({
+        kind: "container",
+        id: container.id,
+        name: container.name,
+      }));
+    }
+
     return card;
   }
 
