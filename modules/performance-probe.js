@@ -4,7 +4,7 @@
 
   const root = window.Cudloun;
   const ID = "performance-probe";
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const STYLE_ID = "cudloun-performance-probe-style";
   const PANEL_ID = "cudloun-performance-probe-panel";
   const SAMPLE_LIMIT = 90;
@@ -12,12 +12,13 @@
 
   let sampleTimer = null;
   let observer = null;
+  let longTaskObserver = null;
   let firstPostAt = null;
   let firstImageCompleteAt = null;
   let maxPostsSeen = 0;
   let maxImagesSeen = 0;
   let samples = [];
-  let lastReport = null;
+  let longTasks = [];
 
   root.registerModule({
     id: ID,
@@ -72,7 +73,7 @@
     renderHelp() {
       return [
         "Enable this module on a Babeta page, reproduce slow loading or blank scrolling, then copy the report.",
-        "The report includes route, viewport, browser hints, navigation timings, post counts, image state, placeholders, and recent visible-post samples.",
+        "The report includes a short analysis plus route, viewport, browser hints, navigation timings, long tasks where available, post counts, image state, placeholders, and recent visible-post samples.",
         "It only observes the page. It does not change layout, mark posts as read, scroll the page, or send data anywhere automatically.",
       ];
     },
@@ -91,6 +92,7 @@
       maxImagesSeen = Math.max(maxImagesSeen, counts.images);
     });
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["src", "style", "class"] });
+    startLongTaskObserver(ctx);
     ctx?.log?.info?.("sampling started");
   }
 
@@ -103,6 +105,10 @@
       observer.disconnect();
       observer = null;
     }
+    if (longTaskObserver) {
+      longTaskObserver.disconnect();
+      longTaskObserver = null;
+    }
     document.getElementById(PANEL_ID)?.remove();
     document.getElementById(STYLE_ID)?.remove();
   }
@@ -113,13 +119,12 @@
     maxPostsSeen = 0;
     maxImagesSeen = 0;
     samples = [];
-    lastReport = null;
+    longTasks = [];
   }
 
   function openPanel(ctx) {
     installStyles();
     const report = makeReport("manual");
-    lastReport = report;
 
     let panel = document.getElementById(PANEL_ID);
     if (!panel) {
@@ -167,7 +172,6 @@
 
   function copyReport(ctx) {
     const report = makeReport("copy");
-    lastReport = report;
     const text = reportText(report);
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text).then(
@@ -238,6 +242,7 @@
       viewport: viewportInfo(),
       browser: browserInfo(),
       navigation,
+      analysis: analyzeReport({ navigation, counts, recent, blankSamples }),
       milestones: {
         probeStartedMs: samples[0]?.t || null,
         firstPostSeenMs: firstPostAt,
@@ -245,6 +250,7 @@
         maxPostsSeen,
         maxImagesSeen,
       },
+      longTasks: summarizeLongTasks(),
       counts,
       visiblePostStats: visiblePostStats(),
       samples: {
@@ -253,6 +259,44 @@
         recent: recent,
         blankSamplesLast30s: blankSamples,
       },
+    };
+  }
+
+  function analyzeReport(data) {
+    const probeStart = samples[0]?.t || null;
+    const firstPostDelay = probeStart !== null && firstPostAt !== null ? firstPostAt - probeStart : null;
+    const appRenderAfterLoad = firstPostAt !== null && data.navigation.loadEventEndMs !== null
+      ? firstPostAt - data.navigation.loadEventEndMs
+      : null;
+    const yValues = data.recent.map((item) => item.y);
+    const imageValues = data.recent.map((item) => item.images);
+    const scrollMoves = yValues.filter((value, index) => index > 0 && value !== yValues[index - 1]).length;
+    const imageCountChanged = imageValues.some((value, index) => index > 0 && value !== imageValues[index - 1]);
+    const longTaskSummary = summarizeLongTasks();
+    const notes = [];
+
+    if (data.blankSamples > 0) notes.push(`${data.blankSamples} recent sample(s) had no post in the main reading band.`);
+    else notes.push("No blank-scroll sample was captured in the recent window.");
+
+    if (firstPostDelay !== null) notes.push(`First post was observed ${firstPostDelay} ms after the probe started.`);
+    if (appRenderAfterLoad !== null && appRenderAfterLoad > 750) notes.push(`First post appeared ${appRenderAfterLoad} ms after loadEventEnd.`);
+    if (data.counts.pendingImages > 0) notes.push(`${data.counts.pendingImages} image(s) were still pending at capture time.`);
+    if (data.counts.brokenImages > 0) notes.push(`${data.counts.brokenImages} broken image(s) were visible to the browser.`);
+    if (imageCountChanged) notes.push("Image count changed during the recent sample window.");
+    if (scrollMoves > 0) notes.push(`Scroll position changed ${scrollMoves} time(s) in the recent sample window.`);
+    if (longTaskSummary.supported && longTaskSummary.count > 0) notes.push(`${longTaskSummary.count} long task(s) over 50 ms were observed.`);
+    if (!longTaskSummary.supported) notes.push("Long-task timing is not exposed by this browser.");
+
+    return {
+      blankSamplesLast30s: data.blankSamples,
+      firstPostDelayAfterProbeStartMs: firstPostDelay,
+      firstPostAfterLoadEventMs: appRenderAfterLoad,
+      scrollMovesLast30s: scrollMoves,
+      imageCountChangedLast30s: imageCountChanged,
+      verdict: data.blankSamples > 0 || data.counts.pendingImages > 0 || longTaskSummary.totalDurationMs > 250
+        ? "issue-observed"
+        : "no-issue-observed",
+      notes,
     };
   }
 
@@ -331,7 +375,18 @@
 
   function navigationTiming() {
     const nav = performance.getEntriesByType?.("navigation")?.[0];
-    if (!nav) return {};
+    if (!nav) {
+      return {
+        type: "",
+        responseEndMs: null,
+        domInteractiveMs: null,
+        domContentLoadedMs: null,
+        loadEventEndMs: null,
+        transferSize: 0,
+        encodedBodySize: 0,
+        decodedBodySize: 0,
+      };
+    }
     const start = nav.startTime || 0;
     return {
       type: nav.type || "",
@@ -372,6 +427,48 @@
     };
   }
 
+  function startLongTaskObserver(ctx) {
+    if (!("PerformanceObserver" in window)) return;
+    try {
+      longTaskObserver = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          longTasks.push({
+            startMs: Math.round(entry.startTime),
+            durationMs: Math.round(entry.duration),
+            name: entry.name || "",
+          });
+        });
+        if (longTasks.length > 120) longTasks = longTasks.slice(-120);
+      });
+      longTaskObserver.observe({ entryTypes: ["longtask"] });
+    } catch (error) {
+      longTaskObserver = null;
+      ctx?.log?.debug?.("longtask observer unavailable", error);
+    }
+  }
+
+  function summarizeLongTasks() {
+    const supported = !!longTaskObserver || longTasks.length > 0 || supportsLongTask();
+    const totalDurationMs = longTasks.reduce((sum, item) => sum + item.durationMs, 0);
+    const maxDurationMs = longTasks.reduce((max, item) => Math.max(max, item.durationMs), 0);
+    return {
+      supported,
+      count: longTasks.length,
+      totalDurationMs,
+      maxDurationMs,
+      recent: longTasks.slice(-20),
+    };
+  }
+
+  function supportsLongTask() {
+    try {
+      return Array.isArray(PerformanceObserver.supportedEntryTypes) &&
+        PerformanceObserver.supportedEntryTypes.includes("longtask");
+    } catch (error) {
+      return false;
+    }
+  }
+
   function reportText(report) {
     return [
       "Cudloun Performance Probe",
@@ -382,6 +479,13 @@
       `images: ${report.counts.loadedImages}/${report.counts.images} loaded, ${report.counts.pendingImages} pending, ${report.counts.brokenImages} broken`,
       `placeholders: ${report.counts.placeholders}`,
       `blank main-band samples last 30s: ${report.samples.blankSamplesLast30s}`,
+      `verdict: ${report.analysis.verdict}`,
+      `first post after probe start: ${formatMs(report.analysis.firstPostDelayAfterProbeStartMs)}`,
+      `first post after load event: ${formatMs(report.analysis.firstPostAfterLoadEventMs)}`,
+      `long tasks: ${report.longTasks.supported ? `${report.longTasks.count} / ${report.longTasks.totalDurationMs} ms total` : "not exposed"}`,
+      "",
+      "Analysis:",
+      ...report.analysis.notes.map((note) => `- ${note}`),
       "",
       JSON.stringify(report, null, 2),
     ].join("\n");
@@ -406,6 +510,10 @@
 
   function roundTiming(value) {
     return Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
+  }
+
+  function formatMs(value) {
+    return Number.isFinite(value) ? `${value} ms` : "n/a";
   }
 
   function installStyles() {

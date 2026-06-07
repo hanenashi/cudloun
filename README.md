@@ -89,6 +89,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
 
+## Version 0.4.19 TL;DR
+
+- Improved `performance-probe` reports with a short analysis block and verdict.
+- Added derived timing notes, scroll movement/image-count changes, and long-task totals where the browser exposes them.
+- A report with `seedVersion` older than the manifest means the installed seed userscript is stale, but modules can still update through the manifest loader.
+
 ## Version 0.4.18 TL;DR
 
 - Added `performance-probe`, a disabled-by-default module for copyable Babeta diagnostics.
