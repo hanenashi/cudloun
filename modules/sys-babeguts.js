@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.1";
+  const VERSION = "0.1.2";
   const SELECTORS = {
     boardPost: ".content-item.board-post",
     contentItem: ".content-item",
@@ -233,7 +233,9 @@
 
   function findPostBody(content, header) {
     if (!content) return null;
-    return Array.from(content.children).find((child) => child !== header && child.textContent.trim() && !isReplyMetaNode(child)) || null;
+    return Array.from(content.children).find((child) => {
+      return child !== header && child.textContent.trim() && !isReplyMetaNode(child) && !isHiddenBodyHelper(child);
+    }) || null;
   }
 
   function findPostActions(post) {
@@ -258,6 +260,15 @@
 
   function isReplyMetaText(text) {
     return /^Re:\s*/.test(text) || /^Reakce na\s+/i.test(text);
+  }
+
+  function isHiddenBodyHelper(node) {
+    const text = normalizeText(node.textContent || "");
+    if (/^Načítám…?Přejít na příspěvek$/i.test(text)) return true;
+
+    const rect = node.getBoundingClientRect();
+    const style = window.getComputedStyle(node);
+    return style.display === "none" || style.visibility === "hidden" || rect.height <= 0 || rect.width <= 0;
   }
 
   function findDateWrap(header) {

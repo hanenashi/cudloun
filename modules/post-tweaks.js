@@ -71,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.2",
+      version: "0.2.3",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -221,7 +221,9 @@
     if (!row || !content) return;
 
     const header = parts?.header || content.firstElementChild;
-    const body = parts?.body || Array.from(content.children).find((child) => child !== header && child.textContent.trim() && !isReplyMetaNode(child));
+    const body = parts?.body || Array.from(content.children).find((child) => {
+      return child !== header && child.textContent.trim() && !isReplyMetaNode(child) && !isHiddenBodyHelper(child);
+    });
     const actions =
       parts?.actions ||
       post.querySelector(`[${MARK_ACTIONS}]`) ||
@@ -255,6 +257,19 @@
 
   function isReplyMetaText(text) {
     return /^Re:\s*/.test(text) || /^Reakce na\s+/i.test(text);
+  }
+
+  function isHiddenBodyHelper(node) {
+    const text = normalizeText(node.textContent || "");
+    if (/^Načítám…?Přejít na příspěvek$/i.test(text)) return true;
+
+    const rect = node.getBoundingClientRect();
+    const style = window.getComputedStyle(node);
+    return style.display === "none" || style.visibility === "hidden" || rect.height <= 0 || rect.width <= 0;
+  }
+
+  function normalizeText(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
   }
 
   function findDateWrap(header) {
