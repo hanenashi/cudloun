@@ -84,7 +84,7 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.22",
+  cudlounVersion: "0.4.23",
   userAgentHint: "mobile or desktop hint",
   parentId: "optional parent message document id",
   parentAuthor: "optional parent author label",
@@ -93,6 +93,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Babeta user, and for all messages when the visible user is `Blasnik`. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.23 TL;DR
+
+- Post Tweaks now remembers when its floating panel is hidden.
+- Saved Post Tweaks layout still applies after reload while the panel stays hidden.
+- Use the Post Tweaks module action to show the panel again manually.
 
 ## Version 0.4.22 TL;DR
 

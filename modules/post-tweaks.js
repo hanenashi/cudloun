@@ -34,6 +34,7 @@
 
   const defaults = {
     enabled: true,
+    panelVisible: true,
     avatarInline: false,
     divider: false,
     background: false,
@@ -59,6 +60,7 @@
     id: ID,
     name: "Post Tweaks",
     run,
+    showPanel,
     stop,
   };
 
@@ -69,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.0",
+      version: "0.2.1",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -77,7 +79,7 @@
         return stop;
       },
       action() {
-        run();
+        showPanel();
       },
       renderSettings() {
         const wrap = document.createElement("div");
@@ -96,7 +98,8 @@
       },
       renderHelp() {
         return [
-          "Enable the module on a Babeta board page to show the Post Tweaks control panel.",
+          "Enable the module on a Babeta board page to apply the saved Post Tweaks layout.",
+          "Use Show panel from this module when you want to reopen the floating controls after hiding them.",
           "Existing Post Tweaks settings are kept from the old container storage key.",
           "Use Export and Import in the floating panel to share tuned layouts.",
         ];
@@ -110,7 +113,7 @@
 
   function run() {
     installStyles();
-    installPanel();
+    if (settings.panelVisible !== false) installPanel();
     if (!nativePopoutListenerInstalled) {
       document.addEventListener("pointerdown", handleNativePopoutOutside, true);
       nativePopoutListenerInstalled = true;
@@ -125,6 +128,14 @@
 
     console.log("[cudloun] post tweaks active");
     return api;
+  }
+
+  function showPanel() {
+    settings.panelVisible = true;
+    saveSettings();
+    run();
+    installPanel();
+    applySettings();
   }
 
   function stop() {
@@ -1244,6 +1255,8 @@
     });
 
     panel.querySelector("[data-action='hide']").addEventListener("click", () => {
+      settings.panelVisible = false;
+      saveSettings();
       panel.remove();
     });
 
