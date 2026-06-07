@@ -3,11 +3,12 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.2.0";
+  const VERSION = "0.3.0";
   const PROJECT_ID = "murkypond-vault-fc61c";
   const REST_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
   const MAX_TEXT_LENGTH = 1200;
   const PAGE_SIZE = 80;
+  const ADMIN_AUTHORS = new Set(["blasnik"]);
 
   root.feedback = {
     version: VERSION,
@@ -200,6 +201,15 @@
     reply.textContent = "Reply";
     reply.addEventListener("click", () => setReplyTarget(wrap, message));
     actions.appendChild(reply);
+
+    if (canDeleteMessage(message)) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "cudloun-feedback-delete";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => deleteMessage(wrap, message, remove));
+      actions.appendChild(remove);
+    }
     item.appendChild(actions);
 
     const replies = children.get(message.id) || [];
@@ -314,6 +324,37 @@
     }
   }
 
+  async function deleteMessage(wrap, message, button) {
+    const threadId = wrap.dataset.threadId;
+    if (!threadId || !message.id || !canDeleteMessage(message)) return;
+    if (!window.confirm(`Delete feedback from ${message.author || "Unknown"}?`)) return;
+
+    const status = wrap.querySelector(".cudloun-feedback-status");
+    if (button) button.disabled = true;
+    if (status) status.textContent = "Deleting...";
+
+    try {
+      await requestJson(`${REST_BASE}/cudlounThreads/${encodeURIComponent(threadId)}/messages/${encodeURIComponent(message.id)}`, {
+        method: "DELETE",
+      });
+      if (status) status.textContent = "Deleted.";
+      await loadMessages({ threadId }, wrap);
+      window.setTimeout(() => {
+        if (status?.textContent === "Deleted.") status.textContent = "";
+      }, 1800);
+    } catch (error) {
+      root.log.warn("feedback", "delete failed", threadId, message.id, error);
+      if (status) status.textContent = "Delete failed.";
+      if (button) button.disabled = false;
+    }
+  }
+
+  function canDeleteMessage(message) {
+    const current = normalizedAuthor(detectAuthor());
+    if (!current) return false;
+    return ADMIN_AUTHORS.has(current) || current === normalizedAuthor(message.author);
+  }
+
   function parentFields(form) {
     const parentId = String(form?.dataset?.parentId || "").trim();
     if (!parentId) return { parentId: "", firestoreFields: {} };
@@ -334,7 +375,10 @@
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    return response.json();
+    if (response.status === 204) return {};
+    const text = await response.text();
+    if (!text) return {};
+    return JSON.parse(text);
   }
 
   function documentToMessage(doc) {
@@ -412,6 +456,15 @@
     const text = String(value || "").replace(/\s+/g, " ").trim();
     if (!text || text.length > 40) return false;
     return !/^(unknown|menu|close|search|hledat v klubu|nastaveni|nastavení|barevne schema|barevné schéma|odhlasit|odhlásit|okoun|domů|vzkazník|oblíbené)$/i.test(text);
+  }
+
+  function normalizedAuthor(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
   }
 
   function userAgentHint() {

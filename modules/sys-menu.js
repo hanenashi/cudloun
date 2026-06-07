@@ -990,6 +990,9 @@
       .cudloun-feedback-message-actions{display:flex;justify-content:flex-end;margin:7px 0 0}
       .cudloun-feedback-message-actions button,.cudloun-feedback-reply-target button{appearance:none;border:1px solid rgba(79,102,134,.22);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .74rem/1.2 inherit;padding:5px 7px}
       .cudloun-feedback-message-actions button:hover,.cudloun-feedback-reply-target button:hover{background:#eef2f7}
+      .cudloun-feedback-message-actions button:disabled{opacity:.55;cursor:default}
+      .cudloun-feedback-message-actions .cudloun-feedback-delete{border-color:rgba(180,35,24,.22);background:#fff5f4;color:#b42318}
+      .cudloun-feedback-message-actions .cudloun-feedback-delete:hover{background:#ffe7e5}
       .cudloun-feedback-replies{margin:8px 0 0}
       .cudloun-feedback-form{display:grid;gap:8px}
       .cudloun-feedback-reply-target{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;padding:7px 8px;border:1px solid rgba(8,126,164,.22);border-radius:6px;background:#eef8fb;color:#364152;font-size:.8rem}
