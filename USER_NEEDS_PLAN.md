@@ -37,14 +37,14 @@ These should be the next low-risk changes because they extend `post-tweaks` rath
 
 These needs do not belong in `post-tweaks` because they touch navigation, compose flows, search, or instrumentation.
 
-### 1. `performance-probe`
+### 1. `performance-probe` - shipped in 0.4.18
 
 Purpose: collect reproducible performance evidence from users.
 
-- Measure time from page navigation to first visible post.
-- Measure skeleton/placeholder lifetime where detectable.
-- Detect blank-scroll gaps by sampling visible post count during scroll.
-- Count visible posts, images, and loaded image placeholders.
+- Measure navigation timing and first observed post/image milestones.
+- Measure skeleton/placeholder count where detectable.
+- Detect blank-scroll symptoms by sampling visible post count during user scroll.
+- Count visible posts, total posts, images, loaded images, pending images, and broken images.
 - Provide a copyable report users can paste into Cudloun feedback or Okoun boards.
 
 Why first: users repeatedly report performance, but admin needs concrete device/page evidence. This module is low-risk because it observes instead of changing Babeta behavior.
@@ -128,7 +128,7 @@ Cudloun can collect feedback and sometimes prototype UI around these, but native
 ## Suggested Target Order
 
 1. Extend `post-tweaks` with dark/unread/landscape/image sizing presets.
-2. Build `performance-probe` so user complaints become measurable reports.
+2. Use `performance-probe` reports to collect measurable slow-loading evidence.
 3. Build `image-tweaks` for image-heavy clubs.
 4. Build `nav-tweaks` for cross-device action consistency.
 5. Build `composer-helper` after live editor selectors are sampled carefully.

@@ -21,6 +21,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/sys-menu.js` owns the Babeta avatar menu and Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/post-tweaks.js` owns board post layout tweaks.
+- `modules/performance-probe.js` owns copyable Babeta performance diagnostics.
 - `modules/containers.js` lists standalone live demos from `containers.json`.
 - `containers/` holds standalone tweak demos that can run from Cudloun or from a console loader.
 
@@ -68,6 +69,7 @@ cudlounThreads/framework_cudloun
 cudlounThreads/module_settoun
 cudlounThreads/module_containers
 cudlounThreads/module_post-tweaks
+cudlounThreads/module_performance-probe
 cudlounThreads/container_favorite-pill-colors
 ```
 
@@ -86,6 +88,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.18 TL;DR
+
+- Added `performance-probe`, a disabled-by-default module for copyable Babeta diagnostics.
+- The probe samples route, viewport, browser hints, navigation timings, post counts, image state, placeholders, and recent blank-scroll symptoms.
+- Reports stay local until the user copies them into feedback or a board post.
 
 ## Version 0.4.17 TL;DR
 
