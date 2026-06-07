@@ -3,11 +3,11 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.0";
+  const VERSION = "0.2.0";
   const PROJECT_ID = "murkypond-vault-fc61c";
   const REST_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
   const MAX_TEXT_LENGTH = 1200;
-  const PAGE_SIZE = 40;
+  const PAGE_SIZE = 80;
 
   root.feedback = {
     version: VERSION,
@@ -65,6 +65,20 @@
     textarea.rows = 3;
     textarea.placeholder = "Idea, bug, or note...";
 
+    const replyBanner = document.createElement("div");
+    replyBanner.className = "cudloun-feedback-reply-target";
+    replyBanner.hidden = true;
+
+    const replyText = document.createElement("span");
+
+    const cancelReply = document.createElement("button");
+    cancelReply.type = "button";
+    cancelReply.textContent = "Cancel";
+    cancelReply.addEventListener("click", () => clearReplyTarget(form, textarea));
+
+    replyBanner.appendChild(replyText);
+    replyBanner.appendChild(cancelReply);
+
     const actions = document.createElement("div");
     actions.className = "cudloun-feedback-actions";
 
@@ -79,12 +93,13 @@
     actions.appendChild(status);
     actions.appendChild(submit);
     form.appendChild(author);
+    form.appendChild(replyBanner);
     form.appendChild(textarea);
     form.appendChild(actions);
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      sendMessage(normalized, author, textarea, submit, status, wrap);
+      sendMessage(normalized, author, textarea, submit, status, wrap, form);
     });
 
     wrap.appendChild(header);
@@ -106,7 +121,7 @@
       const url = `${REST_BASE}/cudlounThreads/${encodeURIComponent(target.threadId)}/messages?orderBy=ts%20desc&pageSize=${PAGE_SIZE}`;
       const data = await requestJson(url);
       const messages = (data.documents || []).map(documentToMessage).filter(Boolean).reverse();
-      renderMessages(box, messages);
+      renderMessages(box, messages, wrap);
     } catch (error) {
       root.log.warn("feedback", "ordered load failed", target.threadId, error);
       try {
@@ -114,7 +129,7 @@
         const data = await requestJson(fallbackUrl);
         const messages = (data.documents || []).map(documentToMessage).filter(Boolean)
           .sort((a, b) => (a.ts || 0) - (b.ts || 0));
-        renderMessages(box, messages);
+        renderMessages(box, messages, wrap);
       } catch (fallbackError) {
         root.log.warn("feedback", "load failed", target.threadId, fallbackError);
         box.textContent = "Feedback could not be loaded.";
@@ -122,7 +137,7 @@
     }
   }
 
-  function renderMessages(box, messages) {
+  function renderMessages(box, messages, wrap) {
     box.innerHTML = "";
 
     if (!messages.length) {
@@ -133,36 +148,123 @@
       return;
     }
 
-    messages.forEach((message) => {
-      const item = document.createElement("article");
-      item.className = "cudloun-feedback-message";
-
-      const head = document.createElement("div");
-      head.className = "cudloun-feedback-message-head";
-
-      const author = document.createElement("strong");
-      author.textContent = message.author || "Unknown";
-
-      const time = document.createElement("time");
-      time.textContent = formatTime(message.ts);
-
-      const text = document.createElement("div");
-      text.className = "cudloun-feedback-text";
-      text.textContent = message.text || "";
-
-      head.appendChild(author);
-      head.appendChild(time);
-      item.appendChild(head);
-      item.appendChild(text);
-      box.appendChild(item);
+    const tree = messageTree(messages);
+    tree.roots.forEach((message) => {
+      box.appendChild(renderMessage(message, tree.children, wrap, 0, new Set()));
     });
 
     box.scrollTop = box.scrollHeight;
   }
 
-  async function sendMessage(target, authorInput, textarea, submit, status, wrap) {
+  function renderMessage(message, children, wrap, depth, trail) {
+    if (trail.has(message.id)) return document.createTextNode("");
+    const nextTrail = new Set(trail);
+    nextTrail.add(message.id);
+
+    const item = document.createElement("article");
+    item.className = "cudloun-feedback-message";
+    item.dataset.messageId = message.id;
+    item.dataset.depth = String(Math.min(depth, 3));
+    if (message.parentId) item.dataset.reply = "true";
+
+    const head = document.createElement("div");
+    head.className = "cudloun-feedback-message-head";
+
+    const author = document.createElement("strong");
+    author.textContent = message.author || "Unknown";
+
+    const time = document.createElement("time");
+    time.textContent = formatTime(message.ts);
+
+    head.appendChild(author);
+    head.appendChild(time);
+    item.appendChild(head);
+
+    if (message.parentId) {
+      const parent = document.createElement("div");
+      parent.className = "cudloun-feedback-parent";
+      parent.textContent = message.parentAuthor ? `Reply to ${message.parentAuthor}` : "Reply";
+      item.appendChild(parent);
+    }
+
+    const text = document.createElement("div");
+    text.className = "cudloun-feedback-text";
+    text.textContent = message.text || "";
+    item.appendChild(text);
+
+    const actions = document.createElement("div");
+    actions.className = "cudloun-feedback-message-actions";
+
+    const reply = document.createElement("button");
+    reply.type = "button";
+    reply.textContent = "Reply";
+    reply.addEventListener("click", () => setReplyTarget(wrap, message));
+    actions.appendChild(reply);
+    item.appendChild(actions);
+
+    const replies = children.get(message.id) || [];
+    if (replies.length) {
+      const replyList = document.createElement("div");
+      replyList.className = "cudloun-feedback-replies";
+      replies.forEach((child) => {
+        replyList.appendChild(renderMessage(child, children, wrap, depth + 1, nextTrail));
+      });
+      item.appendChild(replyList);
+    }
+
+    return item;
+  }
+
+  function messageTree(messages) {
+    const byId = new Map(messages.map((message) => [message.id, message]));
+    const children = new Map();
+    const roots = [];
+
+    messages.forEach((message) => {
+      if (message.parentId && byId.has(message.parentId)) {
+        if (!children.has(message.parentId)) children.set(message.parentId, []);
+        children.get(message.parentId).push(message);
+      } else {
+        roots.push(message);
+      }
+    });
+
+    if (!roots.length && messages.length) roots.push(...messages);
+
+    children.forEach((items) => items.sort((a, b) => (a.ts || 0) - (b.ts || 0)));
+    roots.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    return { roots, children };
+  }
+
+  function setReplyTarget(wrap, message) {
+    const form = wrap.querySelector(".cudloun-feedback-form");
+    const textarea = form?.querySelector("textarea");
+    const banner = form?.querySelector(".cudloun-feedback-reply-target");
+    const label = banner?.querySelector("span");
+    if (!form || !textarea || !banner || !label) return;
+
+    form.dataset.parentId = message.id;
+    form.dataset.parentAuthor = message.author || "Unknown";
+    form.dataset.parentExcerpt = excerpt(message.text);
+    label.textContent = `Replying to ${message.author || "Unknown"}: ${excerpt(message.text)}`;
+    banner.hidden = false;
+    textarea.placeholder = "Reply...";
+    textarea.focus();
+  }
+
+  function clearReplyTarget(form, textarea) {
+    delete form.dataset.parentId;
+    delete form.dataset.parentAuthor;
+    delete form.dataset.parentExcerpt;
+    const banner = form.querySelector(".cudloun-feedback-reply-target");
+    if (banner) banner.hidden = true;
+    if (textarea) textarea.placeholder = "Idea, bug, or note...";
+  }
+
+  async function sendMessage(target, authorInput, textarea, submit, status, wrap, form) {
     const author = cleanAuthor(authorInput.value || detectAuthor());
     const text = String(textarea.value || "").trim();
+    const parent = parentFields(form);
 
     if (!text) {
       status.textContent = "Write something first.";
@@ -185,18 +287,20 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fields: {
-            schemaVersion: { integerValue: 1 },
+            schemaVersion: { integerValue: parent.parentId ? 2 : 1 },
             author: { stringValue: author },
             text: { stringValue: text },
             ts: { integerValue: String(Date.now()) },
             route: { stringValue: root.currentRoute() },
             cudlounVersion: { stringValue: root.version || "" },
             userAgentHint: { stringValue: userAgentHint() },
+            ...parent.firestoreFields,
           },
         }),
       });
 
       textarea.value = "";
+      clearReplyTarget(form, textarea);
       status.textContent = "Sent.";
       await loadMessages(target, wrap);
       window.setTimeout(() => {
@@ -208,6 +312,21 @@
     } finally {
       submit.disabled = false;
     }
+  }
+
+  function parentFields(form) {
+    const parentId = String(form?.dataset?.parentId || "").trim();
+    if (!parentId) return { parentId: "", firestoreFields: {} };
+    const parentAuthor = cleanAuthor(form.dataset.parentAuthor || "Unknown");
+    const parentExcerpt = excerpt(form.dataset.parentExcerpt || "");
+    return {
+      parentId,
+      firestoreFields: {
+        parentId: { stringValue: parentId },
+        parentAuthor: { stringValue: parentAuthor },
+        parentExcerpt: { stringValue: parentExcerpt },
+      },
+    };
   }
 
   async function requestJson(url, options) {
@@ -228,6 +347,9 @@
       route: fieldValue(doc.fields.route) || "",
       cudlounVersion: fieldValue(doc.fields.cudlounVersion) || "",
       userAgentHint: fieldValue(doc.fields.userAgentHint) || "",
+      parentId: fieldValue(doc.fields.parentId) || "",
+      parentAuthor: fieldValue(doc.fields.parentAuthor) || "",
+      parentExcerpt: fieldValue(doc.fields.parentExcerpt) || "",
     };
   }
 
@@ -295,6 +417,10 @@
   function userAgentHint() {
     const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
     return `${coarse ? "mobile" : "desktop"} ${window.innerWidth}x${window.innerHeight}`;
+  }
+
+  function excerpt(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().slice(0, 120);
   }
 
   function formatTime(ts) {

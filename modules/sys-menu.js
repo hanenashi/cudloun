@@ -978,11 +978,23 @@
       .cudloun-feedback-empty{padding:12px;color:#697586}
       .cudloun-feedback-message{padding:10px 12px;border-bottom:1px solid rgba(79,102,134,.13);background:#fff}
       .cudloun-feedback-message:last-child{border-bottom:0}
+      .cudloun-feedback-message[data-reply=true]{border-left:3px solid rgba(8,126,164,.28)}
+      .cudloun-feedback-message[data-depth="1"]{margin-left:12px}
+      .cudloun-feedback-message[data-depth="2"]{margin-left:24px}
+      .cudloun-feedback-message[data-depth="3"]{margin-left:36px}
       .cudloun-feedback-message-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 5px}
       .cudloun-feedback-message-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#243041;font-size:.88rem}
       .cudloun-feedback-message-head time{flex:0 0 auto;color:#697586;font-size:.74rem}
+      .cudloun-feedback-parent{margin:0 0 5px;color:#697586;font-size:.76rem;line-height:1.25}
       .cudloun-feedback-text{white-space:pre-wrap;word-break:break-word;color:#364152;line-height:1.42}
+      .cudloun-feedback-message-actions{display:flex;justify-content:flex-end;margin:7px 0 0}
+      .cudloun-feedback-message-actions button,.cudloun-feedback-reply-target button{appearance:none;border:1px solid rgba(79,102,134,.22);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .74rem/1.2 inherit;padding:5px 7px}
+      .cudloun-feedback-message-actions button:hover,.cudloun-feedback-reply-target button:hover{background:#eef2f7}
+      .cudloun-feedback-replies{margin:8px 0 0}
       .cudloun-feedback-form{display:grid;gap:8px}
+      .cudloun-feedback-reply-target{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;padding:7px 8px;border:1px solid rgba(8,126,164,.22);border-radius:6px;background:#eef8fb;color:#364152;font-size:.8rem}
+      .cudloun-feedback-reply-target[hidden]{display:none}
+      .cudloun-feedback-reply-target span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .cudloun-feedback-author,.cudloun-feedback textarea{box-sizing:border-box;width:100%;border:1px solid rgba(79,102,134,.28);border-radius:6px;background:#fff;color:#182230;font:inherit}
       .cudloun-feedback-author{min-height:36px;padding:0 10px}
       .cudloun-feedback textarea{min-height:82px;resize:vertical;padding:9px 10px;line-height:1.38}

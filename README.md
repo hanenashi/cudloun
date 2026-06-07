@@ -84,12 +84,21 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.16",
-  userAgentHint: "mobile or desktop hint"
+  cudlounVersion: "0.4.21",
+  userAgentHint: "mobile or desktop hint",
+  parentId: "optional parent message document id",
+  parentAuthor: "optional parent author label",
+  parentExcerpt: "optional short parent text excerpt"
 }
 ```
 
-The visible Babeta username is convenience identity, not authentication. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.21 TL;DR
+
+- Added replies to Cudloun feedback messages.
+- Feedback panels now render simple nested threads while keeping old top-level messages valid.
+- Reply messages store optional parent metadata for lightweight context.
 
 ## Version 0.4.20 TL;DR
 
