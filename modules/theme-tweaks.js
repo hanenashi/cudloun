@@ -4,10 +4,11 @@
 
   const root = window.Cudloun;
   const ID = "theme-tweaks";
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const STYLE_ID = "cudloun-theme-tweaks-style";
   const STORAGE_KEY = "cudloun.module.themeTweaks.v1";
   const UNREAD_MARK = "data-cudloun-theme-unread-pill";
+  const RAIL_MARK = "data-cudloun-theme-rail";
 
   const presets = {
     pond: {
@@ -154,9 +155,19 @@
     installStyles();
     applyTheme();
     scanUnreadPills();
+    scanThemeRails();
     if (!observer) {
-      observer = new MutationObserver(() => scanUnreadPills());
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      observer = new MutationObserver(() => {
+        scanUnreadPills();
+        scanThemeRails();
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["class", "style"],
+      });
     }
   }
 
@@ -166,6 +177,7 @@
       observer = null;
     }
     document.querySelectorAll(`[${UNREAD_MARK}]`).forEach((node) => node.removeAttribute(UNREAD_MARK));
+    document.querySelectorAll(`[${RAIL_MARK}]`).forEach((node) => node.removeAttribute(RAIL_MARK));
     document.getElementById(STYLE_ID)?.remove();
     document.documentElement.removeAttribute("data-cudloun-theme-tweaks-enabled");
     document.documentElement.removeAttribute("data-cudloun-theme-tweaks-preset");
@@ -304,6 +316,11 @@
         box-shadow: none !important;
       }
 
+      html[data-cudloun-theme-tweaks-enabled="true"] [${RAIL_MARK}] {
+        background-image: none !important;
+        background-color: transparent !important;
+      }
+
       html[data-cudloun-theme-tweaks-enabled="true"] [${UNREAD_MARK}] {
         background: color-mix(in srgb, var(--cudloun-theme-accent) 18%, var(--cudloun-theme-surface)) !important;
         color: var(--cudloun-theme-accent) !important;
@@ -377,6 +394,7 @@
     }).forEach(([name, value]) => {
       document.documentElement.style.setProperty(name, value);
     });
+    scanThemeRails();
   }
 
   function scanUnreadPills() {
@@ -385,6 +403,30 @@
       const chip = label.closest(".MuiChip-root") || label.parentElement;
       if (chip) chip.setAttribute(UNREAD_MARK, "true");
     });
+  }
+
+  function scanThemeRails() {
+    document.querySelectorAll(`[${RAIL_MARK}]`).forEach((node) => {
+      if (!isThemeRail(node)) node.removeAttribute(RAIL_MARK);
+    });
+
+    document.querySelectorAll(".MuiBox-root").forEach((node) => {
+      if (isThemeRail(node) && node.getAttribute(RAIL_MARK) !== "true") node.setAttribute(RAIL_MARK, "true");
+    });
+  }
+
+  function isThemeRail(node) {
+    if (!(node instanceof HTMLElement)) return false;
+
+    const style = getComputedStyle(node);
+    if (style.position !== "fixed") return false;
+    if (Number.parseInt(style.zIndex, 10) < 9000) return false;
+    if (!style.backgroundImage.includes("linear-gradient")) return false;
+    if (!style.backgroundImage.includes("to right")) return false;
+    if (!style.backgroundImage.includes("calc(100% - 12px)")) return false;
+
+    const rect = node.getBoundingClientRect();
+    return rect.width >= document.documentElement.clientWidth - 4 && rect.height >= window.innerHeight * 0.75;
   }
 
   function loadSettings() {
