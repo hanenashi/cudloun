@@ -9,6 +9,7 @@
   const STORAGE_KEY = "cudloun.container.postTweaks.v1";
   const LEGACY_STORAGE_KEY = "cudloun.container.textWidth.v1";
   const MARK_POST = "data-cudloun-post-tweaks-post";
+  const MARK_FIRST_POST = "data-cudloun-post-tweaks-first-post";
   const MARK_ROW = "data-cudloun-post-tweaks-row";
   const MARK_AVATAR = "data-cudloun-post-tweaks-avatar";
   const MARK_CONTENT = "data-cudloun-post-tweaks-content";
@@ -37,8 +38,13 @@
     panelVisible: true,
     avatarInline: false,
     divider: false,
+    dividerDashed: false,
+    dividerWidth: 1,
+    dividerColor: "#000000",
     background: false,
     backgroundColor: "#ffffff",
+    rounded: false,
+    radius: 0,
     avatarSize: 28,
     cardInset: 0,
     sidePadding: 4,
@@ -71,7 +77,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.6",
+      version: "0.2.7",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -154,6 +160,7 @@
 
     document.querySelectorAll([
       `[${MARK_POST}]`,
+      `[${MARK_FIRST_POST}]`,
       `[${MARK_ROW}]`,
       `[${MARK_AVATAR}]`,
       `[${MARK_CONTENT}]`,
@@ -171,6 +178,7 @@
       `[${MARK_DATE_WRAP}]`,
     ].join(",")).forEach((node) => {
       node.removeAttribute(MARK_POST);
+      node.removeAttribute(MARK_FIRST_POST);
       node.removeAttribute(MARK_ROW);
       node.removeAttribute(MARK_AVATAR);
       node.removeAttribute(MARK_CONTENT);
@@ -196,7 +204,9 @@
       "data-cudloun-post-tweaks-enabled",
       "data-cudloun-post-tweaks-avatar-inline",
       "data-cudloun-post-tweaks-divider",
+      "data-cudloun-post-tweaks-divider-dashed",
       "data-cudloun-post-tweaks-background",
+      "data-cudloun-post-tweaks-rounded",
       "data-cudloun-post-tweaks-reply-placement",
       "data-cudloun-post-tweaks-reply-meta-header",
       "data-cudloun-post-tweaks-native-menu-popout",
@@ -206,13 +216,13 @@
   }
 
   function scan() {
-    getBabegutsPosts().forEach((post) => {
-      markPost(post);
+    getBabegutsPosts().forEach((post, index) => {
+      markPost(post, index);
       arrangePost(post);
     });
   }
 
-  function markPost(post) {
+  function markPost(post, index = 0) {
     const parts = getBabegutsParts(post);
     const avatar = parts?.avatar || post.querySelector(".avatar-container");
     if (!avatar) return;
@@ -232,6 +242,7 @@
     const dateWrap = parts?.dateWrap || findDateWrap(header);
 
     post.setAttribute(MARK_POST, "true");
+    post.toggleAttribute(MARK_FIRST_POST, index === 0);
     row.setAttribute(MARK_ROW, "true");
     avatar.setAttribute(MARK_AVATAR, "true");
     content.setAttribute(MARK_CONTENT, "true");
@@ -320,6 +331,13 @@
     if (settings.enabled && settings.background) {
       post.style.setProperty("background", settings.backgroundColor, "important");
       post.style.setProperty("background-color", settings.backgroundColor, "important");
+    } else {
+      post.style.removeProperty("background");
+      post.style.removeProperty("background-color");
+    }
+
+    if (settings.enabled) {
+      post.style.setProperty("border-radius", settings.rounded ? `${settings.radius}px` : "0", "important");
       return;
     }
 
@@ -329,6 +347,7 @@
   function clearPostVisuals(post) {
     post.style.removeProperty("background");
     post.style.removeProperty("background-color");
+    post.style.removeProperty("border-radius");
   }
 
   function getPostState(post, nodes = {}) {
@@ -922,11 +941,26 @@
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
         margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
         font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
+        position: relative !important;
       }
 
-      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
-        border-bottom: 1px solid rgba(79,102,134,.32) !important;
-        box-shadow: inset 0 -1px 0 rgba(79,102,134,.32) !important;
+      html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
+        border-radius: 0 !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-rounded="true"] [${MARK_POST}] {
+        border-radius: var(--cudloun-post-tweaks-radius, 0px) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}]:not([${MARK_FIRST_POST}])::before {
+        content: "" !important;
+        position: absolute !important;
+        left: var(--cudloun-post-tweaks-divider-inset, 0px) !important;
+        right: var(--cudloun-post-tweaks-divider-inset, 0px) !important;
+        top: var(--cudloun-post-tweaks-divider-offset, -2px) !important;
+        border-top: var(--cudloun-post-tweaks-divider-width, 1px) var(--cudloun-post-tweaks-divider-style, solid) var(--cudloun-post-tweaks-divider-color, #000) !important;
+        pointer-events: none !important;
+        z-index: 2 !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
@@ -1014,11 +1048,6 @@
           padding-bottom: var(--cudloun-post-tweaks-side-padding, 4px) !important;
           margin-bottom: var(--cudloun-post-tweaks-post-spacing, 4px) !important;
           font-size: var(--cudloun-post-tweaks-font-scale, 100%) !important;
-        }
-
-        html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-divider="true"] [${MARK_POST}] {
-          border-bottom: 1px solid rgba(79,102,134,.32) !important;
-          box-shadow: inset 0 -1px 0 rgba(79,102,134,.32) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
@@ -1259,6 +1288,28 @@
           <input data-setting="divider" type="checkbox">
         </label>
         <label>
+          <span>Line width</span>
+          <output data-output="dividerWidth"></output>
+          <input data-setting="dividerWidth" type="range" min="1" max="6" step="1">
+        </label>
+        <label>
+          <span>Dashed line</span>
+          <input data-setting="dividerDashed" type="checkbox">
+        </label>
+        <label>
+          <span>Line color</span>
+          <input data-setting="dividerColor" type="color">
+        </label>
+        <label>
+          <span>Round corners</span>
+          <input data-setting="rounded" type="checkbox">
+        </label>
+        <label>
+          <span>Corner radius</span>
+          <output data-output="radius"></output>
+          <input data-setting="radius" type="range" min="0" max="24" step="1">
+        </label>
+        <label>
           <span>Background</span>
           <input data-setting="background" type="checkbox">
         </label>
@@ -1467,7 +1518,9 @@
     document.documentElement.setAttribute("data-cudloun-post-tweaks-enabled", settings.enabled ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-avatar-inline", settings.avatarInline ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-divider", settings.divider ? "true" : "false");
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-divider-dashed", settings.dividerDashed ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-background", settings.background ? "true" : "false");
+    document.documentElement.setAttribute("data-cudloun-post-tweaks-rounded", settings.rounded ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-placement", settings.replyPlacement);
     document.documentElement.setAttribute("data-cudloun-post-tweaks-reply-meta-header", settings.replyMetaInHeader ? "true" : "false");
     document.documentElement.setAttribute("data-cudloun-post-tweaks-native-menu-popout", settings.nativeMenuPopout ? "true" : "false");
@@ -1477,6 +1530,12 @@
     rootStyle.setProperty("--cudloun-post-tweaks-card-inset", `${settings.cardInset}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-side-padding", `${settings.sidePadding}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-post-spacing", `${settings.postSpacing}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-divider-offset", `${Math.round(settings.postSpacing / -2)}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-divider-inset", `${settings.sidePadding}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-divider-width", `${settings.dividerWidth}px`);
+    rootStyle.setProperty("--cudloun-post-tweaks-divider-style", settings.dividerDashed ? "dashed" : "solid");
+    rootStyle.setProperty("--cudloun-post-tweaks-divider-color", settings.dividerColor);
+    rootStyle.setProperty("--cudloun-post-tweaks-radius", `${settings.radius}px`);
     rootStyle.setProperty("--cudloun-post-tweaks-header-scale", `${settings.headerScale}%`);
     rootStyle.setProperty("--cudloun-post-tweaks-font-scale", `${settings.fontScale}%`);
     rootStyle.setProperty("--cudloun-post-tweaks-background-color", settings.backgroundColor);
@@ -1491,7 +1550,12 @@
     setInput(panel, "avatarMenu", settings.avatarMenu);
     setInput(panel, "nativeMenuPopout", settings.nativeMenuPopout);
     setInput(panel, "divider", settings.divider);
+    setInput(panel, "dividerDashed", settings.dividerDashed);
+    setInput(panel, "dividerWidth", settings.dividerWidth);
+    setInput(panel, "dividerColor", settings.dividerColor);
     setInput(panel, "background", settings.background);
+    setInput(panel, "rounded", settings.rounded);
+    setInput(panel, "radius", settings.radius);
     setInput(panel, "backgroundColor", settings.backgroundColor);
     setInput(panel, "avatarSize", settings.avatarSize);
     setInput(panel, "cardInset", settings.cardInset);
@@ -1503,6 +1567,8 @@
     setOutput(panel, "cardInset", `${settings.cardInset}px`);
     setOutput(panel, "sidePadding", `${settings.sidePadding}px`);
     setOutput(panel, "postSpacing", `${settings.postSpacing}px`);
+    setOutput(panel, "dividerWidth", `${settings.dividerWidth}px`);
+    setOutput(panel, "radius", `${settings.radius}px`);
     setOutput(panel, "headerScale", `${settings.headerScale}%`);
     setOutput(panel, "fontScale", `${settings.fontScale}%`);
 

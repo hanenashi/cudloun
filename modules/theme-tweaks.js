@@ -4,7 +4,7 @@
 
   const root = window.Cudloun;
   const ID = "theme-tweaks";
-  const VERSION = "0.1.1";
+  const VERSION = "0.1.2";
   const STYLE_ID = "cudloun-theme-tweaks-style";
   const STORAGE_KEY = "cudloun.module.themeTweaks.v1";
   const UNREAD_MARK = "data-cudloun-theme-unread-pill";
@@ -36,7 +36,7 @@
     darksilver: {
       label: "Darksilver",
       bg: "#000000",
-      chrome: "#101010",
+      chrome: "#000000",
       surface: "#151515",
       post: "#202020",
       text: "#f2f2f2",
