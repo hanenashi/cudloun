@@ -31,6 +31,17 @@
       accent: "#f0b35a",
       border: "rgba(238, 242, 247, .18)",
     },
+    darksilver: {
+      label: "Darksilver",
+      bg: "#000000",
+      chrome: "#101010",
+      surface: "#151515",
+      post: "#202020",
+      text: "#f2f2f2",
+      muted: "#a8a8a8",
+      accent: "#ffaa33",
+      border: "rgba(255, 170, 51, .28)",
+    },
     mint: {
       label: "Mint",
       bg: "#e1f1ec",
@@ -171,11 +182,35 @@
         color: var(--cudloun-theme-text) !important;
       }
 
+      html[data-cudloun-theme-tweaks-enabled="true"] {
+        background: var(--cudloun-theme-bg) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] main,
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiContainer-root,
+      html[data-cudloun-theme-tweaks-enabled="true"] .board-page-container {
+        background: var(--cudloun-theme-bg) !important;
+        color: var(--cudloun-theme-text) !important;
+      }
+
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiAppBar-root,
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiBottomNavigation-root {
         background: var(--cudloun-theme-chrome) !important;
         color: var(--cudloun-theme-text) !important;
         border-color: var(--cudloun-theme-border) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] .board-page-container > .MuiBox-root,
+      html[data-cudloun-theme-tweaks-enabled="true"] .page-header {
+        background: var(--cudloun-theme-chrome) !important;
+        color: var(--cudloun-theme-text) !important;
+        border-color: var(--cudloun-theme-border) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] .board-page-container > .MuiBox-root .MuiBox-root,
+      html[data-cudloun-theme-tweaks-enabled="true"] .page-header .MuiBox-root,
+      html[data-cudloun-theme-tweaks-enabled="true"] .nav-links .MuiBox-root {
+        background: transparent !important;
       }
 
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiDrawer-paper,
@@ -216,6 +251,7 @@
       html[data-cudloun-theme-tweaks-enabled="true"] input,
       html[data-cudloun-theme-tweaks-enabled="true"] textarea,
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiInputBase-root {
+        background: var(--cudloun-theme-surface) !important;
         color: var(--cudloun-theme-text) !important;
       }
 
