@@ -968,15 +968,15 @@
       .cudloun-container-card h3{margin:0 0 6px;color:#243041;font-size:1rem;letter-spacing:0}
       .cudloun-container-card p{margin:0 0 10px;color:#4b5565;line-height:1.4}
       .cudloun-container-actions{display:flex;flex-wrap:wrap;gap:8px}
-      .cudloun-feedback{max-width:680px;margin:18px 0 18px;padding:12px;border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff}
+      .cudloun-feedback{box-sizing:border-box;width:100%;max-width:680px;min-width:0;margin:18px 0 18px;padding:12px;border:1px solid rgba(79,102,134,.22);border-radius:8px;background:#fff;overflow:hidden}
       .cudloun-feedback-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px}
       .cudloun-feedback h3{margin:0;color:#243041;font-size:1rem;letter-spacing:0}
       .cudloun-feedback-meta{margin:0 0 10px;color:#697586;font-size:.78rem;line-height:1.3}
       .cudloun-feedback-refresh{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .78rem/1.2 inherit;padding:6px 8px}
       .cudloun-feedback-refresh:hover{background:#eef2f7}
-      .cudloun-feedback-messages{max-height:260px;overflow:auto;margin:0 0 12px;border:1px solid rgba(79,102,134,.16);border-radius:6px;background:#f8fafc}
+      .cudloun-feedback-messages{box-sizing:border-box;max-width:100%;max-height:260px;overflow:auto;margin:0 0 12px;border:1px solid rgba(79,102,134,.16);border-radius:6px;background:#f8fafc}
       .cudloun-feedback-empty{padding:12px;color:#697586}
-      .cudloun-feedback-message{padding:10px 12px;border-bottom:1px solid rgba(79,102,134,.13);background:#fff}
+      .cudloun-feedback-message{box-sizing:border-box;min-width:0;padding:10px 12px;border-bottom:1px solid rgba(79,102,134,.13);background:#fff}
       .cudloun-feedback-message:last-child{border-bottom:0}
       .cudloun-feedback-message[data-reply=true]{border-left:3px solid rgba(8,126,164,.28)}
       .cudloun-feedback-message[data-depth="1"]{margin-left:12px}
@@ -985,8 +985,10 @@
       .cudloun-feedback-message-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 5px}
       .cudloun-feedback-message-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#243041;font-size:.88rem}
       .cudloun-feedback-message-head time{flex:0 0 auto;color:#697586;font-size:.74rem}
-      .cudloun-feedback-parent{margin:0 0 5px;color:#697586;font-size:.76rem;line-height:1.25}
-      .cudloun-feedback-text{white-space:pre-wrap;word-break:break-word;color:#364152;line-height:1.42}
+      .cudloun-feedback-parent{margin:0 0 5px;color:#697586;font-size:.76rem;line-height:1.25;overflow-wrap:anywhere}
+      .cudloun-feedback-text{min-width:0;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;color:#364152;line-height:1.42}
+      .cudloun-feedback-image-link{display:block;width:max-content;max-width:100%;margin:8px 0 2px}
+      .cudloun-feedback-image{display:block;max-width:100%;max-height:280px;border-radius:6px;border:1px solid rgba(79,102,134,.18);object-fit:contain;background:#f8fafc}
       .cudloun-feedback-message-actions{display:flex;justify-content:flex-end;margin:7px 0 0}
       .cudloun-feedback-message-actions button,.cudloun-feedback-reply-target button{appearance:none;border:1px solid rgba(79,102,134,.22);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .74rem/1.2 inherit;padding:5px 7px}
       .cudloun-feedback-message-actions button:hover,.cudloun-feedback-reply-target button:hover{background:#eef2f7}
@@ -994,13 +996,13 @@
       .cudloun-feedback-message-actions .cudloun-feedback-delete{border-color:rgba(180,35,24,.22);background:#fff5f4;color:#b42318}
       .cudloun-feedback-message-actions .cudloun-feedback-delete:hover{background:#ffe7e5}
       .cudloun-feedback-replies{margin:8px 0 0}
-      .cudloun-feedback-form{display:grid;gap:8px}
-      .cudloun-feedback-reply-target{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;padding:7px 8px;border:1px solid rgba(8,126,164,.22);border-radius:6px;background:#eef8fb;color:#364152;font-size:.8rem}
+      .cudloun-feedback-form{display:grid;min-width:0;max-width:100%;gap:8px}
+      .cudloun-feedback-reply-target{box-sizing:border-box;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0;max-width:100%;min-height:32px;padding:7px 8px;border:1px solid rgba(8,126,164,.22);border-radius:6px;background:#eef8fb;color:#364152;font-size:.8rem;overflow:hidden}
       .cudloun-feedback-reply-target[hidden]{display:none}
-      .cudloun-feedback-reply-target span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .cudloun-feedback-reply-target span{min-width:0;overflow-wrap:anywhere;line-height:1.3}
       .cudloun-feedback-author,.cudloun-feedback textarea{box-sizing:border-box;width:100%;border:1px solid rgba(79,102,134,.28);border-radius:6px;background:#fff;color:#182230;font:inherit}
       .cudloun-feedback-author{min-height:36px;padding:0 10px}
-      .cudloun-feedback textarea{min-height:82px;resize:vertical;padding:9px 10px;line-height:1.38}
+      .cudloun-feedback textarea{display:block;max-width:100%;min-height:82px;resize:vertical;padding:9px 10px;line-height:1.38}
       .cudloun-feedback-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
       .cudloun-feedback-status{min-width:0;color:#697586;font-size:.82rem}
       .cudloun-settings-list{max-width:520px;margin:0 0 18px}

@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.3.0";
+  const VERSION = "0.3.1";
   const PROJECT_ID = "murkypond-vault-fc61c";
   const REST_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
   const MAX_TEXT_LENGTH = 1200;
@@ -190,7 +190,7 @@
 
     const text = document.createElement("div");
     text.className = "cudloun-feedback-text";
-    text.textContent = message.text || "";
+    renderFeedbackText(text, message.text || "");
     item.appendChild(text);
 
     const actions = document.createElement("div");
@@ -244,6 +244,56 @@
     children.forEach((items) => items.sort((a, b) => (a.ts || 0) - (b.ts || 0)));
     roots.sort((a, b) => (a.ts || 0) - (b.ts || 0));
     return { roots, children };
+  }
+
+  function renderFeedbackText(container, value) {
+    const text = String(value || "");
+    const pattern = /<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>|(https?:\/\/[^\s<>"']+\.(?:png|jpe?g|gif|webp|avif)(?:\?[^\s<>"']*)?)/gi;
+    let cursor = 0;
+    let match;
+
+    while ((match = pattern.exec(text))) {
+      const rawUrl = match[1] || match[2] || "";
+      const url = safeImageUrl(rawUrl);
+      if (!url) continue;
+
+      if (match.index > cursor) container.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+      container.appendChild(renderImageLink(url));
+      cursor = match.index + match[0].length;
+    }
+
+    if (cursor < text.length) container.appendChild(document.createTextNode(text.slice(cursor)));
+  }
+
+  function safeImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw || raw.length > 500) return "";
+
+    try {
+      const url = new URL(raw, window.location.href);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+      if (!/\.(png|jpe?g|gif|webp|avif)$/i.test(url.pathname)) return "";
+      return url.href;
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function renderImageLink(url) {
+    const link = document.createElement("a");
+    link.className = "cudloun-feedback-image-link";
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const img = document.createElement("img");
+    img.className = "cudloun-feedback-image";
+    img.src = url;
+    img.loading = "lazy";
+    img.alt = "";
+
+    link.appendChild(img);
+    return link;
   }
 
   function setReplyTarget(wrap, message) {
