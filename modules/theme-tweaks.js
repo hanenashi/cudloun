@@ -301,6 +301,35 @@
         border-color: rgba(255, 170, 51, .5) !important;
       }
 
+      html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-preset="darksilver"] .avatar-container {
+        width: 36px !important;
+        height: 36px !important;
+        overflow: hidden !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-preset="darksilver"] .avatar-container .MuiAvatar-root.content-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-preset="darksilver"] .avatar-container .MuiAvatar-root.content-avatar img {
+        width: 36px !important;
+        height: 36px !important;
+        object-fit: contain !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-dialog,
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-feedback,
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-container-card,

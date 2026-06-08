@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.4.30
+// @version      0.4.31
 // @description  Modular userscript hub for Babeta.
 // @author       hanenashi
 // @match        https://babeta.okoun.cz/*
@@ -18,7 +18,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.4.30";
+  const VERSION = "0.4.31";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const COMMIT_API_URL = "https://api.github.com/repos/hanenashi/cudloun/commits/main";
   const CACHE_BUST = String(Date.now());
