@@ -189,8 +189,7 @@
     style.id = STYLE_ID;
     style.textContent = `
       html[data-cudloun-theme-tweaks-enabled="true"] body,
-      html[data-cudloun-theme-tweaks-enabled="true"] #root,
-      html[data-cudloun-theme-tweaks-enabled="true"] #root > div {
+      html[data-cudloun-theme-tweaks-enabled="true"] #root {
         background: var(--cudloun-theme-bg) !important;
         color: var(--cudloun-theme-text) !important;
       }
