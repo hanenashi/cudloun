@@ -189,13 +189,30 @@
     style.id = STYLE_ID;
     style.textContent = `
       html[data-cudloun-theme-tweaks-enabled="true"] body,
-      html[data-cudloun-theme-tweaks-enabled="true"] #root {
+      html[data-cudloun-theme-tweaks-enabled="true"] #root,
+      html[data-cudloun-theme-tweaks-enabled="true"] #root > div {
         background: var(--cudloun-theme-bg) !important;
         color: var(--cudloun-theme-text) !important;
       }
 
       html[data-cudloun-theme-tweaks-enabled="true"] {
         background: var(--cudloun-theme-bg) !important;
+        scrollbar-color: var(--cudloun-theme-border) var(--cudloun-theme-bg) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] ::-webkit-scrollbar {
+        background: var(--cudloun-theme-bg) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] ::-webkit-scrollbar-track,
+      html[data-cudloun-theme-tweaks-enabled="true"] ::-webkit-scrollbar-corner {
+        background: var(--cudloun-theme-bg) !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] ::-webkit-scrollbar-thumb {
+        background: var(--cudloun-theme-border) !important;
+        border: 2px solid var(--cudloun-theme-bg) !important;
+        border-radius: 999px !important;
       }
 
       html[data-cudloun-theme-tweaks-enabled="true"] main,
