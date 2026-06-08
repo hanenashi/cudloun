@@ -71,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.5",
+      version: "0.2.6",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -148,6 +148,7 @@
 
     document.querySelectorAll(`[${MARK_POST}]`).forEach((post) => {
       cleanupNativeMenuHooks(post);
+      clearPostVisuals(post);
       restorePost(post);
     });
 
@@ -283,6 +284,8 @@
   }
 
   function arrangePost(post) {
+    applyPostVisuals(post);
+
     const header = post.querySelector(`[${MARK_HEADER}]`);
     const actions = post.querySelector(`[${MARK_ACTIONS}]`);
     const reply = post.querySelector(`[${MARK_REPLY}]`);
@@ -311,6 +314,21 @@
     }
 
     updateActionsVisibility(actions, state);
+  }
+
+  function applyPostVisuals(post) {
+    if (settings.enabled && settings.background) {
+      post.style.setProperty("background", settings.backgroundColor, "important");
+      post.style.setProperty("background-color", settings.backgroundColor, "important");
+      return;
+    }
+
+    clearPostVisuals(post);
+  }
+
+  function clearPostVisuals(post) {
+    post.style.removeProperty("background");
+    post.style.removeProperty("background-color");
   }
 
   function getPostState(post, nodes = {}) {
@@ -913,6 +931,13 @@
 
       html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
         background: var(--cudloun-post-tweaks-background-color, #fff) !important;
+        background-color: var(--cudloun-post-tweaks-background-color, #fff) !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] .content-item.board-post[${MARK_POST}],
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] .MuiPaper-root.content-item[${MARK_POST}] {
+        background: var(--cudloun-post-tweaks-background-color, #fff) !important;
+        background-color: var(--cudloun-post-tweaks-background-color, #fff) !important;
       }
 
       html[data-cudloun-post-tweaks-enabled="true"] [${MARK_HEADER}] {
@@ -955,6 +980,28 @@
         display: none !important;
       }
 
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container,
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container .MuiAvatar-root.content-avatar,
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}] .content-avatar,
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}] .MuiAvatar-root {
+        width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        min-width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        font-size: var(--cudloun-post-tweaks-avatar-font-size, 12px) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container .MuiAvatar-root.content-avatar img,
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}] .content-avatar img,
+      html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}] .MuiAvatar-root img {
+        width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        object-fit: cover !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+
       @media (max-width: 700px) {
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_POST}] {
           box-sizing: border-box !important;
@@ -976,6 +1023,7 @@
 
         html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-post-tweaks-background="true"] [${MARK_POST}] {
           background: var(--cudloun-post-tweaks-background-color, #fff) !important;
+          background-color: var(--cudloun-post-tweaks-background-color, #fff) !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_ROW}] {
