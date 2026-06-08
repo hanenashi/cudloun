@@ -21,6 +21,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/sys-menu.js` owns the Babeta avatar menu and Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/post-tweaks.js` owns board post layout tweaks.
+- `modules/theme-tweaks.js` owns Cudloun theme overlays for Babeta.
 - `modules/performance-probe.js` owns copyable Babeta performance diagnostics.
 - `modules/nav-tweaks.js` owns consistent quick navigation shortcuts.
 - `modules/containers.js` lists standalone live demos from `containers.json`.
@@ -70,6 +71,7 @@ cudlounThreads/framework_cudloun
 cudlounThreads/module_settoun
 cudlounThreads/module_containers
 cudlounThreads/module_post-tweaks
+cudlounThreads/module_theme-tweaks
 cudlounThreads/module_performance-probe
 cudlounThreads/module_nav-tweaks
 cudlounThreads/container_favorite-pill-colors
@@ -84,7 +86,7 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.27",
+  cudlounVersion: "0.4.28",
   userAgentHint: "mobile or desktop hint",
   parentId: "optional parent message document id",
   parentAuthor: "optional parent author label",
@@ -93,6 +95,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Babeta user, and for all messages when the visible user is `Blasnik`. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.28 TL;DR
+
+- Added `theme-tweaks`, a disabled-by-default module for Cudloun theme overlays.
+- Babeta's native `okoun-theme-mode` setting stays untouched; Cudloun themes apply as a reversible stylesheet on top.
+- First presets: Pond, Ink, Mint, and Print, with an optional switch to theme the Cudloun panel itself.
 
 ## Version 0.4.27 TL;DR
 
