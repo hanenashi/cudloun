@@ -7,6 +7,7 @@
   const VERSION = "0.1.0";
   const STYLE_ID = "cudloun-theme-tweaks-style";
   const STORAGE_KEY = "cudloun.module.themeTweaks.v1";
+  const UNREAD_MARK = "data-cudloun-theme-unread-pill";
 
   const presets = {
     pond: {
@@ -72,6 +73,7 @@
   };
 
   let settings = loadSettings();
+  let observer = null;
 
   root.registerModule({
     id: ID,
@@ -151,9 +153,19 @@
   function install() {
     installStyles();
     applyTheme();
+    scanUnreadPills();
+    if (!observer) {
+      observer = new MutationObserver(() => scanUnreadPills());
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
   }
 
   function stop() {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    document.querySelectorAll(`[${UNREAD_MARK}]`).forEach((node) => node.removeAttribute(UNREAD_MARK));
     document.getElementById(STYLE_ID)?.remove();
     document.documentElement.removeAttribute("data-cudloun-theme-tweaks-enabled");
     document.documentElement.removeAttribute("data-cudloun-theme-tweaks-preset");
@@ -209,16 +221,19 @@
 
       html[data-cudloun-theme-tweaks-enabled="true"] .board-page-container > .MuiBox-root .MuiBox-root,
       html[data-cudloun-theme-tweaks-enabled="true"] .page-header .MuiBox-root,
-      html[data-cudloun-theme-tweaks-enabled="true"] .nav-links .MuiBox-root {
+      html[data-cudloun-theme-tweaks-enabled="true"] .nav-links .MuiBox-root,
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiListItemSecondaryAction-root .MuiBox-root {
         background: transparent !important;
       }
 
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiDrawer-paper,
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiMenu-paper,
       html[data-cudloun-theme-tweaks-enabled="true"] .MuiPopover-paper,
-      html[data-cudloun-theme-tweaks-enabled="true"] .MuiDialog-paper {
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiDialog-paper,
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiPaper-root.MuiPaper-outlined {
         background: var(--cudloun-theme-surface) !important;
         color: var(--cudloun-theme-text) !important;
+        border-color: var(--cudloun-theme-border) !important;
       }
 
       html[data-cudloun-theme-tweaks-enabled="true"] .content-item.board-post,
@@ -260,6 +275,32 @@
         border-color: var(--cudloun-theme-border) !important;
       }
 
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiAvatar-root {
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] .MuiAvatar-root img,
+      html[data-cudloun-theme-tweaks-enabled="true"] img.MuiBox-root {
+        border-color: transparent !important;
+        box-shadow: none !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"] [${UNREAD_MARK}] {
+        background: color-mix(in srgb, var(--cudloun-theme-accent) 18%, var(--cudloun-theme-surface)) !important;
+        color: var(--cudloun-theme-accent) !important;
+        border-color: color-mix(in srgb, var(--cudloun-theme-accent) 55%, transparent) !important;
+        box-shadow: none !important;
+        font-weight: 750 !important;
+      }
+
+      html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-preset="darksilver"] [${UNREAD_MARK}] {
+        background: #0f0f0f !important;
+        color: #ffaa33 !important;
+        border-color: rgba(255, 170, 51, .5) !important;
+      }
+
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-dialog,
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-feedback,
       html[data-cudloun-theme-tweaks-enabled="true"][data-cudloun-theme-tweaks-cudloun="true"] .cudloun-container-card,
@@ -289,6 +330,14 @@
       "--cudloun-theme-border": preset.border,
     }).forEach(([name, value]) => {
       document.documentElement.style.setProperty(name, value);
+    });
+  }
+
+  function scanUnreadPills() {
+    document.querySelectorAll("span").forEach((label) => {
+      if (!/^(\d+)\s+nov(?:ý|é|ých)$/i.test(label.textContent.trim())) return;
+      const chip = label.closest(".MuiChip-root") || label.parentElement;
+      if (chip) chip.setAttribute(UNREAD_MARK, "true");
     });
   }
 
