@@ -71,7 +71,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.4",
+      version: "0.2.5",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -1011,7 +1011,28 @@
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_AVATAR}] .MuiAvatar-root {
           width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
           height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          min-width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
           font-size: var(--cudloun-post-tweaks-avatar-font-size, 12px) !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container,
+        html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container .MuiAvatar-root.content-avatar {
+          width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          min-width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_AVATAR}] .content-avatar img,
+        html[data-cudloun-post-tweaks-enabled="true"] [${MARK_AVATAR}] .MuiAvatar-root img {
+          width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          object-fit: cover !important;
+        }
+
+        html[data-cudloun-post-tweaks-enabled="true"][data-cudloun-theme-tweaks-enabled="true"] [${MARK_AVATAR}].avatar-container .MuiAvatar-root.content-avatar img {
+          width: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          height: var(--cudloun-post-tweaks-avatar-size, 28px) !important;
+          object-fit: cover !important;
         }
 
         html[data-cudloun-post-tweaks-enabled="true"] [${MARK_CONTENT}] {
