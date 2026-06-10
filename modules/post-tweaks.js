@@ -77,7 +77,7 @@
       id: ID,
       name: "Post Tweaks",
       description: "Tune board post layout, spacing, dividers, background, reply placement, and post menu behavior.",
-      version: "0.2.7",
+      version: "0.2.8",
       defaultEnabled: false,
       actionLabel: "Show panel",
       start() {
@@ -794,7 +794,8 @@
       }
 
       #${PANEL_ID} select,
-      #${PANEL_ID} input[type="color"] {
+      #${PANEL_ID} input[type="color"],
+      #${PANEL_ID} input[type="text"] {
         min-width: 112px;
         border: 1px solid rgba(79,102,134,.26);
         border-radius: 6px;
@@ -808,6 +809,10 @@
         width: 112px;
         height: 28px;
         padding: 2px;
+      }
+
+      #${PANEL_ID} input[data-setting="backgroundColorManual"] {
+        width: 112px;
       }
 
       #${PANEL_ID} .cudloun-post-tweaks-actions {
@@ -1324,6 +1329,10 @@
           <input data-setting="backgroundColor" type="color">
         </label>
         <label>
+          <span>Manual color</span>
+          <input data-setting="backgroundColorManual" type="text" inputmode="text" spellcheck="false" placeholder="#202020">
+        </label>
+        <label>
           <span>Avatar</span>
           <output data-output="avatarSize"></output>
           <input data-setting="avatarSize" type="range" min="18" max="40" step="1">
@@ -1371,15 +1380,24 @@
     `;
 
     panel.querySelectorAll("[data-setting]").forEach((input) => {
-      input.addEventListener("input", () => updateFromInput(input));
-      input.addEventListener("change", () => updateFromInput(input));
+      input.addEventListener("input", () => updateFromInput(input, "input"));
+      input.addEventListener("change", () => updateFromInput(input, "change"));
     });
 
     installPanelDrag(panel);
 
-    function updateFromInput(input) {
+    function updateFromInput(input, eventType = "change") {
       const name = input.dataset.setting;
-      if (input.type === "checkbox") {
+      if (name === "backgroundColorManual") {
+        const color = normalizeManualColor(input.value);
+        if (!color) {
+          if (eventType === "change") syncBackgroundColorInputs(panel);
+          return;
+        }
+
+        settings.backgroundColor = color;
+        syncBackgroundColorInputs(panel, input);
+      } else if (input.type === "checkbox") {
         settings[name] = input.checked;
       } else if (input.type === "range") {
         settings[name] = Number(input.value);
@@ -1388,9 +1406,7 @@
       }
 
       if (name === "backgroundColor") {
-        panel.querySelectorAll(`[data-setting="${name}"]`).forEach((other) => {
-          if (other !== input) other.value = input.value;
-        });
+        syncBackgroundColorInputs(panel, input);
       }
 
       saveSettings();
@@ -1556,7 +1572,7 @@
     setInput(panel, "background", settings.background);
     setInput(panel, "rounded", settings.rounded);
     setInput(panel, "radius", settings.radius);
-    setInput(panel, "backgroundColor", settings.backgroundColor);
+    syncBackgroundColorInputs(panel);
     setInput(panel, "avatarSize", settings.avatarSize);
     setInput(panel, "cardInset", settings.cardInset);
     setInput(panel, "sidePadding", settings.sidePadding);
@@ -1585,6 +1601,44 @@
   function setOutput(panel, name, value) {
     const output = panel.querySelector(`[data-output="${name}"]`);
     if (output) output.textContent = value;
+  }
+
+  function syncBackgroundColorInputs(panel, source) {
+    const color = settings.backgroundColor;
+    const hex = toHexColor(color);
+
+    panel.querySelectorAll('[data-setting="backgroundColor"]').forEach((input) => {
+      if (input === source) return;
+      if (input.tagName === "SELECT") {
+        input.value = COLOR_OPTIONS.some((option) => option.value.toLowerCase() === String(color).toLowerCase()) ? color : "";
+      } else if (input.type === "color" && hex) {
+        input.value = hex;
+      }
+    });
+
+    panel.querySelectorAll('[data-setting="backgroundColorManual"]').forEach((input) => {
+      if (input !== source) input.value = color;
+    });
+  }
+
+  function normalizeManualColor(value) {
+    const color = String(value || "").trim();
+    if (!color) return "";
+    if (!window.CSS || typeof window.CSS.supports !== "function" || !window.CSS.supports("color", color)) return "";
+    return toHexColor(color) || color;
+  }
+
+  function toHexColor(value) {
+    const color = String(value || "").trim();
+    let match = color.match(/^#([0-9a-f]{3})$/i);
+    if (match) {
+      return `#${match[1].split("").map((part) => `${part}${part}`).join("")}`.toLowerCase();
+    }
+
+    match = color.match(/^#([0-9a-f]{6})$/i);
+    if (match) return `#${match[1].toLowerCase()}`;
+
+    return "";
   }
 
   function showShareBox(panel, text) {
