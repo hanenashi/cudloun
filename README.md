@@ -48,7 +48,7 @@ A container can be:
 Current containers:
 
 - `favorite-pill-colors`: colors unread counters on `https://babeta.okoun.cz/favorites`.
-- `noooovejsi`: adds playful newer/older labels to Babeta board pagination arrows.
+- `noooovejsi`: replaces Babeta compact board pagination counts with an `oooooo` distance-to-newest indicator.
 
 Container files live in `containers/` and are listed in `containers.json`.
 
@@ -88,7 +88,7 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.41",
+  cudlounVersion: "0.4.42",
   userAgentHint: "mobile or desktop hint",
   parentId: "optional parent message document id",
   parentAuthor: "optional parent author label",
@@ -97,6 +97,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Babeta user, and for all messages when the visible user is `Blasnik`. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.42 TL;DR
+
+- Changed `noooovejsi` from text wordplay to an `oooooo` distance indicator for compact Babeta pagination.
+- `Novějších 50 z N` now becomes `oooo... NOVĚJŠÍ`, capped at six `o`s; the newest/current state stays inactive as plain `NOVĚJŠÍ`.
+- Bumped the container catalog to `0.3.2`.
 
 ## Version 0.4.41 TL;DR
 

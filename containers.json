@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1",
+  "version": "0.3.2",
   "containers": [
     {
       "id": "favorite-pill-colors",
@@ -12,9 +12,9 @@
     {
       "id": "noooovejsi",
       "name": "Noooovejsi",
-      "description": "Adds playful newer/older labels to Babeta board pagination arrows.",
+      "description": "Replaces Babeta compact board pagination counts with an oooooo distance-to-newest indicator.",
       "file": "containers/noooovejsi.container.js",
-      "sha256": "f7cac75c524353b7d216ed88c909bf52408fd514f344414e3e36063176eb51a6",
+      "sha256": "23ff872a85e8e446904705ec75878ff1f0cc64e2e8bc3f5a4099ca4aa3a5ddb2",
       "match": ["/boards/*"]
     }
   ]

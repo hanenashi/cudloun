@@ -188,7 +188,7 @@
 
       const numberedControls = getNumberedControls(node);
       const hasClassicNumbers = numberedControls.length >= 2;
-      const hasCompactText = hasRelativePagerText(node);
+      const hasCompactText = hasCompactPagerText(node);
       if (!hasClassicNumbers && !hasCompactText) continue;
 
       const text = normalizeText(node.textContent);
@@ -203,12 +203,12 @@
   function enhancePagination(root) {
     const numberedControls = getNumberedControls(root);
     const boardLinks = Array.from(root.querySelectorAll("a[href]")).filter(isSameBoardPagerLink);
-    if (boardLinks.length < 3) return;
-    if (numberedControls.length < 2 && !hasRelativePagerText(root)) return;
+    if (boardLinks.length < 2) return;
+    if (numberedControls.length < 2 && !hasCompactPagerText(root)) return;
 
     root.setAttribute(PAGER_MARK, "true");
 
-    if (numberedControls.length < 2) {
+    if (numberedControls.length < 2 || hasCompactPagerText(root)) {
       enhanceCompactPagination(root, boardLinks);
       return;
     }
@@ -233,12 +233,12 @@
       .filter((item) => item.rect.width > 0 && item.rect.height > 0)
       .sort((a, b) => a.rect.left - b.rect.left);
 
-    const textItems = links.filter((item) => relativeDirection(item.text));
+    const textItems = compactTextControls(root);
     if (textItems.length === 0) return;
 
-    textItems.forEach((item) => markTextLink(item.link, relativeDirection(item.text)));
+    textItems.forEach((item) => markTextLink(item.element, compactLabel(item.text), compactTitle(item.text)));
 
-    const textBounds = getHorizontalBounds(textItems.map((item) => item.link));
+    const textBounds = getHorizontalBounds(textItems.map((item) => item.element));
     links
       .filter((item) => !item.text && midpoint(item.rect) < textBounds.left)
       .forEach((item) => markTitleOnly(item.link, "NOVĚJŠÍ"));
@@ -266,20 +266,20 @@
     label.textContent = text;
   }
 
-  function markTextLink(link, direction) {
-    const original = originalText(link);
-    if (!link.hasAttribute(ORIGINAL_TEXT)) {
-      link.setAttribute(ORIGINAL_TEXT, original);
+  function markTextLink(element, text, title) {
+    const original = originalText(element);
+    if (!element.hasAttribute(ORIGINAL_TEXT)) {
+      element.setAttribute(ORIGINAL_TEXT, original);
     }
 
-    link.setAttribute(TEXT_MARK, direction);
-    link.textContent = playfulText(original, direction);
+    element.setAttribute(TEXT_MARK, "true");
+    element.textContent = text;
 
-    if (!link.hasAttribute(ORIGINAL_TITLE)) {
-      link.setAttribute(ORIGINAL_TITLE, link.getAttribute("title") || "");
+    if (!element.hasAttribute(ORIGINAL_TITLE)) {
+      element.setAttribute(ORIGINAL_TITLE, element.getAttribute("title") || "");
     }
 
-    link.title = link.textContent;
+    element.title = title || text;
   }
 
   function markTitleOnly(link, text) {
@@ -310,14 +310,6 @@
     }
   }
 
-  function playfulText(text, direction) {
-    if (direction === "newer") {
-      return text.replace(/no*v[eě]j[sš][ií]ch/i, "Noooovějších");
-    }
-
-    return text.replace(/sta*r[sš][ií]ch/i, "Staaaarších");
-  }
-
   function newerLabel(index, count) {
     if (count <= 1) return "NOVĚJŠÍ";
     if (index === 0) return "NEJNOVĚJŠÍ";
@@ -341,24 +333,52 @@
     return uniqueElements(controls);
   }
 
-  function hasRelativePagerText(root) {
-    return Array.from(root.querySelectorAll("a[href]"))
-      .filter(isSameBoardPagerLink)
-      .some((link) => relativeDirection(displayText(link)));
+  function hasCompactPagerText(root) {
+    return compactTextControls(root).length > 0;
   }
 
-  function relativeDirection(text) {
-    if (/no*v[eě]j[sš][ií]ch/i.test(text)) return "newer";
-    if (/sta*r[sš][ií]ch/i.test(text)) return "older";
-    return "";
+  function compactTextControls(root) {
+    return uniqueElements(Array.from(root.querySelectorAll("a, button, span"))
+      .filter((element) => isCompactPagerText(displayText(element)))
+      .filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width >= 20 && rect.width <= 240 && rect.height >= 10 && rect.height <= 60;
+      }))
+      .map((element) => ({ element, text: originalText(element) }));
   }
 
-  function displayText(link) {
-    return normalizeText(link.textContent);
+  function isCompactPagerText(text) {
+    return /nov[eě]j[sš][ií](?:ch)?/i.test(text) || /posledn[ií]ch/i.test(text);
   }
 
-  function originalText(link) {
-    return normalizeText(link.getAttribute(ORIGINAL_TEXT) || link.textContent);
+  function compactLabel(text) {
+    const count = remainingPages(text);
+    const prefix = count > 0 ? `${"o".repeat(count)} ` : "";
+    return `${prefix}NOVĚJŠÍ`;
+  }
+
+  function compactTitle(text) {
+    const count = remainingPages(text);
+    if (count <= 0) return "Aktuální nejnovější stránka";
+    return `Zhruba ${count} strán${count === 1 ? "ka" : count < 5 ? "ky" : "ek"} k nejnovějším`;
+  }
+
+  function remainingPages(text) {
+    if (/posledn[ií]ch/i.test(text)) return 1;
+
+    const match = text.match(/z\s+(\d+)(\+)?/i);
+    if (!match) return 0;
+    if (match[2]) return 6;
+
+    return Math.max(1, Math.min(6, Math.ceil(Number(match[1]) / 50)));
+  }
+
+  function displayText(element) {
+    return normalizeText(element.textContent);
+  }
+
+  function originalText(element) {
+    return normalizeText(element.getAttribute(ORIGINAL_TEXT) || element.textContent);
   }
 
   function getHorizontalBounds(elements) {
