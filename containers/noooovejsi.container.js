@@ -338,7 +338,14 @@
   }
 
   function compactTextControls(root) {
-    return uniqueElements(Array.from(root.querySelectorAll("a, button, span"))
+    const linked = visibleCompactControls(Array.from(root.querySelectorAll("a[href]")).filter(isSameBoardPagerLink));
+    if (linked.length > 0) return linked;
+
+    return visibleCompactControls(Array.from(root.querySelectorAll("a, button, span")));
+  }
+
+  function visibleCompactControls(elements) {
+    return uniqueElements(elements
       .filter((element) => isCompactPagerText(displayText(element)))
       .filter((element) => {
         const rect = element.getBoundingClientRect();
@@ -353,8 +360,7 @@
 
   function compactLabel(text) {
     const count = remainingPages(text);
-    const prefix = count > 0 ? `${"o".repeat(count)} ` : "";
-    return `${prefix}NOVĚJŠÍ`;
+    return noooovejsiWord(count);
   }
 
   function compactTitle(text) {
@@ -371,6 +377,10 @@
     if (match[2]) return 6;
 
     return Math.max(1, Math.min(6, Math.ceil(Number(match[1]) / 50)));
+  }
+
+  function noooovejsiWord(count) {
+    return `N${"o".repeat(Math.max(1, count))}vější`;
   }
 
   function displayText(element) {
