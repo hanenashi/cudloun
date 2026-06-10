@@ -13,7 +13,7 @@
     id: MODULE_ID,
     name: "Containers",
     description: "Small live demos that can be run from Cudloun or shared as console loaders.",
-    version: "0.1.0",
+    version: "0.1.1",
     defaultEnabled: true,
     start(ctx) {
       loadCatalog(ctx).then(() => ctx.hub.render()).catch((error) => ctx.log.error("catalog load failed", error));
@@ -179,6 +179,7 @@
   function consoleLoader(container) {
     validateContainerEntry(container);
     const url = `${root.repoUrl}${container.file}?v=${Date.now()}`;
+    const apiName = containerGlobalName(container);
     return [
       "(async()=>{",
       `const url=${JSON.stringify(url)};`,
@@ -188,9 +189,20 @@
       "const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');",
       "if(hash!==expected)throw new Error('Cudloun container hash mismatch');",
       "new Function(code)();",
-      "window.CudlounFavoritePillColors&&window.CudlounFavoritePillColors.run();",
+      `const api=window[${JSON.stringify(apiName)}];`,
+      "if(api&&typeof api.run==='function')api.run();",
       "})();",
     ].join("");
+  }
+
+  function containerGlobalName(container) {
+    if (container.global) return container.global;
+
+    return `Cudloun${container.id
+      .split(/[^a-z0-9]+/i)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join("")}`;
   }
 
   function copyConsoleLoader(container, ctx, card) {
