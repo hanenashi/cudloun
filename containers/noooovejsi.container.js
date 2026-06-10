@@ -7,7 +7,9 @@
   const PAGER_MARK = "data-cudloun-noooovejsi-pagination";
   const ARROW_MARK = "data-cudloun-noooovejsi-arrow";
   const LABEL_MARK = "data-cudloun-noooovejsi-label";
+  const TEXT_MARK = "data-cudloun-noooovejsi-text";
   const ORIGINAL_TITLE = "data-cudloun-noooovejsi-original-title";
+  const ORIGINAL_TEXT = "data-cudloun-noooovejsi-original-text";
   let observer = null;
   let scheduled = false;
 
@@ -52,6 +54,7 @@
     scheduled = false;
 
     document.querySelectorAll(`[${LABEL_MARK}]`).forEach((label) => label.remove());
+    document.querySelectorAll(`[${TEXT_MARK}]`).forEach((link) => restoreTextLink(link));
     document.querySelectorAll(`[${ARROW_MARK}]`).forEach((link) => {
       link.removeAttribute(ARROW_MARK);
 
@@ -114,6 +117,12 @@
         pointer-events: none !important;
       }
 
+      [${TEXT_MARK}] {
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+      }
+
       @media (max-width: 520px) {
         [${ARROW_MARK}] {
           padding-left: 0.4em !important;
@@ -149,6 +158,7 @@
 
   function cleanupMissingRoute() {
     document.querySelectorAll(`[${LABEL_MARK}]`).forEach((label) => label.remove());
+    document.querySelectorAll(`[${TEXT_MARK}]`).forEach((link) => restoreTextLink(link));
     document.querySelectorAll(`[${ARROW_MARK}]`).forEach((link) => link.removeAttribute(ARROW_MARK));
     document.querySelectorAll(`[${PAGER_MARK}]`).forEach((pager) => pager.removeAttribute(PAGER_MARK));
   }
@@ -177,10 +187,12 @@
       if (sameBoardLinks.length < 3) continue;
 
       const numberedControls = getNumberedControls(node);
-      if (numberedControls.length < 2) continue;
+      const hasClassicNumbers = numberedControls.length >= 2;
+      const hasCompactText = hasRelativePagerText(node);
+      if (!hasClassicNumbers && !hasCompactText) continue;
 
       const text = normalizeText(node.textContent);
-      if (!/\b1\b/.test(text) && !/\b2\b/.test(text)) continue;
+      if (hasClassicNumbers && !/\b1\b/.test(text) && !/\b2\b/.test(text)) continue;
 
       return node;
     }
@@ -191,9 +203,15 @@
   function enhancePagination(root) {
     const numberedControls = getNumberedControls(root);
     const boardLinks = Array.from(root.querySelectorAll("a[href]")).filter(isSameBoardPagerLink);
-    if (numberedControls.length < 2 || boardLinks.length < 3) return;
+    if (boardLinks.length < 3) return;
+    if (numberedControls.length < 2 && !hasRelativePagerText(root)) return;
 
     root.setAttribute(PAGER_MARK, "true");
+
+    if (numberedControls.length < 2) {
+      enhanceCompactPagination(root, boardLinks);
+      return;
+    }
 
     const numberBounds = getHorizontalBounds(numberedControls);
     const arrowLinks = boardLinks
@@ -207,6 +225,26 @@
 
     newer.forEach((item, index) => markArrow(item.link, "newer", newerLabel(index, newer.length)));
     older.forEach((item, index) => markArrow(item.link, "older", olderLabel(index, older.length)));
+  }
+
+  function enhanceCompactPagination(root, boardLinks) {
+    const links = boardLinks
+      .map((link) => ({ link, rect: link.getBoundingClientRect(), text: displayText(link) }))
+      .filter((item) => item.rect.width > 0 && item.rect.height > 0)
+      .sort((a, b) => a.rect.left - b.rect.left);
+
+    const textItems = links.filter((item) => relativeDirection(item.text));
+    if (textItems.length === 0) return;
+
+    textItems.forEach((item) => markTextLink(item.link, relativeDirection(item.text)));
+
+    const textBounds = getHorizontalBounds(textItems.map((item) => item.link));
+    links
+      .filter((item) => !item.text && midpoint(item.rect) < textBounds.left)
+      .forEach((item) => markTitleOnly(item.link, "NOVĚJŠÍ"));
+    links
+      .filter((item) => !item.text && midpoint(item.rect) > textBounds.right)
+      .forEach((item) => markTitleOnly(item.link, "STARŠÍ"));
   }
 
   function markArrow(link, direction, text) {
@@ -226,6 +264,58 @@
     }
 
     label.textContent = text;
+  }
+
+  function markTextLink(link, direction) {
+    const original = originalText(link);
+    if (!link.hasAttribute(ORIGINAL_TEXT)) {
+      link.setAttribute(ORIGINAL_TEXT, original);
+    }
+
+    link.setAttribute(TEXT_MARK, direction);
+    link.textContent = playfulText(original, direction);
+
+    if (!link.hasAttribute(ORIGINAL_TITLE)) {
+      link.setAttribute(ORIGINAL_TITLE, link.getAttribute("title") || "");
+    }
+
+    link.title = link.textContent;
+  }
+
+  function markTitleOnly(link, text) {
+    if (!link.hasAttribute(ORIGINAL_TITLE)) {
+      link.setAttribute(ORIGINAL_TITLE, link.getAttribute("title") || "");
+    }
+
+    link.title = text;
+  }
+
+  function restoreTextLink(link) {
+    if (link.hasAttribute(ORIGINAL_TEXT)) {
+      link.textContent = link.getAttribute(ORIGINAL_TEXT) || "";
+      link.removeAttribute(ORIGINAL_TEXT);
+    }
+
+    link.removeAttribute(TEXT_MARK);
+
+    if (link.hasAttribute(ORIGINAL_TITLE)) {
+      const title = link.getAttribute(ORIGINAL_TITLE);
+      if (title) {
+        link.title = title;
+      } else {
+        link.removeAttribute("title");
+      }
+
+      link.removeAttribute(ORIGINAL_TITLE);
+    }
+  }
+
+  function playfulText(text, direction) {
+    if (direction === "newer") {
+      return text.replace(/no*v[eě]j[sš][ií]ch/i, "Noooovějších");
+    }
+
+    return text.replace(/sta*r[sš][ií]ch/i, "Staaaarších");
   }
 
   function newerLabel(index, count) {
@@ -249,6 +339,26 @@
       });
 
     return uniqueElements(controls);
+  }
+
+  function hasRelativePagerText(root) {
+    return Array.from(root.querySelectorAll("a[href]"))
+      .filter(isSameBoardPagerLink)
+      .some((link) => relativeDirection(displayText(link)));
+  }
+
+  function relativeDirection(text) {
+    if (/no*v[eě]j[sš][ií]ch/i.test(text)) return "newer";
+    if (/sta*r[sš][ií]ch/i.test(text)) return "older";
+    return "";
+  }
+
+  function displayText(link) {
+    return normalizeText(link.textContent);
+  }
+
+  function originalText(link) {
+    return normalizeText(link.getAttribute(ORIGINAL_TEXT) || link.textContent);
   }
 
   function getHorizontalBounds(elements) {
