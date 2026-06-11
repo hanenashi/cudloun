@@ -17,6 +17,8 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/core.js` boots the framework from GitHub raw URLs.
 - `modules.json` lists system modules and feature modules.
 - `modules/sys-logger.js` owns logging controls.
+- `modules/sys-babeguts.js` owns a shared Babeta DOM dictionary for live-page tweaking.
+- `modules/sys-kapyguts.js` owns a shared Kapybara DOM dictionary for live-page tweaking.
 - `modules/sys-feedback.js` owns Firestore-backed per-feature feedback threads.
 - `modules/sys-menu.js` owns the Babeta avatar menu and Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
@@ -34,6 +36,10 @@ The current skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a mo
 `modules/sys-babeguts.js` exposes a small Babeta DOM dictionary at `window.Cudloun.babeguts`. It starts with board-page helpers for visible posts, post parts, visible MUI menus, and a compact `inspect()` snapshot for live-page tweaking sessions.
 
 Keep `babeguts.md` updated as the quick field guide for Babeta live-DOM tweaking sessions.
+
+`modules/sys-kapyguts.js` exposes a small Kapybara DOM dictionary at `window.Cudloun.kapyguts`. It starts with route helpers, current-user candidates, board post helpers for `article.post`, and a compact `inspect()` snapshot.
+
+Keep `kapyguts.md` updated as the quick field guide for Kapybara live-DOM tweaking sessions.
 
 ## Containers
 
@@ -88,7 +94,7 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.44",
+  cudlounVersion: "0.4.45",
   userAgentHint: "mobile or desktop hint",
   parentId: "optional parent message document id",
   parentAuthor: "optional parent author label",
@@ -97,6 +103,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Babeta user, and for all messages when the visible user is `Blasnik`. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.45 TL;DR
+
+- Added `sys-kapyguts`, a passive Kapybara DOM dictionary exposed as `window.Cudloun.kapyguts`.
+- Added the Kapybara userscript match so Cudloun can load on `https://kapybara.okoun.cz/*`.
+- Added `kapyguts.md` with the current Kapybara board, favorites, and messages DOM field notes.
 
 ## Version 0.4.44 TL;DR
 
