@@ -47,11 +47,11 @@ It exposes:
 - `visiblePostMenus()`
 - `inspect()`
 
-## Login Notes
+## Access Notes
 
-Kapybara has a separate beta gate from Babeta, but the same local invite code worked on 2026-06-11.
+Kapybara may show its own access gate and has a separate login form. Keep access mechanics, credentials, cookies, and local automation details in private local notes, not in public Cudloun docs.
 
-It also has a separate login form. The current form uses:
+The current login form uses:
 
 ```text
 input[autocomplete="username"]
@@ -59,7 +59,7 @@ input[autocomplete="current-password"]
 button[type="submit"]
 ```
 
-Do not print credentials or invite codes in logs.
+Do not print credentials, access codes, cookies, or local automation details in logs.
 
 ## Board Page Lab Species
 

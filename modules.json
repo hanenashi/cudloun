@@ -1,5 +1,5 @@
 {
-  "version": "0.4.45",
+  "version": "0.4.46",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-babeguts", "file": "modules/sys-babeguts.js", "required": true },
