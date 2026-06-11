@@ -66,14 +66,14 @@ Do not print credentials, access codes, cookies, or local automation details in 
 Baseline page inspected on 2026-06-11:
 
 ```text
-https://kapybara.okoun.cz/boards/malovanky_a_mopedy
+https://kapybara.okoun.cz/boards/boatd_name
 ```
 
 Observed route:
 
 ```text
 route.type: board
-route.boardId: malovanky_a_mopedy
+route.boardId: boatd_name
 posts: 50
 ```
 
@@ -123,7 +123,7 @@ postMenuButton
 Kapybara post links use stable anchors:
 
 ```text
-/boards/malovanky_a_mopedy/c/1074607522#p1074607522
+/boards/boatd_name/c/1074607522#p1074607522
 ```
 
 Individual posts use:
