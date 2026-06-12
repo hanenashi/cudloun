@@ -29,7 +29,7 @@ https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 - `modules/containers.js` lists standalone live demos from `containers.json`.
 - `containers/` holds standalone tweak demos that can run from Cudloun or from a console loader.
 
-The seed loader fetches modules with a `?v=Date.now()` cache buster while the framework is under active development.
+The installable seed loads `cudloun.bundle.js` via userscript `@require` so CSP-strict frontends such as Kapybara do not block module startup. Source modules stay separate in `modules/`; run `node scripts/build-bundle.js` after source changes.
 
 The current skeleton exposes a Cudloun entry in Babeta's avatar menu, opens a module hub, stores module enable switches in `localStorage`, includes a Debug view with recent logs, has Settoun for framework-level settings, and shows Firestore-backed feedback threads for modules and containers.
 
@@ -94,7 +94,7 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
   text: "Feedback text",
   ts: 1710000000000,
   route: "/boards/nepotrebny_pokus",
-  cudlounVersion: "0.4.46",
+  cudlounVersion: "0.4.47",
   userAgentHint: "mobile or desktop hint",
   parentId: "optional parent message document id",
   parentAuthor: "optional parent author label",
@@ -103,6 +103,12 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 ```
 
 The visible Babeta username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Babeta user, and for all messages when the visible user is `Blasnik`. Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.4.47 TL;DR
+
+- Switched the installable seed to a static `@require` bundle so Kapybara CSP does not block startup with `unsafe-eval`.
+- Added `cudloun.bundle.js`, generated from the current manifest, modules, containers, and container catalog.
+- Dynamic script execution is disabled in the bundled loader; embedded modules and containers still run normally.
 
 ## Version 0.4.46 TL;DR
 
