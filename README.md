@@ -1,7 +1,7 @@
 # cudloun
 
 <p align="center">
-  <img src="cudloun.png" alt="Cudloun" width="360">
+  <img src="kapybaroun.png" alt="Cudloun" width="360">
 </p>
 
 Kapybara extension framework for Okoun userscripts.
