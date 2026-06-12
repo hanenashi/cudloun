@@ -1,4 +1,4 @@
-// Cudloun Babeta avatar menu and hub UI.
+// Cudloun Kapybara account menu and hub UI.
 (function () {
   "use strict";
 
@@ -26,8 +26,6 @@
     closeHub,
     renderHub,
     refreshMenuItems,
-    injectIntoAvatarMenu,
-    injectIntoMobileDrawerMenu,
     injectIntoKapybaraAvatarMenu,
   };
 
@@ -36,8 +34,6 @@
     maybeShowRestoreFullscreenPrompt();
     observeAvatarMenu();
     observeRouteChanges();
-    injectIntoAvatarMenu();
-    injectIntoMobileDrawerMenu();
     injectIntoKapybaraAvatarMenu();
     root.log.info("menu", "started", lastRoute);
   }
@@ -51,8 +47,6 @@
 
       window.clearTimeout(observerDebounceTimer);
       observerDebounceTimer = window.setTimeout(() => {
-        injectIntoAvatarMenu();
-        injectIntoMobileDrawerMenu();
         injectIntoKapybaraAvatarMenu();
       }, 40);
     });
@@ -73,91 +67,12 @@
       if (route !== lastRoute) {
         lastRoute = route;
         root.log.info("router", "route changed", route);
-        injectIntoAvatarMenu();
-        injectIntoMobileDrawerMenu();
         injectIntoKapybaraAvatarMenu();
       }
       routeTimer = window.setTimeout(check, 500);
     };
 
     routeTimer = window.setTimeout(check, 500);
-  }
-
-  function injectIntoAvatarMenu() {
-    const menu = visibleAvatarMenu();
-    if (!menu) {
-      root.log.trace("menu", "avatar menu not present");
-      return;
-    }
-
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
-      root.log.trace("menu", "avatar menu items already present");
-      return;
-    }
-
-    const firstItem = menu.querySelector("li[role='menuitem']");
-    if (!firstItem) {
-      root.log.warn("menu", "avatar menu found without menuitem");
-      return;
-    }
-
-    const divider = menu.querySelector("hr");
-    const item = makeMenuItem(firstItem, "Cudloun");
-    item.addEventListener("click", openHub);
-
-    const controlsItem = showFullscreenControls() ? makeMenuActionRow(firstItem) : null;
-
-    if (divider) {
-      divider.before(item);
-      if (controlsItem) item.after(controlsItem);
-    } else {
-      menu.appendChild(item);
-      if (controlsItem) menu.appendChild(controlsItem);
-    }
-
-    root.log.info("menu", "avatar menu items injected", divider ? "before divider" : "at end", menuDebug(menu));
-  }
-
-  function injectIntoMobileDrawerMenu() {
-    const menu = visibleMobileDrawerMenu();
-    if (!menu) {
-      root.log.trace("menu", "mobile drawer menu not present");
-      return;
-    }
-
-    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
-      root.log.trace("menu", "mobile drawer menu items already present");
-      return;
-    }
-
-    const firstItem = menu.querySelector("li[role='menuitem']");
-    if (!firstItem) {
-      root.log.warn("menu", "mobile drawer found without menuitem");
-      return;
-    }
-
-    const item = makeMobileMenuItem(firstItem, "Cudloun");
-    item.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      dismissBabetaMenu(event.currentTarget);
-      openHub();
-    });
-
-    const controlsItem = showFullscreenControls() ? makeMenuActionRow(firstItem, true) : null;
-
-    const logout = Array.from(menu.querySelectorAll("li[role='menuitem']"))
-      .find((li) => li.textContent.includes("Odhlásit"));
-
-    if (logout) {
-      logout.before(item);
-      if (controlsItem) item.after(controlsItem);
-    } else {
-      menu.appendChild(item);
-      if (controlsItem) menu.appendChild(controlsItem);
-    }
-
-    root.log.info("menu", "mobile drawer menu items injected", menuDebug(menu));
   }
 
   function injectIntoKapybaraAvatarMenu() {
@@ -195,49 +110,6 @@
     }
 
     root.log.info("menu", "kapybara avatar menu items injected", menuDebug(menu));
-  }
-
-  function visibleAvatarMenu() {
-    const menus = Array.from(document.querySelectorAll(".MuiMenu-paper ul[role='menu']"));
-    const visibleMenus = menus.filter((menu) => {
-      const rect = menu.getBoundingClientRect();
-      const style = window.getComputedStyle(menu);
-      return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
-    });
-
-    if (menus.length > 1) {
-      root.log.debug("menu", "candidate avatar menus", menus.map(menuDebug));
-    }
-
-    return visibleMenus[visibleMenus.length - 1] || menus[menus.length - 1] || null;
-  }
-
-  function visibleMobileDrawerMenu() {
-    const menus = Array.from(document.querySelectorAll(".MuiDrawer-paperAnchorBottom ul.MuiList-root"));
-    const visibleMenus = menus.filter((menu) => {
-      const rect = menu.getBoundingClientRect();
-      const style = window.getComputedStyle(menu);
-      const rootNode = menu.closest(".MuiDrawer-root");
-      const rootClass = String(rootNode?.className || "");
-      const text = menu.textContent.replace(/\s+/g, "");
-      const onscreen = rect.top < window.innerHeight && rect.bottom > 0;
-      return (
-        rect.width > 0 &&
-        rect.height > 0 &&
-        onscreen &&
-        !rootClass.includes("MuiModal-hidden") &&
-        style.visibility !== "hidden" &&
-        style.display !== "none" &&
-        text.includes("Barevnéschéma") &&
-        (text.includes("Nastavení") || text.includes("Přihlásit"))
-      );
-    });
-
-    if (menus.length > 1) {
-      root.log.debug("menu", "candidate mobile drawer menus", menus.map(menuDebug));
-    }
-
-    return visibleMenus.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0] || null;
   }
 
   function visibleKapybaraAvatarMenu() {
@@ -305,49 +177,6 @@
     return rows[0] || null;
   }
 
-  function makeMenuItem(firstItem, labelText = "Cudloun") {
-    const item = document.createElement("li");
-    item.className = firstItem.className || "";
-    item.setAttribute(MENU_ITEM_ATTR, "true");
-    item.setAttribute("tabindex", "-1");
-    item.setAttribute("role", "menuitem");
-    item.style.cssText = [
-      firstItem.getAttribute("style") || "",
-      "cursor:pointer;",
-      "display:flex;",
-      "align-items:center;",
-      "gap:16px;",
-      "min-height:48px;",
-    ].join("");
-
-    const icon = document.createElement("div");
-    icon.className = firstItem.querySelector("div")?.className || "";
-    icon.innerHTML = labelText === "Fullscreen" ? fullscreenIconSvg() : menuIconSvg();
-
-    const label = document.createElement("span");
-    label.textContent = labelText;
-
-    item.appendChild(icon);
-    item.appendChild(label);
-    return item;
-  }
-
-  function makeMobileMenuItem(firstItem, labelText = "Cudloun") {
-    const item = firstItem.cloneNode(true);
-    item.setAttribute(MENU_ITEM_ATTR, "true");
-    item.setAttribute("tabindex", "-1");
-    item.setAttribute("role", "menuitem");
-    item.style.cursor = "pointer";
-
-    const iconWrap = item.querySelector(".MuiListItemIcon-root") || item.querySelector("svg")?.parentElement;
-    if (iconWrap) iconWrap.innerHTML = labelText === "Fullscreen" ? fullscreenIconSvg() : menuIconSvg();
-
-    const label = item.querySelector(".MuiListItemText-root span") || item.querySelector(".MuiListItemText-root") || item;
-    label.textContent = labelText;
-
-    return item;
-  }
-
   function makeKapybaraMenuItem(anchor) {
     const item = document.createElement("button");
     item.type = "button";
@@ -372,27 +201,6 @@
     return row;
   }
 
-  function makeMenuActionRow(firstItem, mobile = false) {
-    const item = document.createElement("li");
-    item.className = firstItem.className || "";
-    item.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
-    item.setAttribute("tabindex", "-1");
-    item.setAttribute("role", "menuitem");
-    item.style.cssText = [
-      firstItem.getAttribute("style") || "",
-      "cursor:default;",
-      "display:flex;",
-      "align-items:center;",
-      "gap:8px;",
-      "min-height:48px;",
-      mobile ? "padding:8px 16px;" : "padding:8px 16px;",
-    ].join("");
-
-    item.appendChild(makeMenuActionButton("Full", fullscreenIconSvg(), toggleFullscreen, "Fullscreen"));
-    item.appendChild(makeMenuActionButton("Refresh", refreshPageIconSvg(), refreshPage));
-    return item;
-  }
-
   function makeMenuActionButton(labelText, iconSvg, handler, ariaLabel = labelText) {
     const button = document.createElement("button");
     button.className = "cudloun-menu-action-button";
@@ -410,9 +218,7 @@
       event.stopPropagation();
     }
 
-    const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
-    if (menuPaper) menuPaper.style.display = "none";
-    dismissBabetaMenu(event?.currentTarget);
+    dismissKapybaraMenu();
 
     try {
       if (document.fullscreenElement) {
@@ -434,9 +240,7 @@
       event.stopPropagation();
     }
 
-    const menuPaper = event?.currentTarget?.closest(".MuiMenu-paper");
-    if (menuPaper) menuPaper.style.display = "none";
-    dismissBabetaMenu(event?.currentTarget);
+    dismissKapybaraMenu();
     if (document.fullscreenElement) {
       root.storage.set(RESTORE_FULLSCREEN_KEY, true);
     }
@@ -451,8 +255,6 @@
   function refreshMenuItems() {
     document.querySelectorAll(`[${MENU_ITEM_ATTR}], [${FULLSCREEN_ITEM_ATTR}]`)
       .forEach((item) => item.remove());
-    injectIntoAvatarMenu();
-    injectIntoMobileDrawerMenu();
     injectIntoKapybaraAvatarMenu();
   }
 
@@ -543,9 +345,7 @@
     } else if (eventOrModuleId) {
       eventOrModuleId.preventDefault();
       eventOrModuleId.stopPropagation();
-      const menuPaper = eventOrModuleId.currentTarget?.closest(".MuiMenu-paper");
-      if (menuPaper) menuPaper.style.display = "none";
-      dismissBabetaMenu(eventOrModuleId.currentTarget);
+      dismissKapybaraMenu();
     }
 
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
@@ -566,28 +366,6 @@
   function closeHub() {
     document.querySelector(`.${BACKDROP_CLASS}`)?.remove();
     root.log.info("hub", "closed");
-  }
-
-  function dismissBabetaMenu(target) {
-    const drawerRoot = target?.closest?.(".MuiDrawer-root");
-    if (!drawerRoot) return;
-
-    drawerRoot.style.removeProperty("display");
-
-    const backdrop = drawerRoot.querySelector(".MuiBackdrop-root");
-    if (backdrop && window.getComputedStyle(backdrop).display !== "none") {
-      backdrop.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-      return;
-    }
-
-    document.dispatchEvent(new KeyboardEvent("keydown", {
-      key: "Escape",
-      code: "Escape",
-      keyCode: 27,
-      which: 27,
-      bubbles: true,
-      cancelable: true,
-    }));
   }
 
   function dismissKapybaraMenu() {
@@ -651,7 +429,7 @@
 
     const subtitle = document.createElement("div");
     subtitle.className = "cudloun-subtitle";
-    subtitle.textContent = `Babeta module hub core ${root.coreVersion} / seed ${root.seedVersion} / manifest ${root.manifestVersion}`;
+    subtitle.textContent = `Kapybara module hub core ${root.coreVersion} / seed ${root.seedVersion} / manifest ${root.manifestVersion}`;
 
     titleWrap.appendChild(title);
     titleWrap.appendChild(subtitle);

@@ -7,7 +7,7 @@
   root.registerModule({
     id: "settoun",
     name: "Settoun",
-    description: "Framework settings for Cudloun's own Babeta menu behavior.",
+    description: "Framework settings for Cudloun's own Kapybara menu behavior.",
     version: "0.1.0",
     defaultEnabled: true,
     renderSettings(ctx) {
@@ -38,7 +38,7 @@
     renderHelp() {
       return [
         "Settoun holds settings for Cudloun itself.",
-        "Show fullscreen controls whether the Babeta avatar menu includes the Fullscreen and Refresh quick actions.",
+        "Show fullscreen controls whether the Kapybara account menu includes the Fullscreen and Refresh quick actions.",
       ];
     },
   });

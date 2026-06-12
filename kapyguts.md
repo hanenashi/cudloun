@@ -134,16 +134,7 @@ data-post-id="1074607522"
 data-thread-id="1074607385"
 ```
 
-## Page Structure Differences From Babeta
-
-Kapybara is not MUI-shaped.
-
-Babeta board posts:
-
-```text
-div.content-item.board-post
-.MuiPaper-root
-```
+## Board Post Shape
 
 Kapybara board posts:
 
@@ -152,8 +143,6 @@ article.post
 data-post-id
 data-thread-id
 ```
-
-Kapybara still loads JavaScript chunks, but content is server-rendered into the document earlier. In a quick 2026-06-11 board sample, Kapybara had fewer elements than Babeta on the same board, while sending a larger rendered HTML body.
 
 ## Favorites
 

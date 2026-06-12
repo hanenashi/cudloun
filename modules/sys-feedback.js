@@ -474,19 +474,10 @@
   }
 
   function detectAuthor() {
-    const fromBabeguts = root.babeguts && typeof root.babeguts.currentUser === "function"
-      ? root.babeguts.currentUser()
+    const fromKapyguts = root.kapyguts && typeof root.kapyguts.currentUser === "function"
+      ? root.kapyguts.currentUser()
       : "";
-    if (validAuthor(fromBabeguts)) return cleanAuthor(fromBabeguts);
-
-    const desktopAvatar = document.querySelector('button[aria-label="Uživatelské menu"] img[alt]');
-    if (validAuthor(desktopAvatar?.getAttribute("alt"))) return cleanAuthor(desktopAvatar.getAttribute("alt"));
-
-    const mobileAvatar = Array.from(document.querySelectorAll(".MuiBottomNavigationAction-root"))
-      .find((button) => button.querySelector(".MuiAvatar-root, img[alt]"));
-    const mobileAlt = mobileAvatar?.querySelector("img[alt]")?.getAttribute("alt");
-    if (validAuthor(mobileAlt)) return cleanAuthor(mobileAlt);
-    if (validAuthor(mobileAvatar?.textContent)) return cleanAuthor(mobileAvatar.textContent);
+    if (validAuthor(fromKapyguts)) return cleanAuthor(fromKapyguts);
 
     return "Unknown";
   }
