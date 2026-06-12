@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.4.47
+// @version      0.4.48
 // @description  Modular userscript hub for Babeta.
 // @author       hanenashi
 // @match        https://babeta.okoun.cz/*
 // @match        https://kapybara.okoun.cz/*
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.4.47
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.4.48
 // @icon         https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.ico
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js

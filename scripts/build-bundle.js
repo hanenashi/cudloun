@@ -31,7 +31,10 @@ scriptFiles.forEach((file) => {
   const source = readText(file);
   line(`  embeddedText.set(${quote(file)}, ${quote(source)});`);
   line(`  embeddedScripts.set(${quote(file)}, function () {`);
-  out += source.split(/\r?\n/).map((item) => `    ${item}`).join("\n");
+  out += source.split(/\r?\n/).map((item) => {
+    const trimmed = item.replace(/[ \t]+$/g, "");
+    return trimmed ? `    ${trimmed}` : "";
+  }).join("\n");
   line("");
   line("  });");
   line("");
@@ -137,7 +140,10 @@ line("  };");
 line("");
 line("  const CUDLOUN_SEED = seed;");
 line("");
-out += core.split(/\r?\n/).map((item) => `  ${item}`).join("\n");
+out += core.split(/\r?\n/).map((item) => {
+  const trimmed = item.replace(/[ \t]+$/g, "");
+  return trimmed ? `  ${trimmed}` : "";
+}).join("\n");
 line("");
 line("})();");
 

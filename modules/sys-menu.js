@@ -28,6 +28,7 @@
     refreshMenuItems,
     injectIntoAvatarMenu,
     injectIntoMobileDrawerMenu,
+    injectIntoKapybaraAvatarMenu,
   };
 
   function start() {
@@ -37,6 +38,7 @@
     observeRouteChanges();
     injectIntoAvatarMenu();
     injectIntoMobileDrawerMenu();
+    injectIntoKapybaraAvatarMenu();
     root.log.info("menu", "started", lastRoute);
   }
 
@@ -51,6 +53,7 @@
       observerDebounceTimer = window.setTimeout(() => {
         injectIntoAvatarMenu();
         injectIntoMobileDrawerMenu();
+        injectIntoKapybaraAvatarMenu();
       }, 40);
     });
 
@@ -72,6 +75,7 @@
         root.log.info("router", "route changed", route);
         injectIntoAvatarMenu();
         injectIntoMobileDrawerMenu();
+        injectIntoKapybaraAvatarMenu();
       }
       routeTimer = window.setTimeout(check, 500);
     };
@@ -156,6 +160,43 @@
     root.log.info("menu", "mobile drawer menu items injected", menuDebug(menu));
   }
 
+  function injectIntoKapybaraAvatarMenu() {
+    if (!root.kapyguts?.isKapybara?.()) return;
+
+    const menu = visibleKapybaraAvatarMenu();
+    if (!menu) {
+      root.log.trace("menu", "kapybara avatar menu not present");
+      return;
+    }
+
+    if (menu.querySelector(`[${MENU_ITEM_ATTR}]`)) {
+      root.log.trace("menu", "kapybara avatar menu items already present");
+      return;
+    }
+
+    const anchor = kapybaraMenuAnchor(menu);
+    const item = makeKapybaraMenuItem(anchor);
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dismissKapybaraMenu();
+      openHub();
+    });
+
+    if (anchor) {
+      anchor.before(item);
+    } else {
+      menu.appendChild(item);
+    }
+
+    if (showFullscreenControls()) {
+      const controls = makeKapybaraActionRow();
+      item.after(controls);
+    }
+
+    root.log.info("menu", "kapybara avatar menu items injected", menuDebug(menu));
+  }
+
   function visibleAvatarMenu() {
     const menus = Array.from(document.querySelectorAll(".MuiMenu-paper ul[role='menu']"));
     const visibleMenus = menus.filter((menu) => {
@@ -199,6 +240,71 @@
     return visibleMenus.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0] || null;
   }
 
+  function visibleKapybaraAvatarMenu() {
+    const candidates = Array.from(document.querySelectorAll([
+      "[role='dialog']",
+      "[role='menu']",
+      ".bottom-sheet",
+      "[class*='sheet']",
+      "[class*='drawer']",
+      "[class*='menu']",
+      "section",
+      "nav",
+      "aside",
+      "div",
+    ].join(",")))
+      .filter(isUsableKapybaraMenuCandidate)
+      .sort((a, b) => {
+        const rectA = a.getBoundingClientRect();
+        const rectB = b.getBoundingClientRect();
+        return (rectA.width * rectA.height) - (rectB.width * rectB.height);
+      });
+
+    if (candidates.length > 1) {
+      root.log.debug("menu", "candidate kapybara avatar menus", candidates.slice(0, 8).map(menuDebug));
+    }
+
+    return candidates[0] || null;
+  }
+
+  function isUsableKapybaraMenuCandidate(node) {
+    if (!(node instanceof Element)) return false;
+    if (node.closest(`.${BACKDROP_CLASS}`)) return false;
+    if (node.querySelector(`[${MENU_ITEM_ATTR}]`)) return false;
+
+    const rect = node.getBoundingClientRect();
+    if (rect.width < 220 || rect.height < 120) return false;
+    if (rect.bottom <= 0 || rect.top >= window.innerHeight) return false;
+
+    const style = window.getComputedStyle(node);
+    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
+
+    const text = normalizeMenuText(node.textContent);
+    if (!text.includes("Nastavení") || !text.includes("Odhlásit")) return false;
+    if (text.length > 260) return false;
+
+    return true;
+  }
+
+  function kapybaraMenuAnchor(menu) {
+    const rows = Array.from(menu.querySelectorAll("button, a, [role='button'], li, div, span"))
+      .filter((node) => {
+        if (!(node instanceof Element)) return false;
+        const rect = node.getBoundingClientRect();
+        if (rect.width < 80 || rect.height < 24) return false;
+        if (rect.bottom <= 0 || rect.top >= window.innerHeight) return false;
+        const text = normalizeMenuText(node.textContent);
+        return text === "Nastavení" || text === "Odhlásit se" || text === "Odhlásit";
+      })
+      .sort((a, b) => {
+        const rectA = a.getBoundingClientRect();
+        const rectB = b.getBoundingClientRect();
+        return (rectA.width * rectA.height) - (rectB.width * rectB.height);
+      });
+
+    return rows[0] || null;
+  }
+
   function makeMenuItem(firstItem, labelText = "Cudloun") {
     const item = document.createElement("li");
     item.className = firstItem.className || "";
@@ -240,6 +346,30 @@
     label.textContent = labelText;
 
     return item;
+  }
+
+  function makeKapybaraMenuItem(anchor) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = `${anchor?.className || ""} cudloun-kapybara-menu-item`.trim();
+    item.setAttribute(MENU_ITEM_ATTR, "true");
+    item.innerHTML = `${menuIconSvg()}<span>Cudloun</span>`;
+    return item;
+  }
+
+  function makeKapybaraActionRow() {
+    const row = document.createElement("div");
+    row.className = "cudloun-kapybara-action-row";
+    row.setAttribute(FULLSCREEN_ITEM_ATTR, "true");
+    row.appendChild(makeMenuActionButton("Full", fullscreenIconSvg(), (event) => {
+      dismissKapybaraMenu();
+      toggleFullscreen(event);
+    }, "Fullscreen"));
+    row.appendChild(makeMenuActionButton("Refresh", refreshPageIconSvg(), (event) => {
+      dismissKapybaraMenu();
+      refreshPage(event);
+    }));
+    return row;
   }
 
   function makeMenuActionRow(firstItem, mobile = false) {
@@ -323,6 +453,7 @@
       .forEach((item) => item.remove());
     injectIntoAvatarMenu();
     injectIntoMobileDrawerMenu();
+    injectIntoKapybaraAvatarMenu();
   }
 
   function maybeShowRestoreFullscreenPrompt() {
@@ -457,6 +588,21 @@
       bubbles: true,
       cancelable: true,
     }));
+  }
+
+  function dismissKapybaraMenu() {
+    document.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "Escape",
+      code: "Escape",
+      keyCode: 27,
+      which: 27,
+      bubbles: true,
+      cancelable: true,
+    }));
+  }
+
+  function normalizeMenuText(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
   }
 
   function renderHub(selectedId) {
@@ -940,6 +1086,11 @@
       .cudloun-menu-action-button:hover{background:#eef2f7}
       .cudloun-menu-action-button svg{width:18px;height:18px;flex:0 0 auto;fill:currentColor}
       .cudloun-menu-action-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .cudloun-kapybara-menu-item{appearance:none;width:100%;min-height:56px;display:flex;align-items:center;gap:24px;margin:0;padding:12px 40px;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
+      .cudloun-kapybara-menu-item:hover{background:rgba(128,128,128,.08)}
+      .cudloun-kapybara-menu-item svg{width:24px;height:24px;flex:0 0 auto;fill:#b06a00;color:#b06a00}
+      .cudloun-kapybara-menu-item span{font-size:1rem;line-height:1.35}
+      .cudloun-kapybara-action-row{display:flex;align-items:center;gap:8px;padding:4px 40px 12px}
       .cudloun-restore-fullscreen{position:fixed;left:50%;top:14px;z-index:1900;display:flex;align-items:center;gap:8px;transform:translateX(-50%);padding:8px;border:1px solid rgba(79,102,134,.28);border-radius:8px;background:#fff;box-shadow:0 10px 28px rgba(18,27,43,.22);font-family:inherit}
       .cudloun-restore-fullscreen button{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .86rem/1.2 inherit;padding:8px 10px}
       .cudloun-restore-fullscreen button:hover{background:#eef2f7}
