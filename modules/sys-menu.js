@@ -14,6 +14,7 @@
 
   let observer = null;
   let observerDebounceTimer = null;
+  let interactionDebounceTimer = null;
   let routeTimer = null;
   let lastRoute = root.currentRoute();
   let hubPosition = null;
@@ -33,6 +34,7 @@
     installStyles();
     maybeShowRestoreFullscreenPrompt();
     observeAvatarMenu();
+    observeMenuInteractions();
     observeRouteChanges();
     injectIntoKapybaraAvatarMenu();
     root.log.info("menu", "started", lastRoute);
@@ -59,6 +61,21 @@
     });
 
     root.log.debug("menu", "avatar/menu observer attached");
+  }
+
+  function observeMenuInteractions() {
+    const schedule = (event) => {
+      if (!(event.target instanceof Element)) return;
+      if (!event.target.closest("[aria-label='Uživatelské menu'], .user-menu-wrap, .desktop-right, .avatar-shell, .avatar-button")) return;
+
+      window.clearTimeout(interactionDebounceTimer);
+      interactionDebounceTimer = window.setTimeout(() => {
+        injectIntoKapybaraAvatarMenu();
+      }, 80);
+    };
+
+    document.addEventListener("click", schedule, true);
+    document.addEventListener("pointerup", schedule, true);
   }
 
   function observeRouteChanges() {
@@ -145,7 +162,7 @@
     if (node.querySelector(`[${MENU_ITEM_ATTR}]`)) return false;
 
     const rect = node.getBoundingClientRect();
-    if (rect.width < 220 || rect.height < 120) return false;
+    if (rect.width < 160 || rect.height < 120) return false;
     if (rect.bottom <= 0 || rect.top >= window.innerHeight) return false;
 
     const style = window.getComputedStyle(node);
@@ -869,6 +886,10 @@
       .cudloun-kapybara-menu-item svg{width:24px;height:24px;flex:0 0 auto;fill:#b06a00;color:#b06a00}
       .cudloun-kapybara-menu-item span{font-size:1rem;line-height:1.35}
       .cudloun-kapybara-action-row{display:flex;align-items:center;gap:8px;padding:4px 40px 12px}
+      .desktop-menu .cudloun-kapybara-menu-item{min-height:36px;gap:10px;padding:0 16px}
+      .desktop-menu .cudloun-kapybara-menu-item svg{width:20px;height:20px}
+      .desktop-menu .cudloun-kapybara-menu-item span{font-size:.95rem}
+      .desktop-menu .cudloun-kapybara-action-row{padding:4px 8px 8px}
       .cudloun-restore-fullscreen{position:fixed;left:50%;top:14px;z-index:1900;display:flex;align-items:center;gap:8px;transform:translateX(-50%);padding:8px;border:1px solid rgba(79,102,134,.28);border-radius:8px;background:#fff;box-shadow:0 10px 28px rgba(18,27,43,.22);font-family:inherit}
       .cudloun-restore-fullscreen button{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .86rem/1.2 inherit;padding:8px 10px}
       .cudloun-restore-fullscreen button:hover{background:#eef2f7}

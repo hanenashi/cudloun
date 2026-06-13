@@ -93,6 +93,10 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.5.3 TL;DR
+
+- Fixed Cudloun injection into Kapybara's compact desktop account menu.
+
 ## Version 0.5.2 TL;DR
 
 - Added the experimental Thread Lane module for mobile reply-thread side reading.
