@@ -33,6 +33,7 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/sys-feedback.js` owns Firestore-backed per-feature feedback threads.
 - `modules/sys-menu.js` owns Kapybara account-menu injection and the Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
+- `modules/kapybara-theme.js` owns the experimental Kapybara dark theme.
 
 The installable seed uses `@require` so CSP-strict frontends such as Kapybara do not block startup. Source modules stay separate in `modules/`; run this after source changes:
 
@@ -90,6 +91,11 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.5.1 TL;DR
+
+- Added the experimental Kapybara Theme module for a dark Kapybara skin.
+- Keeps the theme removable: disabling the module removes its root marker and injected stylesheet.
 
 ## Version 0.5.0 TL;DR
 

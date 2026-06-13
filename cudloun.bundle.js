@@ -2,13 +2,13 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.5.0";
+  const VERSION = "0.5.1";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
   const embeddedScripts = new Map();
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.5.0\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.5.1\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -1890,6 +1890,262 @@
           ];
         },
       });
+    })();
+
+  });
+
+  embeddedText.set("modules/kapybara-theme.js", "// Kapybara dark theme.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-kapybara-theme-style\";\n  const THEME_ATTR = \"data-cudloun-kapybara-theme\";\n\n  const DEFAULTS = {\n    preset: \"black\",\n    accent: \"#d68a1f\",\n    pitchBlack: true,\n    softenCards: true,\n  };\n\n  root.registerModule({\n    id: \"kapybara-theme\",\n    name: \"Kapybara Theme\",\n    description: \"Dark theme experiment for Kapybara pages.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      apply(ctx);\n      return () => cleanup();\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      wrap.appendChild(makeSelectRow(ctx, \"Color preset\", \"preset\", [\n        [\"black\", \"Black\"],\n        [\"charcoal\", \"Charcoal\"],\n        [\"blueblack\", \"Blue black\"],\n      ]));\n      wrap.appendChild(makeColorRow(ctx, \"Accent\", \"accent\", DEFAULTS.accent));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Pitch black page\", \"pitchBlack\", DEFAULTS.pitchBlack));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Softer post cards\", \"softenCards\", DEFAULTS.softenCards));\n\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable this module to apply a Cudloun dark theme to Kapybara.\",\n        \"The first pass uses semantic Kapybara classes where possible and keeps generated class overrides minimal.\",\n        \"Disable the module to remove the theme style and return to native Kapybara colors.\",\n      ];\n    },\n  });\n\n  function apply(ctx) {\n    if (!root.kapyguts?.isKapybara?.()) return;\n\n    const settings = readSettings(ctx);\n    document.documentElement.setAttribute(THEME_ATTR, \"dark\");\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-bg\", palette(settings).bg);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-surface\", palette(settings).surface);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-surface-2\", palette(settings).surface2);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-line\", palette(settings).line);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-text\", palette(settings).text);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-muted\", palette(settings).muted);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-accent\", settings.accent);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-accent-soft\", hexToRgba(settings.accent, 0.16));\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-radius\", settings.softenCards ? \"10px\" : \"0px\");\n    installStyle();\n    root.log.info(\"kapybara-theme\", \"applied\", settings);\n  }\n\n  function cleanup() {\n    document.documentElement.removeAttribute(THEME_ATTR);\n    [\n      \"--cudloun-kapybara-bg\",\n      \"--cudloun-kapybara-surface\",\n      \"--cudloun-kapybara-surface-2\",\n      \"--cudloun-kapybara-line\",\n      \"--cudloun-kapybara-text\",\n      \"--cudloun-kapybara-muted\",\n      \"--cudloun-kapybara-accent\",\n      \"--cudloun-kapybara-accent-soft\",\n      \"--cudloun-kapybara-radius\",\n    ].forEach((name) => document.documentElement.style.removeProperty(name));\n    document.getElementById(STYLE_ID)?.remove();\n    root.log.info(\"kapybara-theme\", \"removed\");\n  }\n\n  function readSettings(ctx) {\n    return {\n      preset: ctx.storage.get(\"preset\", DEFAULTS.preset),\n      accent: validColor(ctx.storage.get(\"accent\", DEFAULTS.accent), DEFAULTS.accent),\n      pitchBlack: ctx.storage.get(\"pitchBlack\", DEFAULTS.pitchBlack) !== false,\n      softenCards: ctx.storage.get(\"softenCards\", DEFAULTS.softenCards) !== false,\n    };\n  }\n\n  function palette(settings) {\n    const presets = {\n      black: {\n        bg: settings.pitchBlack ? \"#000000\" : \"#070707\",\n        surface: \"#141414\",\n        surface2: \"#1f1f1f\",\n        line: \"#303030\",\n        text: \"#f4f4f4\",\n        muted: \"#aaaeb6\",\n      },\n      charcoal: {\n        bg: \"#101214\",\n        surface: \"#191d21\",\n        surface2: \"#242a30\",\n        line: \"#36404a\",\n        text: \"#f2f4f7\",\n        muted: \"#a8b0ba\",\n      },\n      blueblack: {\n        bg: \"#080b10\",\n        surface: \"#111827\",\n        surface2: \"#1d2636\",\n        line: \"#334155\",\n        text: \"#f8fafc\",\n        muted: \"#a6b1c2\",\n      },\n    };\n    return presets[settings.preset] || presets.black;\n  }\n\n  function installStyle() {\n    if (document.getElementById(STYLE_ID)) return;\n\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[${THEME_ATTR}=\"dark\"]{color-scheme:dark;background:var(--cudloun-kapybara-bg)!important;scrollbar-color:var(--cudloun-kapybara-accent) var(--cudloun-kapybara-bg)}\n      html[${THEME_ATTR}=\"dark\"] body,\n      html[${THEME_ATTR}=\"dark\"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}\n      html[${THEME_ATTR}=\"dark\"] body::before,\n      html[${THEME_ATTR}=\"dark\"] body::after,\n      html[${THEME_ATTR}=\"dark\"] #root::before,\n      html[${THEME_ATTR}=\"dark\"] #root::after{background:transparent!important;background-image:none!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(main,header,nav,footer,aside,section,form):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^=\"cudloun-\"]){background-color:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.post,.post-main,.message-card,.conversation-item,.bottom-sheet,[role=\"dialog\"],[role=\"menu\"]):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^=\"cudloun-\"]){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] article.post{border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}\n      html[${THEME_ATTR}=\"dark\"] article.post + article.post{border-top:1px solid var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] .post-header,\n      html[${THEME_ATTR}=\"dark\"] .meta,\n      html[${THEME_ATTR}=\"dark\"] .reply-ref,\n      html[${THEME_ATTR}=\"dark\"] .actions,\n      html[${THEME_ATTR}=\"dark\"] .conversation-item{border-color:var(--cudloun-kapybara-line)!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(.body,.markdown,.post-main,p,li,span,div):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:inherit}\n      html[${THEME_ATTR}=\"dark\"] :where(.meta,.reply-ref,time,small,label):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:var(--cudloun-kapybara-muted)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a,.author,.reply-action,button.date):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:var(--cudloun-kapybara-accent)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a):not(.cudloun-dialog *){text-decoration-color:color-mix(in srgb,var(--cudloun-kapybara-accent) 60%,transparent)!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(button,input,textarea,select):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(button):not(.cudloun-dialog *):not([class^=\"cudloun-\"]):hover{background:var(--cudloun-kapybara-accent-soft)!important}\n      html[${THEME_ATTR}=\"dark\"] input::placeholder,\n      html[${THEME_ATTR}=\"dark\"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}\n\n      html[${THEME_ATTR}=\"dark\"] .avatar,\n      html[${THEME_ATTR}=\"dark\"] .avatar img,\n      html[${THEME_ATTR}=\"dark\"] .avatar-button img,\n      html[${THEME_ATTR}=\"dark\"] .avatar-shell img{background:transparent!important;border-color:transparent!important}\n      html[${THEME_ATTR}=\"dark\"] :where(img,video,canvas):not(.cudloun-mascot){color-scheme:normal}\n      html[${THEME_ATTR}=\"dark\"] :where(hr){border-color:var(--cudloun-kapybara-line)!important}\n    `;\n    document.head.appendChild(style);\n  }\n\n  function makeCheckboxRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const input = document.createElement(\"input\");\n    input.type = \"checkbox\";\n    input.checked = ctx.storage.get(key, fallback) !== false;\n    input.addEventListener(\"change\", () => {\n      ctx.storage.set(key, input.checked);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(input);\n    return label;\n  }\n\n  function makeColorRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const input = document.createElement(\"input\");\n    input.type = \"color\";\n    input.value = validColor(ctx.storage.get(key, fallback), fallback);\n    input.addEventListener(\"input\", () => {\n      ctx.storage.set(key, input.value);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(input);\n    return label;\n  }\n\n  function makeSelectRow(ctx, labelText, key, options) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const select = document.createElement(\"select\");\n    select.className = \"cudloun-select\";\n    const current = ctx.storage.get(key, DEFAULTS[key]);\n    options.forEach(([value, name]) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = name;\n      option.selected = value === current;\n      select.appendChild(option);\n    });\n    select.addEventListener(\"change\", () => {\n      ctx.storage.set(key, select.value);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(select);\n    return label;\n  }\n\n  function validColor(value, fallback) {\n    const text = String(value || \"\");\n    return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;\n  }\n\n  function hexToRgba(hex, alpha) {\n    const clean = validColor(hex, DEFAULTS.accent).slice(1);\n    const value = Number.parseInt(clean, 16);\n    const red = (value >> 16) & 255;\n    const green = (value >> 8) & 255;\n    const blue = value & 255;\n    return `rgba(${red},${green},${blue},${alpha})`;\n  }\n})();\n");
+  embeddedScripts.set("modules/kapybara-theme.js", function () {
+    // Kapybara dark theme.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const STYLE_ID = "cudloun-kapybara-theme-style";
+      const THEME_ATTR = "data-cudloun-kapybara-theme";
+
+      const DEFAULTS = {
+        preset: "black",
+        accent: "#d68a1f",
+        pitchBlack: true,
+        softenCards: true,
+      };
+
+      root.registerModule({
+        id: "kapybara-theme",
+        name: "Kapybara Theme",
+        description: "Dark theme experiment for Kapybara pages.",
+        version: "0.1.0",
+        defaultEnabled: false,
+        start(ctx) {
+          apply(ctx);
+          return () => cleanup();
+        },
+        renderSettings(ctx) {
+          const wrap = document.createElement("div");
+          wrap.className = "cudloun-settings-list";
+
+          wrap.appendChild(makeSelectRow(ctx, "Color preset", "preset", [
+            ["black", "Black"],
+            ["charcoal", "Charcoal"],
+            ["blueblack", "Blue black"],
+          ]));
+          wrap.appendChild(makeColorRow(ctx, "Accent", "accent", DEFAULTS.accent));
+          wrap.appendChild(makeCheckboxRow(ctx, "Pitch black page", "pitchBlack", DEFAULTS.pitchBlack));
+          wrap.appendChild(makeCheckboxRow(ctx, "Softer post cards", "softenCards", DEFAULTS.softenCards));
+
+          return wrap;
+        },
+        renderHelp() {
+          return [
+            "Enable this module to apply a Cudloun dark theme to Kapybara.",
+            "The first pass uses semantic Kapybara classes where possible and keeps generated class overrides minimal.",
+            "Disable the module to remove the theme style and return to native Kapybara colors.",
+          ];
+        },
+      });
+
+      function apply(ctx) {
+        if (!root.kapyguts?.isKapybara?.()) return;
+
+        const settings = readSettings(ctx);
+        document.documentElement.setAttribute(THEME_ATTR, "dark");
+        document.documentElement.style.setProperty("--cudloun-kapybara-bg", palette(settings).bg);
+        document.documentElement.style.setProperty("--cudloun-kapybara-surface", palette(settings).surface);
+        document.documentElement.style.setProperty("--cudloun-kapybara-surface-2", palette(settings).surface2);
+        document.documentElement.style.setProperty("--cudloun-kapybara-line", palette(settings).line);
+        document.documentElement.style.setProperty("--cudloun-kapybara-text", palette(settings).text);
+        document.documentElement.style.setProperty("--cudloun-kapybara-muted", palette(settings).muted);
+        document.documentElement.style.setProperty("--cudloun-kapybara-accent", settings.accent);
+        document.documentElement.style.setProperty("--cudloun-kapybara-accent-soft", hexToRgba(settings.accent, 0.16));
+        document.documentElement.style.setProperty("--cudloun-kapybara-radius", settings.softenCards ? "10px" : "0px");
+        installStyle();
+        root.log.info("kapybara-theme", "applied", settings);
+      }
+
+      function cleanup() {
+        document.documentElement.removeAttribute(THEME_ATTR);
+        [
+          "--cudloun-kapybara-bg",
+          "--cudloun-kapybara-surface",
+          "--cudloun-kapybara-surface-2",
+          "--cudloun-kapybara-line",
+          "--cudloun-kapybara-text",
+          "--cudloun-kapybara-muted",
+          "--cudloun-kapybara-accent",
+          "--cudloun-kapybara-accent-soft",
+          "--cudloun-kapybara-radius",
+        ].forEach((name) => document.documentElement.style.removeProperty(name));
+        document.getElementById(STYLE_ID)?.remove();
+        root.log.info("kapybara-theme", "removed");
+      }
+
+      function readSettings(ctx) {
+        return {
+          preset: ctx.storage.get("preset", DEFAULTS.preset),
+          accent: validColor(ctx.storage.get("accent", DEFAULTS.accent), DEFAULTS.accent),
+          pitchBlack: ctx.storage.get("pitchBlack", DEFAULTS.pitchBlack) !== false,
+          softenCards: ctx.storage.get("softenCards", DEFAULTS.softenCards) !== false,
+        };
+      }
+
+      function palette(settings) {
+        const presets = {
+          black: {
+            bg: settings.pitchBlack ? "#000000" : "#070707",
+            surface: "#141414",
+            surface2: "#1f1f1f",
+            line: "#303030",
+            text: "#f4f4f4",
+            muted: "#aaaeb6",
+          },
+          charcoal: {
+            bg: "#101214",
+            surface: "#191d21",
+            surface2: "#242a30",
+            line: "#36404a",
+            text: "#f2f4f7",
+            muted: "#a8b0ba",
+          },
+          blueblack: {
+            bg: "#080b10",
+            surface: "#111827",
+            surface2: "#1d2636",
+            line: "#334155",
+            text: "#f8fafc",
+            muted: "#a6b1c2",
+          },
+        };
+        return presets[settings.preset] || presets.black;
+      }
+
+      function installStyle() {
+        if (document.getElementById(STYLE_ID)) return;
+
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          html[${THEME_ATTR}="dark"]{color-scheme:dark;background:var(--cudloun-kapybara-bg)!important;scrollbar-color:var(--cudloun-kapybara-accent) var(--cudloun-kapybara-bg)}
+          html[${THEME_ATTR}="dark"] body,
+          html[${THEME_ATTR}="dark"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}
+          html[${THEME_ATTR}="dark"] body::before,
+          html[${THEME_ATTR}="dark"] body::after,
+          html[${THEME_ATTR}="dark"] #root::before,
+          html[${THEME_ATTR}="dark"] #root::after{background:transparent!important;background-image:none!important}
+
+          html[${THEME_ATTR}="dark"] :where(main,header,nav,footer,aside,section,form):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^="cudloun-"]){background-color:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] :where(.post,.post-main,.message-card,.conversation-item,.bottom-sheet,[role="dialog"],[role="menu"]):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^="cudloun-"]){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] article.post{border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}
+          html[${THEME_ATTR}="dark"] article.post + article.post{border-top:1px solid var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] .post-header,
+          html[${THEME_ATTR}="dark"] .meta,
+          html[${THEME_ATTR}="dark"] .reply-ref,
+          html[${THEME_ATTR}="dark"] .actions,
+          html[${THEME_ATTR}="dark"] .conversation-item{border-color:var(--cudloun-kapybara-line)!important}
+
+          html[${THEME_ATTR}="dark"] :where(.body,.markdown,.post-main,p,li,span,div):not(.cudloun-dialog *):not([class^="cudloun-"]){color:inherit}
+          html[${THEME_ATTR}="dark"] :where(.meta,.reply-ref,time,small,label):not(.cudloun-dialog *):not([class^="cudloun-"]){color:var(--cudloun-kapybara-muted)!important}
+          html[${THEME_ATTR}="dark"] :where(a,.author,.reply-action,button.date):not(.cudloun-dialog *):not([class^="cudloun-"]){color:var(--cudloun-kapybara-accent)!important}
+          html[${THEME_ATTR}="dark"] :where(a):not(.cudloun-dialog *){text-decoration-color:color-mix(in srgb,var(--cudloun-kapybara-accent) 60%,transparent)!important}
+
+          html[${THEME_ATTR}="dark"] :where(button,input,textarea,select):not(.cudloun-dialog *):not([class^="cudloun-"]){background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] :where(button):not(.cudloun-dialog *):not([class^="cudloun-"]):hover{background:var(--cudloun-kapybara-accent-soft)!important}
+          html[${THEME_ATTR}="dark"] input::placeholder,
+          html[${THEME_ATTR}="dark"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}
+
+          html[${THEME_ATTR}="dark"] .avatar,
+          html[${THEME_ATTR}="dark"] .avatar img,
+          html[${THEME_ATTR}="dark"] .avatar-button img,
+          html[${THEME_ATTR}="dark"] .avatar-shell img{background:transparent!important;border-color:transparent!important}
+          html[${THEME_ATTR}="dark"] :where(img,video,canvas):not(.cudloun-mascot){color-scheme:normal}
+          html[${THEME_ATTR}="dark"] :where(hr){border-color:var(--cudloun-kapybara-line)!important}
+        `;
+        document.head.appendChild(style);
+      }
+
+      function makeCheckboxRow(ctx, labelText, key, fallback) {
+        const label = document.createElement("label");
+        label.className = "cudloun-setting-row";
+
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = labelText;
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = ctx.storage.get(key, fallback) !== false;
+        input.addEventListener("change", () => {
+          ctx.storage.set(key, input.checked);
+          apply(ctx);
+        });
+
+        label.appendChild(text);
+        label.appendChild(input);
+        return label;
+      }
+
+      function makeColorRow(ctx, labelText, key, fallback) {
+        const label = document.createElement("label");
+        label.className = "cudloun-setting-row";
+
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = labelText;
+
+        const input = document.createElement("input");
+        input.type = "color";
+        input.value = validColor(ctx.storage.get(key, fallback), fallback);
+        input.addEventListener("input", () => {
+          ctx.storage.set(key, input.value);
+          apply(ctx);
+        });
+
+        label.appendChild(text);
+        label.appendChild(input);
+        return label;
+      }
+
+      function makeSelectRow(ctx, labelText, key, options) {
+        const label = document.createElement("label");
+        label.className = "cudloun-setting-row";
+
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = labelText;
+
+        const select = document.createElement("select");
+        select.className = "cudloun-select";
+        const current = ctx.storage.get(key, DEFAULTS[key]);
+        options.forEach(([value, name]) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = name;
+          option.selected = value === current;
+          select.appendChild(option);
+        });
+        select.addEventListener("change", () => {
+          ctx.storage.set(key, select.value);
+          apply(ctx);
+        });
+
+        label.appendChild(text);
+        label.appendChild(select);
+        return label;
+      }
+
+      function validColor(value, fallback) {
+        const text = String(value || "");
+        return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;
+      }
+
+      function hexToRgba(hex, alpha) {
+        const clean = validColor(hex, DEFAULTS.accent).slice(1);
+        const value = Number.parseInt(clean, 16);
+        const red = (value >> 16) & 255;
+        const green = (value >> 8) & 255;
+        const blue = value & 255;
+        return `rgba(${red},${green},${blue},${alpha})`;
+      }
     })();
 
   });
