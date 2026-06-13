@@ -6,11 +6,7 @@
 
 Kapybara extension framework for Okoun userscripts.
 
-Install:
-
-```text
-https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
-```
+Install: [cudloun.user.js](https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js)
 
 ## Archive
 
