@@ -2,13 +2,13 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.5.1";
+  const VERSION = "0.5.2";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
   const embeddedScripts = new Map();
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.5.1\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.5.2\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -2145,6 +2145,317 @@
         const green = (value >> 8) & 255;
         const blue = value & 255;
         return `rgba(${red},${green},${blue},${alpha})`;
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/thread-lane.js", "// Mobile thread lane for Kapybara reply references.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-thread-lane-style\";\n  const OPEN_ATTR = \"data-cudloun-thread-lane\";\n  const LANE_CLASS = \"cudloun-thread-lane\";\n  const BACKDROP_CLASS = \"cudloun-thread-lane-backdrop\";\n  const DEFAULTS = {\n    mobileOnly: true,\n    newestFirst: true,\n  };\n\n  let ctxRef = null;\n  let clickHandler = null;\n  let keyHandler = null;\n  let routeTimer = null;\n  let lastRoute = \"\";\n\n  root.registerModule({\n    id: \"thread-lane\",\n    name: \"Thread Lane\",\n    description: \"Mobile side lane for reading a reply thread without leaving chronological view.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      ctxRef = ctx;\n      installStyles();\n      attach();\n      return () => cleanup();\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n      wrap.appendChild(makeCheckboxRow(ctx, \"Mobile only\", \"mobileOnly\", DEFAULTS.mobileOnly));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Newest first\", \"newestFirst\", DEFAULTS.newestFirst));\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Tap a Kapybara reply reference such as Re: Lucifer to slide the page left and open the whole visible thread.\",\n        \"Swipe the thread lane right, press Escape, or tap Close to return to the original page.\",\n        \"This first version only uses posts already loaded on the current Kapybara page.\",\n      ];\n    },\n  });\n\n  function attach() {\n    if (!root.kapyguts?.isKapybara?.()) return;\n    if (clickHandler) return;\n\n    clickHandler = (event) => {\n      if (!isAllowedViewport()) return;\n\n      const target = event.target instanceof Element ? event.target : null;\n      const replyRef = target?.closest(root.kapyguts.selectors.replyMeta || \".reply-ref\");\n      if (!replyRef) return;\n\n      const post = replyRef.closest(root.kapyguts.selectors.boardPost || \"article.post\");\n      if (!post) return;\n\n      const threadId = post.getAttribute(\"data-thread-id\") || \"\";\n      if (!threadId) return;\n\n      const posts = threadPosts(threadId);\n      if (posts.length < 2) return;\n\n      event.preventDefault();\n      event.stopPropagation();\n      event.stopImmediatePropagation();\n      openLane({ sourcePost: post, replyRef, threadId, posts });\n    };\n\n    keyHandler = (event) => {\n      if (event.key === \"Escape\") closeLane();\n    };\n\n    document.addEventListener(\"click\", clickHandler, true);\n    document.addEventListener(\"keydown\", keyHandler, true);\n    observeRouteChanges();\n    root.log.info(\"thread-lane\", \"ready\");\n  }\n\n  function cleanup() {\n    closeLane(true);\n    if (clickHandler) document.removeEventListener(\"click\", clickHandler, true);\n    if (keyHandler) document.removeEventListener(\"keydown\", keyHandler, true);\n    clickHandler = null;\n    keyHandler = null;\n    window.clearTimeout(routeTimer);\n    routeTimer = null;\n    document.getElementById(STYLE_ID)?.remove();\n    ctxRef = null;\n    root.log.info(\"thread-lane\", \"removed\");\n  }\n\n  function observeRouteChanges() {\n    lastRoute = root.currentRoute();\n    const check = () => {\n      const route = root.currentRoute();\n      if (route !== lastRoute) {\n        lastRoute = route;\n        closeLane();\n      }\n      routeTimer = window.setTimeout(check, 500);\n    };\n    routeTimer = window.setTimeout(check, 500);\n  }\n\n  function isAllowedViewport() {\n    if (!ctxRef?.storage.get(\"mobileOnly\", DEFAULTS.mobileOnly)) return true;\n    return window.innerWidth <= 760 || window.matchMedia(\"(pointer: coarse)\").matches;\n  }\n\n  function openLane({ sourcePost, replyRef, threadId, posts }) {\n    closeLane();\n\n    const sourceId = sourcePost.getAttribute(\"data-post-id\") || \"\";\n    const title = cleanText(replyRef.textContent) || \"Thread\";\n    const sorted = sortedThreadPosts(posts);\n\n    const backdrop = document.createElement(\"div\");\n    backdrop.className = BACKDROP_CLASS;\n    backdrop.addEventListener(\"click\", (event) => {\n      if (event.target === backdrop) closeLane();\n    });\n\n    const lane = document.createElement(\"aside\");\n    lane.className = LANE_CLASS;\n    lane.setAttribute(\"role\", \"dialog\");\n    lane.setAttribute(\"aria-modal\", \"true\");\n    lane.setAttribute(\"aria-label\", title);\n\n    const header = document.createElement(\"div\");\n    header.className = \"cudloun-thread-lane-head\";\n\n    const titleWrap = document.createElement(\"div\");\n    titleWrap.className = \"cudloun-thread-lane-title-wrap\";\n    const heading = document.createElement(\"h2\");\n    heading.textContent = title;\n    const meta = document.createElement(\"p\");\n    meta.textContent = `${sorted.length} visible posts`;\n    titleWrap.appendChild(heading);\n    titleWrap.appendChild(meta);\n\n    const close = document.createElement(\"button\");\n    close.type = \"button\";\n    close.className = \"cudloun-thread-lane-close\";\n    close.textContent = \"Close\";\n    close.addEventListener(\"click\", closeLane);\n\n    header.appendChild(titleWrap);\n    header.appendChild(close);\n    lane.appendChild(header);\n\n    const list = document.createElement(\"div\");\n    list.className = \"cudloun-thread-lane-list\";\n    sorted.forEach((post) => list.appendChild(renderPostClone(post, sourceId)));\n    lane.appendChild(list);\n\n    backdrop.appendChild(lane);\n    document.body.appendChild(backdrop);\n    installSwipeClose(lane);\n\n    window.requestAnimationFrame(() => {\n      document.documentElement.setAttribute(OPEN_ATTR, \"open\");\n      lane.focus?.();\n    });\n\n    root.log.info(\"thread-lane\", \"opened\", threadId, `${sorted.length} posts`);\n  }\n\n  function closeLane(immediate = false) {\n    document.documentElement.removeAttribute(OPEN_ATTR);\n    const backdrop = document.querySelector(`.${BACKDROP_CLASS}`);\n    if (!backdrop) return;\n\n    if (immediate) {\n      backdrop.remove();\n      return;\n    }\n\n    window.setTimeout(() => {\n      if (!document.documentElement.hasAttribute(OPEN_ATTR)) backdrop.remove();\n    }, 180);\n  }\n\n  function threadPosts(threadId) {\n    return root.kapyguts.allPosts()\n      .filter((post) => post.getAttribute(\"data-thread-id\") === threadId);\n  }\n\n  function sortedThreadPosts(posts) {\n    const newestFirst = ctxRef?.storage.get(\"newestFirst\", DEFAULTS.newestFirst) !== false;\n    return posts.slice().sort((a, b) => {\n      const aId = numericPostId(a);\n      const bId = numericPostId(b);\n      if (aId !== bId) return newestFirst ? bId - aId : aId - bId;\n      return posts.indexOf(a) - posts.indexOf(b);\n    });\n  }\n\n  function renderPostClone(post, sourceId) {\n    const clone = post.cloneNode(true);\n    clone.classList.add(\"cudloun-thread-lane-post\");\n    clone.removeAttribute(\"id\");\n    clone.querySelectorAll(\"[id]\").forEach((node) => node.removeAttribute(\"id\"));\n    clone.querySelectorAll(\"button, input, textarea, select\").forEach((node) => {\n      node.disabled = true;\n      node.setAttribute(\"aria-disabled\", \"true\");\n    });\n    clone.querySelectorAll(\"a\").forEach((node) => {\n      node.addEventListener(\"click\", (event) => event.stopPropagation());\n    });\n    if ((post.getAttribute(\"data-post-id\") || \"\") === sourceId) {\n      clone.dataset.threadLaneSource = \"true\";\n    }\n    return clone;\n  }\n\n  function installSwipeClose(lane) {\n    let startX = 0;\n    let startY = 0;\n    let tracking = false;\n\n    lane.addEventListener(\"pointerdown\", (event) => {\n      if (event.pointerType === \"mouse\") return;\n      tracking = true;\n      startX = event.clientX;\n      startY = event.clientY;\n      lane.setPointerCapture?.(event.pointerId);\n    });\n\n    lane.addEventListener(\"pointerup\", (event) => {\n      if (!tracking) return;\n      tracking = false;\n      const dx = event.clientX - startX;\n      const dy = event.clientY - startY;\n      if (dx > 72 && Math.abs(dx) > Math.abs(dy) * 1.4) closeLane();\n    });\n\n    lane.addEventListener(\"pointercancel\", () => {\n      tracking = false;\n    });\n  }\n\n  function installStyles() {\n    if (document.getElementById(STYLE_ID)) return;\n\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[${OPEN_ATTR}=\"open\"]{overflow:hidden}\n      html[${OPEN_ATTR}=\"open\"] #root{transform:translateX(-34vw);transition:transform 180ms ease;will-change:transform}\n      html:not([${OPEN_ATTR}=\"open\"]) #root{transition:transform 180ms ease}\n      .${BACKDROP_CLASS}{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.18);pointer-events:none}\n      .${LANE_CLASS}{box-sizing:border-box;position:absolute;top:0;right:0;width:min(92vw,430px);height:100dvh;display:flex;flex-direction:column;overflow:hidden;transform:translateX(104%);transition:transform 180ms ease;background:#f8fafc;color:#182230;border-left:1px solid rgba(79,102,134,.22);box-shadow:-18px 0 42px rgba(0,0,0,.24);pointer-events:auto;font-family:inherit}\n      html[${OPEN_ATTR}=\"open\"] .${LANE_CLASS}{transform:translateX(0)}\n      .cudloun-thread-lane-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 10px;border-bottom:1px solid rgba(79,102,134,.18);background:#fff;flex:0 0 auto}\n      .cudloun-thread-lane-title-wrap{min-width:0}\n      .cudloun-thread-lane-title-wrap h2{margin:0;color:#182230;font-size:1rem;line-height:1.2;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n      .cudloun-thread-lane-title-wrap p{margin:3px 0 0;color:#697586;font-size:.78rem;line-height:1.25}\n      .cudloun-thread-lane-close{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .82rem/1.2 inherit;padding:7px 9px}\n      .cudloun-thread-lane-list{flex:1 1 auto;min-height:0;overflow:auto;padding:8px;background:#edf2f7}\n      .cudloun-thread-lane-post{box-sizing:border-box;width:100%!important;margin:0 0 8px!important;border-radius:8px!important;border:1px solid rgba(79,102,134,.18)!important;background:#fff!important;box-shadow:none!important}\n      .cudloun-thread-lane-post[data-thread-lane-source=true]{outline:2px solid rgba(8,126,164,.45);outline-offset:0}\n      .cudloun-thread-lane-post .post-menu-button{display:none!important}\n      html[data-cudloun-kapybara-theme=\"dark\"] .${LANE_CLASS}{background:var(--cudloun-kapybara-bg,#000);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-head{background:var(--cudloun-kapybara-surface,#141414);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-title-wrap h2{color:var(--cudloun-kapybara-text,#f4f4f4)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-title-wrap p{color:var(--cudloun-kapybara-muted,#aaaeb6)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-close{background:var(--cudloun-kapybara-surface-2,#1f1f1f);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-list{background:var(--cudloun-kapybara-bg,#000)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-thread-lane-post{background:var(--cudloun-kapybara-surface,#141414)!important;border-color:var(--cudloun-kapybara-line,#303030)!important}\n    `;\n    document.head.appendChild(style);\n  }\n\n  function makeCheckboxRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const input = document.createElement(\"input\");\n    input.type = \"checkbox\";\n    input.checked = ctx.storage.get(key, fallback) !== false;\n    input.addEventListener(\"change\", () => ctx.storage.set(key, input.checked));\n\n    label.appendChild(text);\n    label.appendChild(input);\n    return label;\n  }\n\n  function numericPostId(post) {\n    const value = Number.parseInt(post.getAttribute(\"data-post-id\") || \"0\", 10);\n    return Number.isFinite(value) ? value : 0;\n  }\n\n  function cleanText(value) {\n    return String(value || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedScripts.set("modules/thread-lane.js", function () {
+    // Mobile thread lane for Kapybara reply references.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const STYLE_ID = "cudloun-thread-lane-style";
+      const OPEN_ATTR = "data-cudloun-thread-lane";
+      const LANE_CLASS = "cudloun-thread-lane";
+      const BACKDROP_CLASS = "cudloun-thread-lane-backdrop";
+      const DEFAULTS = {
+        mobileOnly: true,
+        newestFirst: true,
+      };
+
+      let ctxRef = null;
+      let clickHandler = null;
+      let keyHandler = null;
+      let routeTimer = null;
+      let lastRoute = "";
+
+      root.registerModule({
+        id: "thread-lane",
+        name: "Thread Lane",
+        description: "Mobile side lane for reading a reply thread without leaving chronological view.",
+        version: "0.1.0",
+        defaultEnabled: false,
+        start(ctx) {
+          ctxRef = ctx;
+          installStyles();
+          attach();
+          return () => cleanup();
+        },
+        renderSettings(ctx) {
+          const wrap = document.createElement("div");
+          wrap.className = "cudloun-settings-list";
+          wrap.appendChild(makeCheckboxRow(ctx, "Mobile only", "mobileOnly", DEFAULTS.mobileOnly));
+          wrap.appendChild(makeCheckboxRow(ctx, "Newest first", "newestFirst", DEFAULTS.newestFirst));
+          return wrap;
+        },
+        renderHelp() {
+          return [
+            "Tap a Kapybara reply reference such as Re: Lucifer to slide the page left and open the whole visible thread.",
+            "Swipe the thread lane right, press Escape, or tap Close to return to the original page.",
+            "This first version only uses posts already loaded on the current Kapybara page.",
+          ];
+        },
+      });
+
+      function attach() {
+        if (!root.kapyguts?.isKapybara?.()) return;
+        if (clickHandler) return;
+
+        clickHandler = (event) => {
+          if (!isAllowedViewport()) return;
+
+          const target = event.target instanceof Element ? event.target : null;
+          const replyRef = target?.closest(root.kapyguts.selectors.replyMeta || ".reply-ref");
+          if (!replyRef) return;
+
+          const post = replyRef.closest(root.kapyguts.selectors.boardPost || "article.post");
+          if (!post) return;
+
+          const threadId = post.getAttribute("data-thread-id") || "";
+          if (!threadId) return;
+
+          const posts = threadPosts(threadId);
+          if (posts.length < 2) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          openLane({ sourcePost: post, replyRef, threadId, posts });
+        };
+
+        keyHandler = (event) => {
+          if (event.key === "Escape") closeLane();
+        };
+
+        document.addEventListener("click", clickHandler, true);
+        document.addEventListener("keydown", keyHandler, true);
+        observeRouteChanges();
+        root.log.info("thread-lane", "ready");
+      }
+
+      function cleanup() {
+        closeLane(true);
+        if (clickHandler) document.removeEventListener("click", clickHandler, true);
+        if (keyHandler) document.removeEventListener("keydown", keyHandler, true);
+        clickHandler = null;
+        keyHandler = null;
+        window.clearTimeout(routeTimer);
+        routeTimer = null;
+        document.getElementById(STYLE_ID)?.remove();
+        ctxRef = null;
+        root.log.info("thread-lane", "removed");
+      }
+
+      function observeRouteChanges() {
+        lastRoute = root.currentRoute();
+        const check = () => {
+          const route = root.currentRoute();
+          if (route !== lastRoute) {
+            lastRoute = route;
+            closeLane();
+          }
+          routeTimer = window.setTimeout(check, 500);
+        };
+        routeTimer = window.setTimeout(check, 500);
+      }
+
+      function isAllowedViewport() {
+        if (!ctxRef?.storage.get("mobileOnly", DEFAULTS.mobileOnly)) return true;
+        return window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches;
+      }
+
+      function openLane({ sourcePost, replyRef, threadId, posts }) {
+        closeLane();
+
+        const sourceId = sourcePost.getAttribute("data-post-id") || "";
+        const title = cleanText(replyRef.textContent) || "Thread";
+        const sorted = sortedThreadPosts(posts);
+
+        const backdrop = document.createElement("div");
+        backdrop.className = BACKDROP_CLASS;
+        backdrop.addEventListener("click", (event) => {
+          if (event.target === backdrop) closeLane();
+        });
+
+        const lane = document.createElement("aside");
+        lane.className = LANE_CLASS;
+        lane.setAttribute("role", "dialog");
+        lane.setAttribute("aria-modal", "true");
+        lane.setAttribute("aria-label", title);
+
+        const header = document.createElement("div");
+        header.className = "cudloun-thread-lane-head";
+
+        const titleWrap = document.createElement("div");
+        titleWrap.className = "cudloun-thread-lane-title-wrap";
+        const heading = document.createElement("h2");
+        heading.textContent = title;
+        const meta = document.createElement("p");
+        meta.textContent = `${sorted.length} visible posts`;
+        titleWrap.appendChild(heading);
+        titleWrap.appendChild(meta);
+
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "cudloun-thread-lane-close";
+        close.textContent = "Close";
+        close.addEventListener("click", closeLane);
+
+        header.appendChild(titleWrap);
+        header.appendChild(close);
+        lane.appendChild(header);
+
+        const list = document.createElement("div");
+        list.className = "cudloun-thread-lane-list";
+        sorted.forEach((post) => list.appendChild(renderPostClone(post, sourceId)));
+        lane.appendChild(list);
+
+        backdrop.appendChild(lane);
+        document.body.appendChild(backdrop);
+        installSwipeClose(lane);
+
+        window.requestAnimationFrame(() => {
+          document.documentElement.setAttribute(OPEN_ATTR, "open");
+          lane.focus?.();
+        });
+
+        root.log.info("thread-lane", "opened", threadId, `${sorted.length} posts`);
+      }
+
+      function closeLane(immediate = false) {
+        document.documentElement.removeAttribute(OPEN_ATTR);
+        const backdrop = document.querySelector(`.${BACKDROP_CLASS}`);
+        if (!backdrop) return;
+
+        if (immediate) {
+          backdrop.remove();
+          return;
+        }
+
+        window.setTimeout(() => {
+          if (!document.documentElement.hasAttribute(OPEN_ATTR)) backdrop.remove();
+        }, 180);
+      }
+
+      function threadPosts(threadId) {
+        return root.kapyguts.allPosts()
+          .filter((post) => post.getAttribute("data-thread-id") === threadId);
+      }
+
+      function sortedThreadPosts(posts) {
+        const newestFirst = ctxRef?.storage.get("newestFirst", DEFAULTS.newestFirst) !== false;
+        return posts.slice().sort((a, b) => {
+          const aId = numericPostId(a);
+          const bId = numericPostId(b);
+          if (aId !== bId) return newestFirst ? bId - aId : aId - bId;
+          return posts.indexOf(a) - posts.indexOf(b);
+        });
+      }
+
+      function renderPostClone(post, sourceId) {
+        const clone = post.cloneNode(true);
+        clone.classList.add("cudloun-thread-lane-post");
+        clone.removeAttribute("id");
+        clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+        clone.querySelectorAll("button, input, textarea, select").forEach((node) => {
+          node.disabled = true;
+          node.setAttribute("aria-disabled", "true");
+        });
+        clone.querySelectorAll("a").forEach((node) => {
+          node.addEventListener("click", (event) => event.stopPropagation());
+        });
+        if ((post.getAttribute("data-post-id") || "") === sourceId) {
+          clone.dataset.threadLaneSource = "true";
+        }
+        return clone;
+      }
+
+      function installSwipeClose(lane) {
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+
+        lane.addEventListener("pointerdown", (event) => {
+          if (event.pointerType === "mouse") return;
+          tracking = true;
+          startX = event.clientX;
+          startY = event.clientY;
+          lane.setPointerCapture?.(event.pointerId);
+        });
+
+        lane.addEventListener("pointerup", (event) => {
+          if (!tracking) return;
+          tracking = false;
+          const dx = event.clientX - startX;
+          const dy = event.clientY - startY;
+          if (dx > 72 && Math.abs(dx) > Math.abs(dy) * 1.4) closeLane();
+        });
+
+        lane.addEventListener("pointercancel", () => {
+          tracking = false;
+        });
+      }
+
+      function installStyles() {
+        if (document.getElementById(STYLE_ID)) return;
+
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          html[${OPEN_ATTR}="open"]{overflow:hidden}
+          html[${OPEN_ATTR}="open"] #root{transform:translateX(-34vw);transition:transform 180ms ease;will-change:transform}
+          html:not([${OPEN_ATTR}="open"]) #root{transition:transform 180ms ease}
+          .${BACKDROP_CLASS}{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.18);pointer-events:none}
+          .${LANE_CLASS}{box-sizing:border-box;position:absolute;top:0;right:0;width:min(92vw,430px);height:100dvh;display:flex;flex-direction:column;overflow:hidden;transform:translateX(104%);transition:transform 180ms ease;background:#f8fafc;color:#182230;border-left:1px solid rgba(79,102,134,.22);box-shadow:-18px 0 42px rgba(0,0,0,.24);pointer-events:auto;font-family:inherit}
+          html[${OPEN_ATTR}="open"] .${LANE_CLASS}{transform:translateX(0)}
+          .cudloun-thread-lane-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 10px;border-bottom:1px solid rgba(79,102,134,.18);background:#fff;flex:0 0 auto}
+          .cudloun-thread-lane-title-wrap{min-width:0}
+          .cudloun-thread-lane-title-wrap h2{margin:0;color:#182230;font-size:1rem;line-height:1.2;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          .cudloun-thread-lane-title-wrap p{margin:3px 0 0;color:#697586;font-size:.78rem;line-height:1.25}
+          .cudloun-thread-lane-close{appearance:none;border:1px solid rgba(79,102,134,.24);border-radius:6px;background:#f8fafc;color:#243041;cursor:pointer;font:700 .82rem/1.2 inherit;padding:7px 9px}
+          .cudloun-thread-lane-list{flex:1 1 auto;min-height:0;overflow:auto;padding:8px;background:#edf2f7}
+          .cudloun-thread-lane-post{box-sizing:border-box;width:100%!important;margin:0 0 8px!important;border-radius:8px!important;border:1px solid rgba(79,102,134,.18)!important;background:#fff!important;box-shadow:none!important}
+          .cudloun-thread-lane-post[data-thread-lane-source=true]{outline:2px solid rgba(8,126,164,.45);outline-offset:0}
+          .cudloun-thread-lane-post .post-menu-button{display:none!important}
+          html[data-cudloun-kapybara-theme="dark"] .${LANE_CLASS}{background:var(--cudloun-kapybara-bg,#000);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-head{background:var(--cudloun-kapybara-surface,#141414);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-title-wrap h2{color:var(--cudloun-kapybara-text,#f4f4f4)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-title-wrap p{color:var(--cudloun-kapybara-muted,#aaaeb6)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-close{background:var(--cudloun-kapybara-surface-2,#1f1f1f);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-list{background:var(--cudloun-kapybara-bg,#000)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-thread-lane-post{background:var(--cudloun-kapybara-surface,#141414)!important;border-color:var(--cudloun-kapybara-line,#303030)!important}
+        `;
+        document.head.appendChild(style);
+      }
+
+      function makeCheckboxRow(ctx, labelText, key, fallback) {
+        const label = document.createElement("label");
+        label.className = "cudloun-setting-row";
+
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = labelText;
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = ctx.storage.get(key, fallback) !== false;
+        input.addEventListener("change", () => ctx.storage.set(key, input.checked));
+
+        label.appendChild(text);
+        label.appendChild(input);
+        return label;
+      }
+
+      function numericPostId(post) {
+        const value = Number.parseInt(post.getAttribute("data-post-id") || "0", 10);
+        return Number.isFinite(value) ? value : 0;
+      }
+
+      function cleanText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
       }
     })();
 
