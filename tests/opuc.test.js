@@ -133,23 +133,69 @@ test("Firefox response variants normalize before OPU URL extraction", async () =
   assert.equal(client.extractUploadUrl(await client.responseBodyText({ response: html })), image);
 });
 
-test("upload resolves when Firefox provides HTML only through response", async () => {
+test("upload establishes a credentialed OPU session before posting", async () => {
   const context = runtimeContext();
   load(context, "modules/opuc/client.js");
   const client = context.window.Cudloun.opuc.client;
   const image = "https://opu.peklo.biz/p/12/34/56/firefox-upload.png";
+  const requests = [];
   context.GM_xmlhttpRequest = (details) => {
-    details.onload({
-      status: 200,
-      responseText: undefined,
-      response: `<input id="link_1" value="${image}">`,
-      finalUrl: "https://opu.peklo.biz/opupload.php",
-    });
+    requests.push(details);
+    if (details.method === "GET") {
+      details.onload({ status: 200, response: "<html>OPU</html>", finalUrl: "https://opu.peklo.biz/" });
+    } else {
+      details.onload({
+        status: 200,
+        responseText: undefined,
+        response: `<input id="link_1" value="${image}">`,
+        finalUrl: "https://opu.peklo.biz/?page=done",
+      });
+    }
     return { abort() {} };
   };
 
   const request = client.upload(new Blob(["png"], { type: "image/png" }));
   assert.equal(await request.promise, image);
+  assert.deepEqual(requests.map(({ method }) => method), ["GET", "POST"]);
+  requests.forEach((details) => {
+    assert.equal(details.anonymous, false);
+    assert.equal(details.withCredentials, true);
+    assert.equal(details.responseType, "text");
+  });
+});
+
+test("upload recovers Firefox's session-backed result after a blank redirect page", async () => {
+  const context = runtimeContext();
+  load(context, "modules/opuc/client.js");
+  const client = context.window.Cudloun.opuc.client;
+  const image = "https://opu.peklo.biz/p/26/07/17/firefox-recovered.png";
+  const requests = [];
+  context.GM_xmlhttpRequest = (details) => {
+    requests.push(`${details.method} ${details.url}`);
+    if (details.method === "POST") {
+      details.onload({
+        status: 200,
+        response: '<form id="xpc"><input name="obrazek[0]" type="file"></form>',
+        finalUrl: "https://opu.peklo.biz/",
+      });
+    } else if (details.url.includes("page=done")) {
+      details.onload({
+        status: 200,
+        response: `<input id="html_0" value="${image}">`,
+        finalUrl: "https://opu.peklo.biz/?page=done",
+      });
+    } else {
+      details.onload({ status: 200, response: "<html>OPU</html>", finalUrl: details.url });
+    }
+    return { abort() {} };
+  };
+
+  assert.equal(await client.upload(new Blob(["png"], { type: "image/png" })).promise, image);
+  assert.deepEqual(requests, [
+    "GET https://opu.peklo.biz/",
+    "POST https://opu.peklo.biz/opupload.php",
+    "GET https://opu.peklo.biz/?page=done",
+  ]);
 });
 
 test("image validation enforces MIME, emptiness, and configured byte limit", () => {

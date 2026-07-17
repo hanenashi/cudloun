@@ -4,8 +4,10 @@
 
   const root = window.Cudloun;
   const runtime = root.opuc = root.opuc || {};
+  const SESSION_URL = "https://opu.peklo.biz/";
   const GALLERY_URL = "https://opu.peklo.biz/?page=userpanel";
   const UPLOAD_URL = "https://opu.peklo.biz/opupload.php";
+  const RESULT_URL = "https://opu.peklo.biz/?page=done";
 
   runtime.client = {
     galleryUrl: GALLERY_URL,
@@ -26,32 +28,66 @@
   }
 
   function upload(file, options = {}) {
-    const formData = new FormData();
-    formData.append("obrazek[0]", file);
-    formData.append("sizep", "0");
-    formData.append("outputf", "auto");
-    formData.append("tl_odeslat", "Odeslat");
+    let activeRequest = null;
+    let cancelled = false;
 
-    const request = gmRequest({
-      method: "POST",
-      url: UPLOAD_URL,
-      data: formData,
-      timeout: 120000,
-      onprogress: options.onProgress,
-    });
+    const startRequest = (details) => {
+      if (cancelled) throw abortError();
+      activeRequest = gmRequest(details);
+      return activeRequest.promise;
+    };
+
+    const promise = (async () => {
+      // OPU stores the uploaded result in a PHP session before redirecting to
+      // ?page=done. Firefox userscript managers can otherwise follow that
+      // redirect before retaining its Set-Cookie header, yielding a blank
+      // upload form instead of the result. Establish the session first.
+      await startRequest({ method: "GET", url: SESSION_URL, timeout: 20000 });
+
+      const formData = new FormData();
+      formData.append("obrazek[0]", file);
+      formData.append("sizep", "0");
+      formData.append("outputf", "auto");
+      formData.append("tl_odeslat", "Odeslat");
+
+      const response = await startRequest({
+        method: "POST",
+        url: UPLOAD_URL,
+        data: formData,
+        timeout: 120000,
+        onprogress: options.onProgress,
+      });
+
+      if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
+      const body = await responseBodyText(response);
+      let url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, "finalUrl"));
+
+      // Some Firefox/userscript-manager combinations retain OPU's cookie only
+      // after the redirect chain finishes. A separate request then sees the
+      // session-backed result page and recovers the URL without re-uploading.
+      if (!url) {
+        const result = await startRequest({ method: "GET", url: RESULT_URL, timeout: 20000 });
+        if (result.status === 200) {
+          const resultBody = await responseBodyText(result);
+          url = extractUploadUrl(resultBody) || validateOpuUrl(safeResponseValue(result, "finalUrl"));
+        }
+      }
+
+      if (!url) {
+        const responseHint = body ? `${body.length} response characters were checked` : "the response body was empty";
+        const pageHint = looksLikeUploadForm(body) ? " OPU returned its blank upload form, which usually means its session cookie was blocked." : "";
+        throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).${pageHint}`);
+      }
+      return url;
+    })();
 
     return {
-      abort: request.abort,
-      promise: request.promise.then(async (response) => {
-        if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
-        const body = await responseBodyText(response);
-        const url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, "finalUrl"));
-        if (!url) {
-          const responseHint = body ? `${body.length} response characters were checked` : "the response body was empty";
-          throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).`);
-        }
-        return url;
-      }),
+      promise,
+      abort() {
+        if (cancelled) return;
+        cancelled = true;
+        activeRequest?.abort?.();
+      },
     };
   }
 
@@ -111,6 +147,11 @@
     return "";
   }
 
+  function looksLikeUploadForm(html) {
+    const source = String(html || "");
+    return /<form\b[^>]*\bid=["']xpc["']/i.test(source) && /name=["']obrazek\[0\]["']/i.test(source);
+  }
+
   function extractCandidateUrl(value) {
     const text = String(value || "");
     const match = text.match(/(?:href|src)=["']([^"']+)["']/i);
@@ -156,6 +197,9 @@
       rejectPromise = reject;
       const requestDetails = {
         ...details,
+        responseType: details.responseType || "text",
+        anonymous: false,
+        withCredentials: true,
         onload(response) {
           if (settled) return;
           settled = true;

@@ -29,6 +29,15 @@ Blob, document, XML, and plain-object responses before extracting the returned
 OPU URL. Extraction also accepts the known link input plus direct anchor, image,
 relative, protocol-relative, and safely validated raw URL shapes.
 
+## Firefox session compatibility in Cudloun 0.6.2
+
+OPU stores each successful upload result in a PHP session and redirects to
+`?page=done`. Some Firefox/userscript-manager combinations follow that redirect
+without retaining OPU's new session cookie, so they receive the blank upload
+form instead of the result. OPUc now establishes a credentialed OPU session
+before posting, explicitly enables credentials on GM requests, and retries the
+session-backed result page once when the upload response contains no URL.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.2 TL;DR
+
+- Fixed OPU result recovery when Firefox loses OPU's session cookie while
+  following the post-upload redirect.
+- OPUc now establishes a credentialed session before upload and performs one
+  credentialed result-page lookup when the redirect body has no image URL.
+
 ## Version 0.6.1 TL;DR
 
 - Fixed OPU upload response parsing in Firefox/Violentmonkey, where response
