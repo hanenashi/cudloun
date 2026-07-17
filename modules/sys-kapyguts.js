@@ -23,6 +23,14 @@
     favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
     messageItem: ".conversation-item",
     messageCard: ".message-card",
+    newPostComposer: "section.new-post-composer[aria-label='Nový příspěvek']",
+    replyComposer: "section.reply-composer[aria-label='Odpověď']",
+    composer: ".composer",
+    composerEditor: ".composer-editor",
+    composerEditable: ".composer-content-editable[role='textbox'][contenteditable='true']",
+    composerToolbarSlot: ".composer-toolbar-slot",
+    composerToolbar: "[role='toolbar'][aria-label='Formátování textu']",
+    composerImageButton: "button[aria-label='Vložit obrázek']",
   };
   const TEXT = {
     postMenu: ["Smazat", "Upravit", "Označit"],
@@ -47,6 +55,9 @@
     postParts,
     visibleMenus,
     visiblePostMenus,
+    allComposers,
+    composerParts,
+    observeComposers,
     inspect,
   };
 
@@ -180,6 +191,65 @@
     return visibleMenus("post");
   }
 
+  function allComposers(scope = document) {
+    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));
+  }
+
+  function composerParts(section) {
+    if (!section) return null;
+
+    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);
+    const editor = section.querySelector(SELECTORS.composerEditor);
+    const editable = section.querySelector(SELECTORS.composerEditable);
+    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);
+    const toolbar = section.querySelector(SELECTORS.composerToolbar);
+    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||
+      section.querySelector(SELECTORS.composerImageButton);
+
+    return {
+      section,
+      kind: section.matches?.(SELECTORS.newPostComposer) ? "new-post" : "reply",
+      composer,
+      editor,
+      editable,
+      toolbarSlot,
+      toolbar,
+      imageButton,
+      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),
+    };
+  }
+
+  function observeComposers(callback, scope = document.body, onRemoved = null) {
+    if (typeof callback !== "function") return () => {};
+
+    const active = new Map();
+    const scan = () => {
+      const current = new Set(allComposers(scope || document));
+
+      active.forEach((parts, section) => {
+        if (current.has(section) && section.isConnected) return;
+        active.delete(section);
+        if (typeof onRemoved === "function") onRemoved(parts);
+      });
+
+      current.forEach((section) => {
+        const parts = composerParts(section);
+        if (!parts?.ready || active.has(section)) return;
+        active.set(section, parts);
+        callback(parts);
+      });
+    };
+
+    scan();
+    const observer = new MutationObserver(scan);
+    observer.observe(scope || document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      active.clear();
+    };
+  }
+
   function inspect() {
     const posts = visiblePosts();
     const menus = visibleMenus();
@@ -204,6 +274,8 @@
         favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,
         messageItems: document.querySelectorAll(SELECTORS.messageItem).length,
         messageCards: document.querySelectorAll(SELECTORS.messageCard).length,
+        composers: allComposers().length,
+        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
         visibleMenus: menus.length,
       },
       posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),

@@ -31,12 +31,19 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/kapybara-theme.js` owns the experimental Kapybara dark theme.
 - `modules/thread-lane.js` owns the experimental mobile reply-thread side lane.
+- `modules/opuc/` contains the experimental OPUc-for-Kapybara integration.
 
 The installable seed uses `@require` so CSP-strict frontends such as Kapybara do not block startup. Source modules stay separate in `modules/`; run this after source changes:
 
 ```text
 node scripts/build-bundle.js
 ```
+
+## OPUc Integration
+
+The Kapybara port of OPUc is a default-disabled Cudloun module rather than a
+separate userscript or repository. Its architecture, implementation phases, and
+test criteria are in [`modules/opuc/README.md`](modules/opuc/README.md).
 
 ## Kapyguts
 
@@ -88,6 +95,13 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.6.0 TL;DR
+
+- Added a default-disabled OPUc module for one-image OPU upload and native
+  Kapybara editor insertion.
+- Added shared Kapyguts helpers for dynamic new-post and reply composers.
+- Added ordered multi-file module support to the loader and bundle builder.
 
 ## Version 0.5.3 TL;DR
 

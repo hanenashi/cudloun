@@ -2,13 +2,13 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.5.3";
+  const VERSION = "0.6.0";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
   const embeddedScripts = new Map();
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.5.3\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.0\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -44,7 +44,7 @@
 
   });
 
-  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.0\";\n  const SELECTORS = {\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    visibleMenus,\n    visiblePostMenus,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        visibleMenus: menus.length,\n      },\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text) {\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.0\";\n  const SELECTORS = {\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n    newPostComposer: \"section.new-post-composer[aria-label='Nový příspěvek']\",\n    replyComposer: \"section.reply-composer[aria-label='Odpověď']\",\n    composer: \".composer\",\n    composerEditor: \".composer-editor\",\n    composerEditable: \".composer-content-editable[role='textbox'][contenteditable='true']\",\n    composerToolbarSlot: \".composer-toolbar-slot\",\n    composerToolbar: \"[role='toolbar'][aria-label='Formátování textu']\",\n    composerImageButton: \"button[aria-label='Vložit obrázek']\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    visibleMenus,\n    visiblePostMenus,\n    allComposers,\n    composerParts,\n    observeComposers,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function allComposers(scope = document) {\n    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));\n  }\n\n  function composerParts(section) {\n    if (!section) return null;\n\n    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);\n    const editor = section.querySelector(SELECTORS.composerEditor);\n    const editable = section.querySelector(SELECTORS.composerEditable);\n    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);\n    const toolbar = section.querySelector(SELECTORS.composerToolbar);\n    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||\n      section.querySelector(SELECTORS.composerImageButton);\n\n    return {\n      section,\n      kind: section.matches?.(SELECTORS.newPostComposer) ? \"new-post\" : \"reply\",\n      composer,\n      editor,\n      editable,\n      toolbarSlot,\n      toolbar,\n      imageButton,\n      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),\n    };\n  }\n\n  function observeComposers(callback, scope = document.body, onRemoved = null) {\n    if (typeof callback !== \"function\") return () => {};\n\n    const active = new Map();\n    const scan = () => {\n      const current = new Set(allComposers(scope || document));\n\n      active.forEach((parts, section) => {\n        if (current.has(section) && section.isConnected) return;\n        active.delete(section);\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      });\n\n      current.forEach((section) => {\n        const parts = composerParts(section);\n        if (!parts?.ready || active.has(section)) return;\n        active.set(section, parts);\n        callback(parts);\n      });\n    };\n\n    scan();\n    const observer = new MutationObserver(scan);\n    observer.observe(scope || document.body, { childList: true, subtree: true });\n\n    return () => {\n      observer.disconnect();\n      active.clear();\n    };\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        composers: allComposers().length,\n        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,\n        visibleMenus: menus.length,\n      },\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text) {\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
   embeddedScripts.set("modules/sys-kapyguts.js", function () {
     // Cudloun Kapybara DOM dictionary helpers.
     (function () {
@@ -71,6 +71,14 @@
         favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
         messageItem: ".conversation-item",
         messageCard: ".message-card",
+        newPostComposer: "section.new-post-composer[aria-label='Nový příspěvek']",
+        replyComposer: "section.reply-composer[aria-label='Odpověď']",
+        composer: ".composer",
+        composerEditor: ".composer-editor",
+        composerEditable: ".composer-content-editable[role='textbox'][contenteditable='true']",
+        composerToolbarSlot: ".composer-toolbar-slot",
+        composerToolbar: "[role='toolbar'][aria-label='Formátování textu']",
+        composerImageButton: "button[aria-label='Vložit obrázek']",
       };
       const TEXT = {
         postMenu: ["Smazat", "Upravit", "Označit"],
@@ -95,6 +103,9 @@
         postParts,
         visibleMenus,
         visiblePostMenus,
+        allComposers,
+        composerParts,
+        observeComposers,
         inspect,
       };
 
@@ -228,6 +239,65 @@
         return visibleMenus("post");
       }
 
+      function allComposers(scope = document) {
+        return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));
+      }
+
+      function composerParts(section) {
+        if (!section) return null;
+
+        const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);
+        const editor = section.querySelector(SELECTORS.composerEditor);
+        const editable = section.querySelector(SELECTORS.composerEditable);
+        const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);
+        const toolbar = section.querySelector(SELECTORS.composerToolbar);
+        const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||
+          section.querySelector(SELECTORS.composerImageButton);
+
+        return {
+          section,
+          kind: section.matches?.(SELECTORS.newPostComposer) ? "new-post" : "reply",
+          composer,
+          editor,
+          editable,
+          toolbarSlot,
+          toolbar,
+          imageButton,
+          ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),
+        };
+      }
+
+      function observeComposers(callback, scope = document.body, onRemoved = null) {
+        if (typeof callback !== "function") return () => {};
+
+        const active = new Map();
+        const scan = () => {
+          const current = new Set(allComposers(scope || document));
+
+          active.forEach((parts, section) => {
+            if (current.has(section) && section.isConnected) return;
+            active.delete(section);
+            if (typeof onRemoved === "function") onRemoved(parts);
+          });
+
+          current.forEach((section) => {
+            const parts = composerParts(section);
+            if (!parts?.ready || active.has(section)) return;
+            active.set(section, parts);
+            callback(parts);
+          });
+        };
+
+        scan();
+        const observer = new MutationObserver(scan);
+        observer.observe(scope || document.body, { childList: true, subtree: true });
+
+        return () => {
+          observer.disconnect();
+          active.clear();
+        };
+      }
+
       function inspect() {
         const posts = visiblePosts();
         const menus = visibleMenus();
@@ -252,6 +322,8 @@
             favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,
             messageItems: document.querySelectorAll(SELECTORS.messageItem).length,
             messageCards: document.querySelectorAll(SELECTORS.messageCard).length,
+            composers: allComposers().length,
+            readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
             visibleMenus: menus.length,
           },
           posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),
@@ -2482,6 +2554,853 @@
 
   });
 
+  embeddedText.set("modules/opuc/client.js", "// OPU transport and response helpers for the Cudloun OPUc module.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const GALLERY_URL = \"https://opu.peklo.biz/?page=userpanel\";\n  const UPLOAD_URL = \"https://opu.peklo.biz/opupload.php\";\n\n  runtime.client = {\n    galleryUrl: GALLERY_URL,\n    uploadUrl: UPLOAD_URL,\n    checkLoginStatus,\n    upload,\n    extractUploadUrl,\n    validateOpuUrl,\n    getThumbUrl,\n  };\n\n  async function checkLoginStatus() {\n    const request = gmRequest({ method: \"GET\", url: GALLERY_URL, timeout: 20000 });\n    const response = await request.promise;\n    const finalUrl = String(response.finalUrl || response.responseURL || \"\");\n    return finalUrl ? !finalUrl.includes(\"page=prihlaseni\") : false;\n  }\n\n  function upload(file, options = {}) {\n    const formData = new FormData();\n    formData.append(\"obrazek[0]\", file);\n    formData.append(\"sizep\", \"0\");\n    formData.append(\"outputf\", \"auto\");\n    formData.append(\"tl_odeslat\", \"Odeslat\");\n\n    const request = gmRequest({\n      method: \"POST\",\n      url: UPLOAD_URL,\n      data: formData,\n      timeout: 120000,\n      onprogress: options.onProgress,\n    });\n\n    return {\n      abort: request.abort,\n      promise: request.promise.then((response) => {\n        if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);\n        const url = extractUploadUrl(response.responseText || \"\");\n        if (!url) throw new Error(\"OPU upload response did not contain an image URL.\");\n        return url;\n      }),\n    };\n  }\n\n  function extractUploadUrl(html) {\n    const doc = new DOMParser().parseFromString(String(html || \"\"), \"text/html\");\n    const input = doc.querySelector('input[id^=\"link_\"]');\n    if (!input?.value) return \"\";\n\n    const match = input.value.match(/href=[\"']([^\"']+)[\"']/i);\n    const candidate = match?.[1] || input.value;\n    return validateOpuUrl(candidate);\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      const url = new URL(String(value || \"\").trim());\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\") return \"\";\n      if (!url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function getThumbUrl(imageUrl) {\n    const validated = validateOpuUrl(imageUrl);\n    if (!validated) return \"\";\n\n    const url = new URL(validated);\n    const parts = url.pathname.split(\"/\");\n    const fileName = parts.pop();\n    if (!fileName || parts.includes(\"thumbs\")) return url.toString();\n\n    const pIndex = parts.indexOf(\"p\");\n    if (pIndex < 0) return url.toString();\n    parts.push(\"thumbs\", fileName);\n    url.pathname = parts.join(\"/\");\n    return url.toString();\n  }\n\n  function gmRequest(details) {\n    let handle = null;\n    let settled = false;\n    let rejectPromise = null;\n\n    const promise = new Promise((resolve, reject) => {\n      rejectPromise = reject;\n      const requestDetails = {\n        ...details,\n        onload(response) {\n          if (settled) return;\n          settled = true;\n          resolve(response);\n        },\n        onerror() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request failed.\"));\n        },\n        ontimeout() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request timed out.\"));\n        },\n        onabort() {\n          if (settled) return;\n          settled = true;\n          reject(abortError());\n        },\n        onprogress(event) {\n          if (typeof details.onprogress === \"function\") details.onprogress(event);\n        },\n      };\n\n      try {\n        if (typeof GM_xmlhttpRequest === \"function\") {\n          handle = GM_xmlhttpRequest(requestDetails);\n          return;\n        }\n        if (typeof GM !== \"undefined\" && GM && typeof GM.xmlHttpRequest === \"function\") {\n          handle = GM.xmlHttpRequest(requestDetails);\n          return;\n        }\n        settled = true;\n        reject(new Error(\"The userscript network bridge is unavailable.\"));\n      } catch (_error) {\n        settled = true;\n        reject(new Error(\"The OPU request could not be started.\"));\n      }\n    });\n\n    return {\n      promise,\n      abort() {\n        if (settled) return;\n        if (handle && typeof handle.abort === \"function\") {\n          handle.abort();\n          return;\n        }\n        settled = true;\n        rejectPromise?.(abortError());\n      },\n    };\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/client.js", function () {
+    // OPU transport and response helpers for the Cudloun OPUc module.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+      const GALLERY_URL = "https://opu.peklo.biz/?page=userpanel";
+      const UPLOAD_URL = "https://opu.peklo.biz/opupload.php";
+
+      runtime.client = {
+        galleryUrl: GALLERY_URL,
+        uploadUrl: UPLOAD_URL,
+        checkLoginStatus,
+        upload,
+        extractUploadUrl,
+        validateOpuUrl,
+        getThumbUrl,
+      };
+
+      async function checkLoginStatus() {
+        const request = gmRequest({ method: "GET", url: GALLERY_URL, timeout: 20000 });
+        const response = await request.promise;
+        const finalUrl = String(response.finalUrl || response.responseURL || "");
+        return finalUrl ? !finalUrl.includes("page=prihlaseni") : false;
+      }
+
+      function upload(file, options = {}) {
+        const formData = new FormData();
+        formData.append("obrazek[0]", file);
+        formData.append("sizep", "0");
+        formData.append("outputf", "auto");
+        formData.append("tl_odeslat", "Odeslat");
+
+        const request = gmRequest({
+          method: "POST",
+          url: UPLOAD_URL,
+          data: formData,
+          timeout: 120000,
+          onprogress: options.onProgress,
+        });
+
+        return {
+          abort: request.abort,
+          promise: request.promise.then((response) => {
+            if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
+            const url = extractUploadUrl(response.responseText || "");
+            if (!url) throw new Error("OPU upload response did not contain an image URL.");
+            return url;
+          }),
+        };
+      }
+
+      function extractUploadUrl(html) {
+        const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+        const input = doc.querySelector('input[id^="link_"]');
+        if (!input?.value) return "";
+
+        const match = input.value.match(/href=["']([^"']+)["']/i);
+        const candidate = match?.[1] || input.value;
+        return validateOpuUrl(candidate);
+      }
+
+      function validateOpuUrl(value) {
+        try {
+          const url = new URL(String(value || "").trim());
+          if (url.protocol !== "https:" || url.hostname !== "opu.peklo.biz") return "";
+          if (!url.pathname.startsWith("/p/")) return "";
+          return url.toString();
+        } catch (_error) {
+          return "";
+        }
+      }
+
+      function getThumbUrl(imageUrl) {
+        const validated = validateOpuUrl(imageUrl);
+        if (!validated) return "";
+
+        const url = new URL(validated);
+        const parts = url.pathname.split("/");
+        const fileName = parts.pop();
+        if (!fileName || parts.includes("thumbs")) return url.toString();
+
+        const pIndex = parts.indexOf("p");
+        if (pIndex < 0) return url.toString();
+        parts.push("thumbs", fileName);
+        url.pathname = parts.join("/");
+        return url.toString();
+      }
+
+      function gmRequest(details) {
+        let handle = null;
+        let settled = false;
+        let rejectPromise = null;
+
+        const promise = new Promise((resolve, reject) => {
+          rejectPromise = reject;
+          const requestDetails = {
+            ...details,
+            onload(response) {
+              if (settled) return;
+              settled = true;
+              resolve(response);
+            },
+            onerror() {
+              if (settled) return;
+              settled = true;
+              reject(new Error("OPU network request failed."));
+            },
+            ontimeout() {
+              if (settled) return;
+              settled = true;
+              reject(new Error("OPU network request timed out."));
+            },
+            onabort() {
+              if (settled) return;
+              settled = true;
+              reject(abortError());
+            },
+            onprogress(event) {
+              if (typeof details.onprogress === "function") details.onprogress(event);
+            },
+          };
+
+          try {
+            if (typeof GM_xmlhttpRequest === "function") {
+              handle = GM_xmlhttpRequest(requestDetails);
+              return;
+            }
+            if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") {
+              handle = GM.xmlHttpRequest(requestDetails);
+              return;
+            }
+            settled = true;
+            reject(new Error("The userscript network bridge is unavailable."));
+          } catch (_error) {
+            settled = true;
+            reject(new Error("The OPU request could not be started."));
+          }
+        });
+
+        return {
+          promise,
+          abort() {
+            if (settled) return;
+            if (handle && typeof handle.abort === "function") {
+              handle.abort();
+              return;
+            }
+            settled = true;
+            rejectPromise?.(abortError());
+          },
+        };
+      }
+
+      function abortError() {
+        const error = new Error("OPU upload cancelled.");
+        error.name = "AbortError";
+        return error;
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/image-pipeline.js", "// Minimal image validation and preview helpers for OPUc.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  runtime.imagePipeline = {\n    validateFile,\n    describeFile,\n    formatBytes,\n  };\n\n  function validateFile(file, maxBytes) {\n    if (!(file instanceof Blob)) throw new Error(\"Choose an image file first.\");\n    if (!String(file.type || \"\").startsWith(\"image/\")) throw new Error(\"The selected file is not an image.\");\n    if (!file.size) throw new Error(\"The selected image is empty.\");\n    if (maxBytes > 0 && file.size > maxBytes) {\n      throw new Error(`The image is larger than the ${formatBytes(maxBytes)} upload limit.`);\n    }\n    return file;\n  }\n\n  function describeFile(file) {\n    return {\n      name: String(file?.name || \"image\"),\n      type: String(file?.type || \"application/octet-stream\"),\n      size: Number(file?.size || 0),\n      sizeText: formatBytes(Number(file?.size || 0)),\n    };\n  }\n\n  function formatBytes(bytes) {\n    const value = Number(bytes) || 0;\n    if (value <= 0) return \"0 B\";\n    const units = [\"B\", \"KB\", \"MB\", \"GB\"];\n    const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);\n    const amount = value / Math.pow(1024, index);\n    return `${Number(amount.toFixed(index ? 1 : 0))} ${units[index]}`;\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/image-pipeline.js", function () {
+    // Minimal image validation and preview helpers for OPUc.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+
+      runtime.imagePipeline = {
+        validateFile,
+        describeFile,
+        formatBytes,
+      };
+
+      function validateFile(file, maxBytes) {
+        if (!(file instanceof Blob)) throw new Error("Choose an image file first.");
+        if (!String(file.type || "").startsWith("image/")) throw new Error("The selected file is not an image.");
+        if (!file.size) throw new Error("The selected image is empty.");
+        if (maxBytes > 0 && file.size > maxBytes) {
+          throw new Error(`The image is larger than the ${formatBytes(maxBytes)} upload limit.`);
+        }
+        return file;
+      }
+
+      function describeFile(file) {
+        return {
+          name: String(file?.name || "image"),
+          type: String(file?.type || "application/octet-stream"),
+          size: Number(file?.size || 0),
+          sizeText: formatBytes(Number(file?.size || 0)),
+        };
+      }
+
+      function formatBytes(bytes) {
+        const value = Number(bytes) || 0;
+        if (value <= 0) return "0 B";
+        const units = ["B", "KB", "MB", "GB"];
+        const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+        const amount = value / Math.pow(1024, index);
+        return `${Number(amount.toFixed(index ? 1 : 0))} ${units[index]}`;
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/kapybara-adapter.js", "// Kapybara composer discovery, launcher placement, and native image insertion.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const bindings = new Map();\n  let stopObserver = null;\n\n  runtime.adapter = {\n    start,\n    stop,\n    bindLauncher,\n    insertImageUrl,\n  };\n\n  function start(onComposer, onRemoved) {\n    stop();\n    stopObserver = root.kapyguts.observeComposers(\n      (parts) => onComposer(parts),\n      document.body,\n      (parts) => {\n        bindings.get(parts.section)?.remove();\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      }\n    );\n    return stop;\n  }\n\n  function stop() {\n    stopObserver?.();\n    stopObserver = null;\n    Array.from(bindings.values()).forEach((binding) => binding.remove());\n    bindings.clear();\n  }\n\n  function bindLauncher(parts, onClick) {\n    if (bindings.has(parts.section)) return bindings.get(parts.section);\n\n    const row = document.createElement(\"div\");\n    row.className = \"cudloun-opuc-launcher-row\";\n    row.dataset.composerKind = parts.kind;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-launcher\";\n    button.setAttribute(\"aria-label\", \"OPUc upload\");\n    button.title = \"Upload an image through OPUc\";\n    button.textContent = \"OPUc\";\n    button.addEventListener(\"click\", onClick);\n    row.appendChild(button);\n    parts.toolbarSlot.insertAdjacentElement(\"afterend\", row);\n\n    const align = () => alignBelowImageButton(parts, row);\n    window.requestAnimationFrame(align);\n    const resizeObserver = typeof ResizeObserver === \"function\" ? new ResizeObserver(align) : null;\n    resizeObserver?.observe(parts.toolbarSlot);\n    window.addEventListener(\"resize\", align);\n\n    const binding = {\n      parts,\n      row,\n      button,\n      remove() {\n        resizeObserver?.disconnect();\n        window.removeEventListener(\"resize\", align);\n        button.removeEventListener(\"click\", onClick);\n        row.remove();\n        bindings.delete(parts.section);\n      },\n    };\n    bindings.set(parts.section, binding);\n    return binding;\n  }\n\n  async function insertImageUrl(parts, imageUrl) {\n    if (!parts?.section?.isConnected) throw new Error(\"The originating Kapybara composer was closed.\");\n    const validated = runtime.client.validateOpuUrl(imageUrl);\n    if (!validated) throw new Error(\"OPU returned an invalid image URL.\");\n\n    const existingCount = Array.from(parts.section.querySelectorAll(\"img\"))\n      .filter((image) => image.src === validated).length;\n\n    parts.imageButton.click();\n    const dialog = await waitFor(findImageDialog, 5000, \"Kapybara's image dialog did not open.\");\n    const urlTab = findControlByText(dialog, '[role=\"tab\"]', \"Z URL\");\n    if (!urlTab) throw new Error(\"Kapybara's URL image tab was not found.\");\n    urlTab.click();\n\n    const input = await waitFor(\n      () => dialog.querySelector('input[type=\"url\"]'),\n      3000,\n      \"Kapybara's image URL field was not found.\"\n    );\n    setInputValue(input, validated);\n\n    const insert = await waitFor(\n      () => {\n        const control = findControlByText(dialog, \"button\", \"Vložit\");\n        return control && !control.disabled ? control : null;\n      },\n      3000,\n      \"Kapybara did not enable image insertion.\"\n    );\n    insert.click();\n\n    await waitFor(\n      () => Array.from(parts.section.querySelectorAll(\"img\"))\n        .filter((image) => image.src === validated).length > existingCount,\n      5000,\n      \"Kapybara did not confirm the inserted OPU image.\"\n    );\n    parts.editable?.focus();\n    return validated;\n  }\n\n  function alignBelowImageButton(parts, row) {\n    if (!row.isConnected || !parts.imageButton?.isConnected || !parts.toolbarSlot?.isConnected) return;\n    const slotRect = parts.toolbarSlot.getBoundingClientRect();\n    const imageRect = parts.imageButton.getBoundingClientRect();\n    const rowWidth = row.getBoundingClientRect().width;\n    const desired = Math.max(0, Math.round(imageRect.left - slotRect.left));\n    const safe = desired + 64 < rowWidth ? desired : 0;\n    row.style.setProperty(\"--cudloun-opuc-launcher-offset\", `${safe}px`);\n  }\n\n  function findImageDialog() {\n    return Array.from(document.querySelectorAll('[role=\"dialog\"]'))\n      .filter(isVisible)\n      .find((dialog) => findControlByText(dialog, '[role=\"tab\"]', \"Z URL\")) || null;\n  }\n\n  function findControlByText(scope, selector, text) {\n    return Array.from(scope.querySelectorAll(selector))\n      .find((node) => cleanText(node.textContent) === text) || null;\n  }\n\n  function setInputValue(input, value) {\n    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\")?.set;\n    if (setter) setter.call(input, value);\n    else input.value = value;\n    input.dispatchEvent(new InputEvent(\"input\", { bubbles: true, inputType: \"insertText\", data: value }));\n    input.dispatchEvent(new Event(\"change\", { bubbles: true }));\n  }\n\n  function waitFor(probe, timeout, message) {\n    const started = Date.now();\n    return new Promise((resolve, reject) => {\n      const check = () => {\n        try {\n          const result = probe();\n          if (result) {\n            resolve(result);\n            return;\n          }\n        } catch (_error) {\n          // Retry until timeout so transient rerenders do not fail insertion.\n        }\n        if (Date.now() - started >= timeout) {\n          reject(new Error(message));\n          return;\n        }\n        window.setTimeout(check, 50);\n      };\n      check();\n    });\n  }\n\n  function isVisible(node) {\n    const rect = node.getBoundingClientRect();\n    const style = window.getComputedStyle(node);\n    return rect.width > 0 && rect.height > 0 && style.display !== \"none\" && style.visibility !== \"hidden\";\n  }\n\n  function cleanText(value) {\n    return String(value || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/kapybara-adapter.js", function () {
+    // Kapybara composer discovery, launcher placement, and native image insertion.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+      const bindings = new Map();
+      let stopObserver = null;
+
+      runtime.adapter = {
+        start,
+        stop,
+        bindLauncher,
+        insertImageUrl,
+      };
+
+      function start(onComposer, onRemoved) {
+        stop();
+        stopObserver = root.kapyguts.observeComposers(
+          (parts) => onComposer(parts),
+          document.body,
+          (parts) => {
+            bindings.get(parts.section)?.remove();
+            if (typeof onRemoved === "function") onRemoved(parts);
+          }
+        );
+        return stop;
+      }
+
+      function stop() {
+        stopObserver?.();
+        stopObserver = null;
+        Array.from(bindings.values()).forEach((binding) => binding.remove());
+        bindings.clear();
+      }
+
+      function bindLauncher(parts, onClick) {
+        if (bindings.has(parts.section)) return bindings.get(parts.section);
+
+        const row = document.createElement("div");
+        row.className = "cudloun-opuc-launcher-row";
+        row.dataset.composerKind = parts.kind;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cudloun-opuc-launcher";
+        button.setAttribute("aria-label", "OPUc upload");
+        button.title = "Upload an image through OPUc";
+        button.textContent = "OPUc";
+        button.addEventListener("click", onClick);
+        row.appendChild(button);
+        parts.toolbarSlot.insertAdjacentElement("afterend", row);
+
+        const align = () => alignBelowImageButton(parts, row);
+        window.requestAnimationFrame(align);
+        const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(align) : null;
+        resizeObserver?.observe(parts.toolbarSlot);
+        window.addEventListener("resize", align);
+
+        const binding = {
+          parts,
+          row,
+          button,
+          remove() {
+            resizeObserver?.disconnect();
+            window.removeEventListener("resize", align);
+            button.removeEventListener("click", onClick);
+            row.remove();
+            bindings.delete(parts.section);
+          },
+        };
+        bindings.set(parts.section, binding);
+        return binding;
+      }
+
+      async function insertImageUrl(parts, imageUrl) {
+        if (!parts?.section?.isConnected) throw new Error("The originating Kapybara composer was closed.");
+        const validated = runtime.client.validateOpuUrl(imageUrl);
+        if (!validated) throw new Error("OPU returned an invalid image URL.");
+
+        const existingCount = Array.from(parts.section.querySelectorAll("img"))
+          .filter((image) => image.src === validated).length;
+
+        parts.imageButton.click();
+        const dialog = await waitFor(findImageDialog, 5000, "Kapybara's image dialog did not open.");
+        const urlTab = findControlByText(dialog, '[role="tab"]', "Z URL");
+        if (!urlTab) throw new Error("Kapybara's URL image tab was not found.");
+        urlTab.click();
+
+        const input = await waitFor(
+          () => dialog.querySelector('input[type="url"]'),
+          3000,
+          "Kapybara's image URL field was not found."
+        );
+        setInputValue(input, validated);
+
+        const insert = await waitFor(
+          () => {
+            const control = findControlByText(dialog, "button", "Vložit");
+            return control && !control.disabled ? control : null;
+          },
+          3000,
+          "Kapybara did not enable image insertion."
+        );
+        insert.click();
+
+        await waitFor(
+          () => Array.from(parts.section.querySelectorAll("img"))
+            .filter((image) => image.src === validated).length > existingCount,
+          5000,
+          "Kapybara did not confirm the inserted OPU image."
+        );
+        parts.editable?.focus();
+        return validated;
+      }
+
+      function alignBelowImageButton(parts, row) {
+        if (!row.isConnected || !parts.imageButton?.isConnected || !parts.toolbarSlot?.isConnected) return;
+        const slotRect = parts.toolbarSlot.getBoundingClientRect();
+        const imageRect = parts.imageButton.getBoundingClientRect();
+        const rowWidth = row.getBoundingClientRect().width;
+        const desired = Math.max(0, Math.round(imageRect.left - slotRect.left));
+        const safe = desired + 64 < rowWidth ? desired : 0;
+        row.style.setProperty("--cudloun-opuc-launcher-offset", `${safe}px`);
+      }
+
+      function findImageDialog() {
+        return Array.from(document.querySelectorAll('[role="dialog"]'))
+          .filter(isVisible)
+          .find((dialog) => findControlByText(dialog, '[role="tab"]', "Z URL")) || null;
+      }
+
+      function findControlByText(scope, selector, text) {
+        return Array.from(scope.querySelectorAll(selector))
+          .find((node) => cleanText(node.textContent) === text) || null;
+      }
+
+      function setInputValue(input, value) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+        if (setter) setter.call(input, value);
+        else input.value = value;
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: value }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      function waitFor(probe, timeout, message) {
+        const started = Date.now();
+        return new Promise((resolve, reject) => {
+          const check = () => {
+            try {
+              const result = probe();
+              if (result) {
+                resolve(result);
+                return;
+              }
+            } catch (_error) {
+              // Retry until timeout so transient rerenders do not fail insertion.
+            }
+            if (Date.now() - started >= timeout) {
+              reject(new Error(message));
+              return;
+            }
+            window.setTimeout(check, 50);
+          };
+          check();
+        });
+      }
+
+      function isVisible(node) {
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+      }
+
+      function cleanText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/queue.js", "// Per-composer OPUc session state.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const byComposer = new WeakMap();\n  const sessions = new Set();\n\n  runtime.queue = {\n    ensure,\n    dispose,\n    disposeAll,\n    sessions,\n  };\n\n  function ensure(parts) {\n    const key = parts?.section;\n    if (!key) throw new Error(\"A Kapybara composer is required.\");\n    if (byComposer.has(key)) return byComposer.get(key);\n\n    const session = {\n      parts,\n      file: null,\n      previewUrl: \"\",\n      status: \"idle\",\n      message: \"\",\n      progress: 0,\n      uploadedUrl: \"\",\n      request: null,\n      disposed: false,\n      listeners: new Set(),\n      subscribe(listener) {\n        this.listeners.add(listener);\n        return () => this.listeners.delete(listener);\n      },\n      notify() {\n        this.listeners.forEach((listener) => listener(this));\n      },\n      update(values) {\n        Object.assign(this, values);\n        this.notify();\n      },\n      setFile(file) {\n        this.request?.abort?.();\n        revokePreview(this);\n        this.file = file;\n        this.previewUrl = URL.createObjectURL(file);\n        this.status = \"ready\";\n        this.message = \"Ready to upload.\";\n        this.progress = 0;\n        this.uploadedUrl = \"\";\n        this.request = null;\n        this.notify();\n      },\n      clear() {\n        this.request?.abort?.();\n        revokePreview(this);\n        this.file = null;\n        this.status = \"idle\";\n        this.message = \"\";\n        this.progress = 0;\n        this.uploadedUrl = \"\";\n        this.request = null;\n        this.notify();\n      },\n    };\n\n    byComposer.set(key, session);\n    sessions.add(session);\n    return session;\n  }\n\n  function dispose(session) {\n    if (!session || session.disposed) return;\n    session.disposed = true;\n    session.request?.abort?.();\n    revokePreview(session);\n    session.listeners.clear();\n    sessions.delete(session);\n    byComposer.delete(session.parts.section);\n  }\n\n  function disposeAll() {\n    Array.from(sessions).forEach(dispose);\n  }\n\n  function revokePreview(session) {\n    if (!session.previewUrl) return;\n    URL.revokeObjectURL(session.previewUrl);\n    session.previewUrl = \"\";\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/queue.js", function () {
+    // Per-composer OPUc session state.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+      const byComposer = new WeakMap();
+      const sessions = new Set();
+
+      runtime.queue = {
+        ensure,
+        dispose,
+        disposeAll,
+        sessions,
+      };
+
+      function ensure(parts) {
+        const key = parts?.section;
+        if (!key) throw new Error("A Kapybara composer is required.");
+        if (byComposer.has(key)) return byComposer.get(key);
+
+        const session = {
+          parts,
+          file: null,
+          previewUrl: "",
+          status: "idle",
+          message: "",
+          progress: 0,
+          uploadedUrl: "",
+          request: null,
+          disposed: false,
+          listeners: new Set(),
+          subscribe(listener) {
+            this.listeners.add(listener);
+            return () => this.listeners.delete(listener);
+          },
+          notify() {
+            this.listeners.forEach((listener) => listener(this));
+          },
+          update(values) {
+            Object.assign(this, values);
+            this.notify();
+          },
+          setFile(file) {
+            this.request?.abort?.();
+            revokePreview(this);
+            this.file = file;
+            this.previewUrl = URL.createObjectURL(file);
+            this.status = "ready";
+            this.message = "Ready to upload.";
+            this.progress = 0;
+            this.uploadedUrl = "";
+            this.request = null;
+            this.notify();
+          },
+          clear() {
+            this.request?.abort?.();
+            revokePreview(this);
+            this.file = null;
+            this.status = "idle";
+            this.message = "";
+            this.progress = 0;
+            this.uploadedUrl = "";
+            this.request = null;
+            this.notify();
+          },
+        };
+
+        byComposer.set(key, session);
+        sessions.add(session);
+        return session;
+      }
+
+      function dispose(session) {
+        if (!session || session.disposed) return;
+        session.disposed = true;
+        session.request?.abort?.();
+        revokePreview(session);
+        session.listeners.clear();
+        sessions.delete(session);
+        byComposer.delete(session.parts.section);
+      }
+
+      function disposeAll() {
+        Array.from(sessions).forEach(dispose);
+      }
+
+      function revokePreview(session) {
+        if (!session.previewUrl) return;
+        URL.revokeObjectURL(session.previewUrl);
+        session.previewUrl = "";
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/styles.js", "// Removable styles for OPUc composer UI.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const STYLE_ID = \"cudloun-opuc-style\";\n\n  runtime.styles = { install, remove };\n\n  function install() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      .cudloun-opuc-launcher-row{box-sizing:border-box;display:flex;align-items:center;width:100%;padding:4px 0 2px var(--cudloun-opuc-launcher-offset,0);min-height:30px}\n      .cudloun-opuc-launcher{appearance:none;border:1px solid rgba(70,92,120,.3);border-radius:6px;background:#f4f7fa;color:#243041;cursor:pointer;font:700 12px/1.2 inherit;padding:5px 9px;box-shadow:0 1px 2px rgba(0,0,0,.08)}\n      .cudloun-opuc-launcher:hover{border-color:#087ea4;color:#087ea4}\n      .cudloun-opuc-launcher:focus-visible{outline:2px solid #087ea4;outline-offset:2px}\n      .cudloun-opuc-panel{box-sizing:border-box;display:none;gap:10px;align-items:center;margin:4px 0 8px;padding:9px;border:1px solid rgba(70,92,120,.22);border-radius:8px;background:#f8fafc;color:#243041;font:13px/1.35 inherit}\n      .cudloun-opuc-panel[data-open=true]{display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-areas:\"preview info\" \"preview status\" \"actions actions\"}\n      .cudloun-opuc-preview{grid-area:preview;width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid rgba(70,92,120,.22);background:#fff}\n      .cudloun-opuc-file-info{grid-area:info;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}\n      .cudloun-opuc-status{grid-area:status;color:#596579;min-height:18px}\n      .cudloun-opuc-panel[data-state=error] .cudloun-opuc-status{color:#b42318}\n      .cudloun-opuc-panel[data-state=success] .cudloun-opuc-status{color:#067647}\n      .cudloun-opuc-actions{grid-area:actions;display:flex;gap:7px;justify-content:flex-end}\n      .cudloun-opuc-action{appearance:none;border:1px solid rgba(70,92,120,.28);border-radius:6px;background:#fff;color:#243041;cursor:pointer;font:700 12px/1.2 inherit;padding:6px 10px}\n      .cudloun-opuc-action[data-primary=true]{border-color:#087ea4;background:#087ea4;color:#fff}\n      .cudloun-opuc-action:disabled{cursor:default;opacity:.55}\n      html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-launcher,\n      html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-panel,\n      html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-action{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-action[data-primary=true]{background:var(--cudloun-kapybara-accent,#d68a1f);color:#fff}\n      @media(max-width:620px){.cudloun-opuc-launcher-row{padding-inline-start:0}.cudloun-opuc-panel[data-open=true]{grid-template-columns:48px minmax(0,1fr)}.cudloun-opuc-preview{width:46px;height:46px}}\n    `;\n    document.head.appendChild(style);\n  }\n\n  function remove() {\n    document.getElementById(STYLE_ID)?.remove();\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/styles.js", function () {
+    // Removable styles for OPUc composer UI.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+      const STYLE_ID = "cudloun-opuc-style";
+
+      runtime.styles = { install, remove };
+
+      function install() {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          .cudloun-opuc-launcher-row{box-sizing:border-box;display:flex;align-items:center;width:100%;padding:4px 0 2px var(--cudloun-opuc-launcher-offset,0);min-height:30px}
+          .cudloun-opuc-launcher{appearance:none;border:1px solid rgba(70,92,120,.3);border-radius:6px;background:#f4f7fa;color:#243041;cursor:pointer;font:700 12px/1.2 inherit;padding:5px 9px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+          .cudloun-opuc-launcher:hover{border-color:#087ea4;color:#087ea4}
+          .cudloun-opuc-launcher:focus-visible{outline:2px solid #087ea4;outline-offset:2px}
+          .cudloun-opuc-panel{box-sizing:border-box;display:none;gap:10px;align-items:center;margin:4px 0 8px;padding:9px;border:1px solid rgba(70,92,120,.22);border-radius:8px;background:#f8fafc;color:#243041;font:13px/1.35 inherit}
+          .cudloun-opuc-panel[data-open=true]{display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-areas:"preview info" "preview status" "actions actions"}
+          .cudloun-opuc-preview{grid-area:preview;width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid rgba(70,92,120,.22);background:#fff}
+          .cudloun-opuc-file-info{grid-area:info;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+          .cudloun-opuc-status{grid-area:status;color:#596579;min-height:18px}
+          .cudloun-opuc-panel[data-state=error] .cudloun-opuc-status{color:#b42318}
+          .cudloun-opuc-panel[data-state=success] .cudloun-opuc-status{color:#067647}
+          .cudloun-opuc-actions{grid-area:actions;display:flex;gap:7px;justify-content:flex-end}
+          .cudloun-opuc-action{appearance:none;border:1px solid rgba(70,92,120,.28);border-radius:6px;background:#fff;color:#243041;cursor:pointer;font:700 12px/1.2 inherit;padding:6px 10px}
+          .cudloun-opuc-action[data-primary=true]{border-color:#087ea4;background:#087ea4;color:#fff}
+          .cudloun-opuc-action:disabled{cursor:default;opacity:.55}
+          html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-launcher,
+          html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-panel,
+          html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-action{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme=dark] .cudloun-opuc-action[data-primary=true]{background:var(--cudloun-kapybara-accent,#d68a1f);color:#fff}
+          @media(max-width:620px){.cudloun-opuc-launcher-row{padding-inline-start:0}.cudloun-opuc-panel[data-open=true]{grid-template-columns:48px minmax(0,1fr)}.cudloun-opuc-preview{width:46px;height:46px}}
+        `;
+        document.head.appendChild(style);
+      }
+
+      function remove() {
+        document.getElementById(STYLE_ID)?.remove();
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/ui.js", "// Minimal one-file OPUc staging and upload UI.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const views = new Map();\n  let ctxRef = null;\n  let stopAdapter = null;\n  let loginState = \"unknown\";\n  let loginProbe = null;\n\n  runtime.ui = { start, stop };\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    runtime.styles.install();\n    stopAdapter = runtime.adapter.start(\n      (parts) => mountComposer(parts),\n      (parts) => unmountComposer(parts)\n    );\n    ctx.log.info(\"OPUc composer integration ready\");\n    return stop;\n  }\n\n  function stop() {\n    stopAdapter?.();\n    stopAdapter = null;\n    views.forEach((view) => view.remove());\n    views.clear();\n    runtime.queue?.disposeAll();\n    runtime.styles?.remove();\n    ctxRef = null;\n    loginState = \"unknown\";\n    loginProbe = null;\n  }\n\n  function mountComposer(parts) {\n    if (!ctxRef || views.has(parts.section)) return;\n    const session = runtime.queue.ensure(parts);\n    const binding = runtime.adapter.bindLauncher(parts, () => chooseFile(view));\n    const view = createView(session, binding);\n    views.set(parts.section, view);\n  }\n\n  function unmountComposer(parts) {\n    const view = views.get(parts.section);\n    if (!view) return;\n    view.remove();\n    views.delete(parts.section);\n  }\n\n  function createView(session, binding) {\n    const input = document.createElement(\"input\");\n    input.type = \"file\";\n    input.accept = \"image/*\";\n    input.hidden = true;\n    binding.row.appendChild(input);\n\n    const panel = document.createElement(\"div\");\n    panel.className = \"cudloun-opuc-panel\";\n    panel.dataset.open = \"false\";\n    panel.dataset.state = \"idle\";\n\n    const preview = document.createElement(\"img\");\n    preview.className = \"cudloun-opuc-preview\";\n    preview.alt = \"Selected image preview\";\n\n    const fileInfo = document.createElement(\"div\");\n    fileInfo.className = \"cudloun-opuc-file-info\";\n\n    const status = document.createElement(\"div\");\n    status.className = \"cudloun-opuc-status\";\n    status.setAttribute(\"aria-live\", \"polite\");\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-opuc-actions\";\n\n    const clear = actionButton(\"Clear\", false);\n    const upload = actionButton(\"Upload to OPU\", true);\n    actions.appendChild(clear);\n    actions.appendChild(upload);\n\n    panel.appendChild(preview);\n    panel.appendChild(fileInfo);\n    panel.appendChild(status);\n    panel.appendChild(actions);\n    binding.row.insertAdjacentElement(\"afterend\", panel);\n\n    const view = {\n      session,\n      binding,\n      input,\n      panel,\n      preview,\n      fileInfo,\n      status,\n      clear,\n      upload,\n      unsubscribe: null,\n      removed: false,\n      remove() {\n        if (this.removed) return;\n        this.removed = true;\n        this.unsubscribe?.();\n        input.removeEventListener(\"change\", onFileChange);\n        clear.removeEventListener(\"click\", onClear);\n        upload.removeEventListener(\"click\", onUpload);\n        panel.remove();\n        binding.remove();\n        runtime.queue.dispose(session);\n      },\n    };\n\n    const onFileChange = () => selectFile(view, input.files?.[0] || null);\n    const onClear = () => session.clear();\n    const onUpload = () => {\n      if (session.status === \"uploading\") session.request?.abort?.();\n      else uploadFile(view);\n    };\n    input.addEventListener(\"change\", onFileChange);\n    clear.addEventListener(\"click\", onClear);\n    upload.addEventListener(\"click\", onUpload);\n    view.unsubscribe = session.subscribe(() => render(view));\n    render(view);\n    return view;\n  }\n\n  function chooseFile(view) {\n    if (!view.session.parts.section.isConnected) return;\n    probeLogin(view);\n    view.input.click();\n  }\n\n  function selectFile(view, file) {\n    view.input.value = \"\";\n    if (!file) return;\n    try {\n      const maxMb = validMaxMb(ctxRef?.storage.get(\"maxUploadMb\", 25));\n      runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);\n      view.session.setFile(file);\n    } catch (error) {\n      view.session.update({ status: \"error\", message: safeMessage(error), progress: 0 });\n    }\n  }\n\n  async function uploadFile(view) {\n    const session = view.session;\n    if (!session.file || session.disposed) return;\n\n    session.update({ status: \"uploading\", message: \"Uploading to OPU…\", progress: 0 });\n    const request = runtime.client.upload(session.file, {\n      onProgress(event) {\n        if (!event.lengthComputable || !event.total) return;\n        const progress = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));\n        session.update({ progress, message: `Uploading to OPU… ${progress}%` });\n      },\n    });\n    session.request = request;\n\n    try {\n      const url = await request.promise;\n      if (session.disposed || !session.parts.section.isConnected) {\n        throw new Error(\"The originating Kapybara composer was closed.\");\n      }\n      session.update({ status: \"inserting\", message: \"Adding the image to Kapybara…\", uploadedUrl: url });\n      await runtime.adapter.insertImageUrl(session.parts, url);\n      session.update({ status: \"success\", message: \"Uploaded and inserted. Review the post before sending.\", progress: 100 });\n    } catch (error) {\n      const cancelled = error?.name === \"AbortError\";\n      session.update({\n        status: cancelled ? \"ready\" : \"error\",\n        message: cancelled ? \"Upload cancelled. The image is still staged.\" : safeMessage(error),\n        progress: 0,\n      });\n    } finally {\n      session.request = null;\n      render(view);\n    }\n  }\n\n  function render(view) {\n    const session = view.session;\n    const hasFile = !!session.file;\n    view.panel.dataset.open = hasFile || session.status === \"error\" ? \"true\" : \"false\";\n    view.panel.dataset.state = session.status;\n    view.preview.hidden = !session.previewUrl;\n    if (session.previewUrl) view.preview.src = session.previewUrl;\n\n    const info = runtime.imagePipeline.describeFile(session.file);\n    view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : \"No image selected\";\n    view.status.textContent = session.message || loginMessage();\n    view.clear.disabled = session.status === \"uploading\" || session.status === \"inserting\";\n    view.upload.disabled = !hasFile || session.status === \"inserting\" || session.status === \"success\";\n    view.upload.textContent = session.status === \"uploading\" ? \"Cancel upload\" : session.status === \"error\" ? \"Retry upload\" : \"Upload to OPU\";\n  }\n\n  function probeLogin(view) {\n    if (loginState !== \"unknown\" || loginProbe) return loginProbe;\n    loginState = \"checking\";\n    render(view);\n    loginProbe = runtime.client.checkLoginStatus()\n      .then((loggedIn) => {\n        loginState = loggedIn ? \"logged-in\" : \"logged-out\";\n        return loggedIn;\n      })\n      .catch(() => {\n        loginState = \"unavailable\";\n        return false;\n      })\n      .finally(() => {\n        loginProbe = null;\n        views.forEach(render);\n      });\n    return loginProbe;\n  }\n\n  function loginMessage() {\n    if (loginState === \"checking\") return \"Checking OPU session…\";\n    if (loginState === \"logged-out\") return \"OPU is not signed in; account features may be limited.\";\n    if (loginState === \"unavailable\") return \"OPU session could not be checked; upload may still work.\";\n    return \"\";\n  }\n\n  function actionButton(label, primary) {\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-action\";\n    button.dataset.primary = primary ? \"true\" : \"false\";\n    button.textContent = label;\n    return button;\n  }\n\n  function validMaxMb(value) {\n    const parsed = Number(value);\n    return Number.isFinite(parsed) && parsed >= 1 && parsed <= 100 ? parsed : 25;\n  }\n\n  function safeMessage(error) {\n    return error instanceof Error && error.message ? error.message : \"The OPU operation failed.\";\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/ui.js", function () {
+    // Minimal one-file OPUc staging and upload UI.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+      const views = new Map();
+      let ctxRef = null;
+      let stopAdapter = null;
+      let loginState = "unknown";
+      let loginProbe = null;
+
+      runtime.ui = { start, stop };
+
+      function start(ctx) {
+        stop();
+        ctxRef = ctx;
+        runtime.styles.install();
+        stopAdapter = runtime.adapter.start(
+          (parts) => mountComposer(parts),
+          (parts) => unmountComposer(parts)
+        );
+        ctx.log.info("OPUc composer integration ready");
+        return stop;
+      }
+
+      function stop() {
+        stopAdapter?.();
+        stopAdapter = null;
+        views.forEach((view) => view.remove());
+        views.clear();
+        runtime.queue?.disposeAll();
+        runtime.styles?.remove();
+        ctxRef = null;
+        loginState = "unknown";
+        loginProbe = null;
+      }
+
+      function mountComposer(parts) {
+        if (!ctxRef || views.has(parts.section)) return;
+        const session = runtime.queue.ensure(parts);
+        const binding = runtime.adapter.bindLauncher(parts, () => chooseFile(view));
+        const view = createView(session, binding);
+        views.set(parts.section, view);
+      }
+
+      function unmountComposer(parts) {
+        const view = views.get(parts.section);
+        if (!view) return;
+        view.remove();
+        views.delete(parts.section);
+      }
+
+      function createView(session, binding) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.hidden = true;
+        binding.row.appendChild(input);
+
+        const panel = document.createElement("div");
+        panel.className = "cudloun-opuc-panel";
+        panel.dataset.open = "false";
+        panel.dataset.state = "idle";
+
+        const preview = document.createElement("img");
+        preview.className = "cudloun-opuc-preview";
+        preview.alt = "Selected image preview";
+
+        const fileInfo = document.createElement("div");
+        fileInfo.className = "cudloun-opuc-file-info";
+
+        const status = document.createElement("div");
+        status.className = "cudloun-opuc-status";
+        status.setAttribute("aria-live", "polite");
+
+        const actions = document.createElement("div");
+        actions.className = "cudloun-opuc-actions";
+
+        const clear = actionButton("Clear", false);
+        const upload = actionButton("Upload to OPU", true);
+        actions.appendChild(clear);
+        actions.appendChild(upload);
+
+        panel.appendChild(preview);
+        panel.appendChild(fileInfo);
+        panel.appendChild(status);
+        panel.appendChild(actions);
+        binding.row.insertAdjacentElement("afterend", panel);
+
+        const view = {
+          session,
+          binding,
+          input,
+          panel,
+          preview,
+          fileInfo,
+          status,
+          clear,
+          upload,
+          unsubscribe: null,
+          removed: false,
+          remove() {
+            if (this.removed) return;
+            this.removed = true;
+            this.unsubscribe?.();
+            input.removeEventListener("change", onFileChange);
+            clear.removeEventListener("click", onClear);
+            upload.removeEventListener("click", onUpload);
+            panel.remove();
+            binding.remove();
+            runtime.queue.dispose(session);
+          },
+        };
+
+        const onFileChange = () => selectFile(view, input.files?.[0] || null);
+        const onClear = () => session.clear();
+        const onUpload = () => {
+          if (session.status === "uploading") session.request?.abort?.();
+          else uploadFile(view);
+        };
+        input.addEventListener("change", onFileChange);
+        clear.addEventListener("click", onClear);
+        upload.addEventListener("click", onUpload);
+        view.unsubscribe = session.subscribe(() => render(view));
+        render(view);
+        return view;
+      }
+
+      function chooseFile(view) {
+        if (!view.session.parts.section.isConnected) return;
+        probeLogin(view);
+        view.input.click();
+      }
+
+      function selectFile(view, file) {
+        view.input.value = "";
+        if (!file) return;
+        try {
+          const maxMb = validMaxMb(ctxRef?.storage.get("maxUploadMb", 25));
+          runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);
+          view.session.setFile(file);
+        } catch (error) {
+          view.session.update({ status: "error", message: safeMessage(error), progress: 0 });
+        }
+      }
+
+      async function uploadFile(view) {
+        const session = view.session;
+        if (!session.file || session.disposed) return;
+
+        session.update({ status: "uploading", message: "Uploading to OPU…", progress: 0 });
+        const request = runtime.client.upload(session.file, {
+          onProgress(event) {
+            if (!event.lengthComputable || !event.total) return;
+            const progress = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));
+            session.update({ progress, message: `Uploading to OPU… ${progress}%` });
+          },
+        });
+        session.request = request;
+
+        try {
+          const url = await request.promise;
+          if (session.disposed || !session.parts.section.isConnected) {
+            throw new Error("The originating Kapybara composer was closed.");
+          }
+          session.update({ status: "inserting", message: "Adding the image to Kapybara…", uploadedUrl: url });
+          await runtime.adapter.insertImageUrl(session.parts, url);
+          session.update({ status: "success", message: "Uploaded and inserted. Review the post before sending.", progress: 100 });
+        } catch (error) {
+          const cancelled = error?.name === "AbortError";
+          session.update({
+            status: cancelled ? "ready" : "error",
+            message: cancelled ? "Upload cancelled. The image is still staged." : safeMessage(error),
+            progress: 0,
+          });
+        } finally {
+          session.request = null;
+          render(view);
+        }
+      }
+
+      function render(view) {
+        const session = view.session;
+        const hasFile = !!session.file;
+        view.panel.dataset.open = hasFile || session.status === "error" ? "true" : "false";
+        view.panel.dataset.state = session.status;
+        view.preview.hidden = !session.previewUrl;
+        if (session.previewUrl) view.preview.src = session.previewUrl;
+
+        const info = runtime.imagePipeline.describeFile(session.file);
+        view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : "No image selected";
+        view.status.textContent = session.message || loginMessage();
+        view.clear.disabled = session.status === "uploading" || session.status === "inserting";
+        view.upload.disabled = !hasFile || session.status === "inserting" || session.status === "success";
+        view.upload.textContent = session.status === "uploading" ? "Cancel upload" : session.status === "error" ? "Retry upload" : "Upload to OPU";
+      }
+
+      function probeLogin(view) {
+        if (loginState !== "unknown" || loginProbe) return loginProbe;
+        loginState = "checking";
+        render(view);
+        loginProbe = runtime.client.checkLoginStatus()
+          .then((loggedIn) => {
+            loginState = loggedIn ? "logged-in" : "logged-out";
+            return loggedIn;
+          })
+          .catch(() => {
+            loginState = "unavailable";
+            return false;
+          })
+          .finally(() => {
+            loginProbe = null;
+            views.forEach(render);
+          });
+        return loginProbe;
+      }
+
+      function loginMessage() {
+        if (loginState === "checking") return "Checking OPU session…";
+        if (loginState === "logged-out") return "OPU is not signed in; account features may be limited.";
+        if (loginState === "unavailable") return "OPU session could not be checked; upload may still work.";
+        return "";
+      }
+
+      function actionButton(label, primary) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cudloun-opuc-action";
+        button.dataset.primary = primary ? "true" : "false";
+        button.textContent = label;
+        return button;
+      }
+
+      function validMaxMb(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed >= 1 && parsed <= 100 ? parsed : 25;
+      }
+
+      function safeMessage(error) {
+        return error instanceof Error && error.message ? error.message : "The OPU operation failed.";
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
+  embeddedScripts.set("modules/opuc/index.js", function () {
+    // Cudloun module registration for OPUc on Kapybara.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const runtime = root.opuc = root.opuc || {};
+
+      root.registerModule({
+        id: "opuc",
+        name: "OPUc for Kapybara",
+        description: "Upload an image through OPU and insert it into Kapybara's native editor.",
+        version: "0.1.0",
+        defaultEnabled: false,
+        start(ctx) {
+          if (!root.kapyguts?.isKapybara?.()) return null;
+          return runtime.ui.start(ctx);
+        },
+        renderSettings(ctx) {
+          const wrap = document.createElement("div");
+          wrap.className = "cudloun-settings-list";
+
+          const label = document.createElement("label");
+          label.className = "cudloun-setting-row";
+          const text = document.createElement("span");
+          text.className = "cudloun-setting-text";
+          text.textContent = "Maximum image size (MB)";
+
+          const input = document.createElement("input");
+          input.className = "cudloun-select";
+          input.type = "number";
+          input.min = "1";
+          input.max = "100";
+          input.step = "1";
+          input.value = String(ctx.storage.get("maxUploadMb", 25));
+          input.addEventListener("change", () => {
+            const value = Math.max(1, Math.min(100, Number(input.value) || 25));
+            input.value = String(value);
+            ctx.storage.set("maxUploadMb", value);
+          });
+
+          label.appendChild(text);
+          label.appendChild(input);
+          wrap.appendChild(label);
+          return wrap;
+        },
+        renderHelp() {
+          return [
+            "Enable the module to add an OPUc button below the native image control in new-post and reply composers.",
+            "The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.",
+            "OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.",
+          ];
+        },
+      });
+    })();
+
+  });
+
   function normalizeEmbeddedPath(url) {
     const raw = String(url || "").split("#")[0].split("?")[0];
     if (raw.startsWith(RAW_MAIN_URL)) return raw.slice(RAW_MAIN_URL.length);
@@ -2587,7 +3506,7 @@
     "use strict";
 
     const seed = CUDLOUN_SEED;
-    const CORE_VERSION = "0.3.11";
+    const CORE_VERSION = "0.3.12";
     const STORAGE_KEY = "cudloun.settings.v1";
     const MAX_LOGS = 500;
     const LEVELS = { off: 0, error: 1, warn: 2, info: 3, debug: 4, trace: 5 };
@@ -2664,9 +3583,12 @@
 
     async function loadManifestGroup(items, groupName) {
       for (const item of items) {
-        if (!item || !item.file) continue;
+        if (!item) continue;
+        const files = Array.isArray(item.files) ? item.files : item.file ? [item.file] : [];
         if (item.required || groupName === "module") {
-          await loadScript(item.file, item.id || item.file);
+          for (const file of files) {
+            await loadScript(file, files.length === 1 ? (item.id || file) : `${item.id || groupName}:${file}`);
+          }
         }
       }
     }

@@ -144,6 +144,40 @@ data-post-id
 data-thread-id
 ```
 
+## New Post and Reply Composers
+
+Observed on desktop on 2026-07-17 in `nepotrebny_pokus`:
+
+```text
+section.new-post-composer[aria-label="Nový příspěvek"]
+section.reply-composer[aria-label="Odpověď"]
+.composer
+.composer-editor
+.composer-content-editable[role="textbox"][contenteditable="true"]
+.composer-toolbar-slot
+[role="toolbar"][aria-label="Formátování textu"]
+button[aria-label="Vložit obrázek"]
+```
+
+The composer is dynamic and uses a Lexical editor, not a textarea. Native URL
+image insertion creates a decorator node marked with:
+
+```text
+data-lexical-decorator="true"
+```
+
+The native image dialog currently offers:
+
+```text
+Ze souboru
+Z mých obrázků
+Z URL
+```
+
+Prefer the semantic classes, roles, and accessible labels above. Do not couple
+tweaks to the generated classes. Composer helpers should be added to Kapyguts
+before individual modules depend on these facts.
+
 ## Favorites
 
 Observed route:

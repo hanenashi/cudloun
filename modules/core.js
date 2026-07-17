@@ -3,7 +3,7 @@
   "use strict";
 
   const seed = CUDLOUN_SEED;
-  const CORE_VERSION = "0.3.11";
+  const CORE_VERSION = "0.3.12";
   const STORAGE_KEY = "cudloun.settings.v1";
   const MAX_LOGS = 500;
   const LEVELS = { off: 0, error: 1, warn: 2, info: 3, debug: 4, trace: 5 };
@@ -80,9 +80,12 @@
 
   async function loadManifestGroup(items, groupName) {
     for (const item of items) {
-      if (!item || !item.file) continue;
+      if (!item) continue;
+      const files = Array.isArray(item.files) ? item.files : item.file ? [item.file] : [];
       if (item.required || groupName === "module") {
-        await loadScript(item.file, item.id || item.file);
+        for (const file of files) {
+          await loadScript(file, files.length === 1 ? (item.id || file) : `${item.id || groupName}:${file}`);
+        }
       }
     }
   }

@@ -6,9 +6,9 @@ const manifest = readJson("modules.json");
 const containers = fs.existsSync(path.join(root, "containers.json")) ? readJson("containers.json") : { containers: [] };
 const core = readText("modules/core.js");
 const scriptFiles = [
-  ...manifest.system.map((item) => item.file),
-  ...manifest.modules.map((item) => item.file),
-  ...(containers.containers || []).map((item) => item.file),
+  ...manifest.system.flatMap(itemFiles),
+  ...manifest.modules.flatMap(itemFiles),
+  ...(containers.containers || []).flatMap(itemFiles),
 ];
 
 let out = "";
@@ -155,6 +155,12 @@ function readText(file) {
 
 function readJson(file) {
   return JSON.parse(readText(file));
+}
+
+function itemFiles(item) {
+  if (!item) return [];
+  if (Array.isArray(item.files)) return item.files.filter(Boolean);
+  return item.file ? [item.file] : [];
 }
 
 function quote(value) {
