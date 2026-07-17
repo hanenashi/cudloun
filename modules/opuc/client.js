@@ -12,6 +12,7 @@
     uploadUrl: UPLOAD_URL,
     checkLoginStatus,
     upload,
+    responseBodyText,
     extractUploadUrl,
     validateOpuUrl,
     getThumbUrl,
@@ -41,28 +42,87 @@
 
     return {
       abort: request.abort,
-      promise: request.promise.then((response) => {
+      promise: request.promise.then(async (response) => {
         if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
-        const url = extractUploadUrl(response.responseText || "");
-        if (!url) throw new Error("OPU upload response did not contain an image URL.");
+        const body = await responseBodyText(response);
+        const url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, "finalUrl"));
+        if (!url) {
+          const responseHint = body ? `${body.length} response characters were checked` : "the response body was empty";
+          throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).`);
+        }
         return url;
       }),
     };
   }
 
-  function extractUploadUrl(html) {
-    const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
-    const input = doc.querySelector('input[id^="link_"]');
-    if (!input?.value) return "";
+  async function responseBodyText(response) {
+    const responseText = safeResponseValue(response, "responseText");
+    if (typeof responseText === "string" && responseText) return responseText;
 
-    const match = input.value.match(/href=["']([^"']+)["']/i);
-    const candidate = match?.[1] || input.value;
-    return validateOpuUrl(candidate);
+    const body = safeResponseValue(response, "response");
+    if (typeof body === "string") return body;
+    if (!body) {
+      const xml = safeResponseValue(response, "responseXML");
+      return serializeDocument(xml);
+    }
+    if (typeof body.text === "function") {
+      try {
+        return await body.text();
+      } catch (_error) {
+        // Continue to the document/object fallbacks below.
+      }
+    }
+    const serialized = serializeDocument(body);
+    if (serialized) return serialized;
+    if (typeof body === "object") {
+      try {
+        return JSON.stringify(body);
+      } catch (_error) {
+        return "";
+      }
+    }
+    return String(body || "");
+  }
+
+  function extractUploadUrl(html) {
+    const source = String(html || "");
+    if (!source) return "";
+    const doc = new DOMParser().parseFromString(source, "text/html");
+    const candidates = [];
+
+    doc.querySelectorAll('input[id^="link_"], input[name^="link"], input[value*="opu.peklo.biz/p/"]')
+      .forEach((input) => candidates.push(input.value));
+    doc.querySelectorAll('a[href*="opu.peklo.biz/p/"], a[href^="/p/"]')
+      .forEach((link) => candidates.push(link.getAttribute("href")));
+    doc.querySelectorAll('img[src*="opu.peklo.biz/p/"], img[src^="/p/"]')
+      .forEach((image) => candidates.push(image.getAttribute("src")));
+
+    for (const value of candidates) {
+      const direct = extractCandidateUrl(value);
+      if (direct) return direct;
+    }
+
+    const unescaped = source.replace(/\\\//g, "/");
+    const rawMatches = unescaped.match(/(?:https?:)?\/\/opu\.peklo\.biz\/p\/[^\s"'<>\\]+|\/p\/[^\s"'<>\\]+/gi) || [];
+    for (const value of rawMatches) {
+      const direct = validateOpuUrl(value);
+      if (direct) return direct;
+    }
+    return "";
+  }
+
+  function extractCandidateUrl(value) {
+    const text = String(value || "");
+    const match = text.match(/(?:href|src)=["']([^"']+)["']/i);
+    return validateOpuUrl(match?.[1] || text);
   }
 
   function validateOpuUrl(value) {
     try {
-      const url = new URL(String(value || "").trim());
+      let candidate = String(value || "").trim().replace(/&amp;/gi, "&");
+      if (candidate.startsWith("//")) candidate = `https:${candidate}`;
+      if (candidate.startsWith("/p/")) candidate = `https://opu.peklo.biz${candidate}`;
+      const url = new URL(candidate);
       if (url.protocol !== "https:" || url.hostname !== "opu.peklo.biz") return "";
       if (!url.pathname.startsWith("/p/")) return "";
       return url.toString();
@@ -119,6 +179,11 @@
         onprogress(event) {
           if (typeof details.onprogress === "function") details.onprogress(event);
         },
+        upload: {
+          onprogress(event) {
+            if (typeof details.onprogress === "function") details.onprogress(event);
+          },
+        },
       };
 
       try {
@@ -156,5 +221,24 @@
     const error = new Error("OPU upload cancelled.");
     error.name = "AbortError";
     return error;
+  }
+
+  function safeResponseValue(response, name) {
+    try {
+      return response?.[name];
+    } catch (_error) {
+      return undefined;
+    }
+  }
+
+  function serializeDocument(value) {
+    if (!value || typeof value !== "object") return "";
+    if (value.nodeType !== 9 && !value.documentElement) return "";
+    try {
+      if (typeof XMLSerializer === "function") return new XMLSerializer().serializeToString(value);
+    } catch (_error) {
+      // Fall through to outerHTML.
+    }
+    return String(value.documentElement?.outerHTML || "");
   }
 })();

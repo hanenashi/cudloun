@@ -2,13 +2,13 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.0";
+  const VERSION = "0.6.1";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
   const embeddedScripts = new Map();
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.0\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.1\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -2554,7 +2554,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/client.js", "// OPU transport and response helpers for the Cudloun OPUc module.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const GALLERY_URL = \"https://opu.peklo.biz/?page=userpanel\";\n  const UPLOAD_URL = \"https://opu.peklo.biz/opupload.php\";\n\n  runtime.client = {\n    galleryUrl: GALLERY_URL,\n    uploadUrl: UPLOAD_URL,\n    checkLoginStatus,\n    upload,\n    extractUploadUrl,\n    validateOpuUrl,\n    getThumbUrl,\n  };\n\n  async function checkLoginStatus() {\n    const request = gmRequest({ method: \"GET\", url: GALLERY_URL, timeout: 20000 });\n    const response = await request.promise;\n    const finalUrl = String(response.finalUrl || response.responseURL || \"\");\n    return finalUrl ? !finalUrl.includes(\"page=prihlaseni\") : false;\n  }\n\n  function upload(file, options = {}) {\n    const formData = new FormData();\n    formData.append(\"obrazek[0]\", file);\n    formData.append(\"sizep\", \"0\");\n    formData.append(\"outputf\", \"auto\");\n    formData.append(\"tl_odeslat\", \"Odeslat\");\n\n    const request = gmRequest({\n      method: \"POST\",\n      url: UPLOAD_URL,\n      data: formData,\n      timeout: 120000,\n      onprogress: options.onProgress,\n    });\n\n    return {\n      abort: request.abort,\n      promise: request.promise.then((response) => {\n        if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);\n        const url = extractUploadUrl(response.responseText || \"\");\n        if (!url) throw new Error(\"OPU upload response did not contain an image URL.\");\n        return url;\n      }),\n    };\n  }\n\n  function extractUploadUrl(html) {\n    const doc = new DOMParser().parseFromString(String(html || \"\"), \"text/html\");\n    const input = doc.querySelector('input[id^=\"link_\"]');\n    if (!input?.value) return \"\";\n\n    const match = input.value.match(/href=[\"']([^\"']+)[\"']/i);\n    const candidate = match?.[1] || input.value;\n    return validateOpuUrl(candidate);\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      const url = new URL(String(value || \"\").trim());\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\") return \"\";\n      if (!url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function getThumbUrl(imageUrl) {\n    const validated = validateOpuUrl(imageUrl);\n    if (!validated) return \"\";\n\n    const url = new URL(validated);\n    const parts = url.pathname.split(\"/\");\n    const fileName = parts.pop();\n    if (!fileName || parts.includes(\"thumbs\")) return url.toString();\n\n    const pIndex = parts.indexOf(\"p\");\n    if (pIndex < 0) return url.toString();\n    parts.push(\"thumbs\", fileName);\n    url.pathname = parts.join(\"/\");\n    return url.toString();\n  }\n\n  function gmRequest(details) {\n    let handle = null;\n    let settled = false;\n    let rejectPromise = null;\n\n    const promise = new Promise((resolve, reject) => {\n      rejectPromise = reject;\n      const requestDetails = {\n        ...details,\n        onload(response) {\n          if (settled) return;\n          settled = true;\n          resolve(response);\n        },\n        onerror() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request failed.\"));\n        },\n        ontimeout() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request timed out.\"));\n        },\n        onabort() {\n          if (settled) return;\n          settled = true;\n          reject(abortError());\n        },\n        onprogress(event) {\n          if (typeof details.onprogress === \"function\") details.onprogress(event);\n        },\n      };\n\n      try {\n        if (typeof GM_xmlhttpRequest === \"function\") {\n          handle = GM_xmlhttpRequest(requestDetails);\n          return;\n        }\n        if (typeof GM !== \"undefined\" && GM && typeof GM.xmlHttpRequest === \"function\") {\n          handle = GM.xmlHttpRequest(requestDetails);\n          return;\n        }\n        settled = true;\n        reject(new Error(\"The userscript network bridge is unavailable.\"));\n      } catch (_error) {\n        settled = true;\n        reject(new Error(\"The OPU request could not be started.\"));\n      }\n    });\n\n    return {\n      promise,\n      abort() {\n        if (settled) return;\n        if (handle && typeof handle.abort === \"function\") {\n          handle.abort();\n          return;\n        }\n        settled = true;\n        rejectPromise?.(abortError());\n      },\n    };\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n})();\n");
+  embeddedText.set("modules/opuc/client.js", "// OPU transport and response helpers for the Cudloun OPUc module.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const GALLERY_URL = \"https://opu.peklo.biz/?page=userpanel\";\n  const UPLOAD_URL = \"https://opu.peklo.biz/opupload.php\";\n\n  runtime.client = {\n    galleryUrl: GALLERY_URL,\n    uploadUrl: UPLOAD_URL,\n    checkLoginStatus,\n    upload,\n    responseBodyText,\n    extractUploadUrl,\n    validateOpuUrl,\n    getThumbUrl,\n  };\n\n  async function checkLoginStatus() {\n    const request = gmRequest({ method: \"GET\", url: GALLERY_URL, timeout: 20000 });\n    const response = await request.promise;\n    const finalUrl = String(response.finalUrl || response.responseURL || \"\");\n    return finalUrl ? !finalUrl.includes(\"page=prihlaseni\") : false;\n  }\n\n  function upload(file, options = {}) {\n    const formData = new FormData();\n    formData.append(\"obrazek[0]\", file);\n    formData.append(\"sizep\", \"0\");\n    formData.append(\"outputf\", \"auto\");\n    formData.append(\"tl_odeslat\", \"Odeslat\");\n\n    const request = gmRequest({\n      method: \"POST\",\n      url: UPLOAD_URL,\n      data: formData,\n      timeout: 120000,\n      onprogress: options.onProgress,\n    });\n\n    return {\n      abort: request.abort,\n      promise: request.promise.then(async (response) => {\n        if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);\n        const body = await responseBodyText(response);\n        const url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, \"finalUrl\"));\n        if (!url) {\n          const responseHint = body ? `${body.length} response characters were checked` : \"the response body was empty\";\n          throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).`);\n        }\n        return url;\n      }),\n    };\n  }\n\n  async function responseBodyText(response) {\n    const responseText = safeResponseValue(response, \"responseText\");\n    if (typeof responseText === \"string\" && responseText) return responseText;\n\n    const body = safeResponseValue(response, \"response\");\n    if (typeof body === \"string\") return body;\n    if (!body) {\n      const xml = safeResponseValue(response, \"responseXML\");\n      return serializeDocument(xml);\n    }\n    if (typeof body.text === \"function\") {\n      try {\n        return await body.text();\n      } catch (_error) {\n        // Continue to the document/object fallbacks below.\n      }\n    }\n    const serialized = serializeDocument(body);\n    if (serialized) return serialized;\n    if (typeof body === \"object\") {\n      try {\n        return JSON.stringify(body);\n      } catch (_error) {\n        return \"\";\n      }\n    }\n    return String(body || \"\");\n  }\n\n  function extractUploadUrl(html) {\n    const source = String(html || \"\");\n    if (!source) return \"\";\n    const doc = new DOMParser().parseFromString(source, \"text/html\");\n    const candidates = [];\n\n    doc.querySelectorAll('input[id^=\"link_\"], input[name^=\"link\"], input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], a[href^=\"/p/\"]')\n      .forEach((link) => candidates.push(link.getAttribute(\"href\")));\n    doc.querySelectorAll('img[src*=\"opu.peklo.biz/p/\"], img[src^=\"/p/\"]')\n      .forEach((image) => candidates.push(image.getAttribute(\"src\")));\n\n    for (const value of candidates) {\n      const direct = extractCandidateUrl(value);\n      if (direct) return direct;\n    }\n\n    const unescaped = source.replace(/\\\\\\//g, \"/\");\n    const rawMatches = unescaped.match(/(?:https?:)?\\/\\/opu\\.peklo\\.biz\\/p\\/[^\\s\"'<>\\\\]+|\\/p\\/[^\\s\"'<>\\\\]+/gi) || [];\n    for (const value of rawMatches) {\n      const direct = validateOpuUrl(value);\n      if (direct) return direct;\n    }\n    return \"\";\n  }\n\n  function extractCandidateUrl(value) {\n    const text = String(value || \"\");\n    const match = text.match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n    return validateOpuUrl(match?.[1] || text);\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      let candidate = String(value || \"\").trim().replace(/&amp;/gi, \"&\");\n      if (candidate.startsWith(\"//\")) candidate = `https:${candidate}`;\n      if (candidate.startsWith(\"/p/\")) candidate = `https://opu.peklo.biz${candidate}`;\n      const url = new URL(candidate);\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\") return \"\";\n      if (!url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function getThumbUrl(imageUrl) {\n    const validated = validateOpuUrl(imageUrl);\n    if (!validated) return \"\";\n\n    const url = new URL(validated);\n    const parts = url.pathname.split(\"/\");\n    const fileName = parts.pop();\n    if (!fileName || parts.includes(\"thumbs\")) return url.toString();\n\n    const pIndex = parts.indexOf(\"p\");\n    if (pIndex < 0) return url.toString();\n    parts.push(\"thumbs\", fileName);\n    url.pathname = parts.join(\"/\");\n    return url.toString();\n  }\n\n  function gmRequest(details) {\n    let handle = null;\n    let settled = false;\n    let rejectPromise = null;\n\n    const promise = new Promise((resolve, reject) => {\n      rejectPromise = reject;\n      const requestDetails = {\n        ...details,\n        onload(response) {\n          if (settled) return;\n          settled = true;\n          resolve(response);\n        },\n        onerror() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request failed.\"));\n        },\n        ontimeout() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request timed out.\"));\n        },\n        onabort() {\n          if (settled) return;\n          settled = true;\n          reject(abortError());\n        },\n        onprogress(event) {\n          if (typeof details.onprogress === \"function\") details.onprogress(event);\n        },\n        upload: {\n          onprogress(event) {\n            if (typeof details.onprogress === \"function\") details.onprogress(event);\n          },\n        },\n      };\n\n      try {\n        if (typeof GM_xmlhttpRequest === \"function\") {\n          handle = GM_xmlhttpRequest(requestDetails);\n          return;\n        }\n        if (typeof GM !== \"undefined\" && GM && typeof GM.xmlHttpRequest === \"function\") {\n          handle = GM.xmlHttpRequest(requestDetails);\n          return;\n        }\n        settled = true;\n        reject(new Error(\"The userscript network bridge is unavailable.\"));\n      } catch (_error) {\n        settled = true;\n        reject(new Error(\"The OPU request could not be started.\"));\n      }\n    });\n\n    return {\n      promise,\n      abort() {\n        if (settled) return;\n        if (handle && typeof handle.abort === \"function\") {\n          handle.abort();\n          return;\n        }\n        settled = true;\n        rejectPromise?.(abortError());\n      },\n    };\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n\n  function safeResponseValue(response, name) {\n    try {\n      return response?.[name];\n    } catch (_error) {\n      return undefined;\n    }\n  }\n\n  function serializeDocument(value) {\n    if (!value || typeof value !== \"object\") return \"\";\n    if (value.nodeType !== 9 && !value.documentElement) return \"\";\n    try {\n      if (typeof XMLSerializer === \"function\") return new XMLSerializer().serializeToString(value);\n    } catch (_error) {\n      // Fall through to outerHTML.\n    }\n    return String(value.documentElement?.outerHTML || \"\");\n  }\n})();\n");
   embeddedScripts.set("modules/opuc/client.js", function () {
     // OPU transport and response helpers for the Cudloun OPUc module.
     (function () {
@@ -2570,6 +2570,7 @@
         uploadUrl: UPLOAD_URL,
         checkLoginStatus,
         upload,
+        responseBodyText,
         extractUploadUrl,
         validateOpuUrl,
         getThumbUrl,
@@ -2599,28 +2600,87 @@
 
         return {
           abort: request.abort,
-          promise: request.promise.then((response) => {
+          promise: request.promise.then(async (response) => {
             if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
-            const url = extractUploadUrl(response.responseText || "");
-            if (!url) throw new Error("OPU upload response did not contain an image URL.");
+            const body = await responseBodyText(response);
+            const url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, "finalUrl"));
+            if (!url) {
+              const responseHint = body ? `${body.length} response characters were checked` : "the response body was empty";
+              throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).`);
+            }
             return url;
           }),
         };
       }
 
-      function extractUploadUrl(html) {
-        const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
-        const input = doc.querySelector('input[id^="link_"]');
-        if (!input?.value) return "";
+      async function responseBodyText(response) {
+        const responseText = safeResponseValue(response, "responseText");
+        if (typeof responseText === "string" && responseText) return responseText;
 
-        const match = input.value.match(/href=["']([^"']+)["']/i);
-        const candidate = match?.[1] || input.value;
-        return validateOpuUrl(candidate);
+        const body = safeResponseValue(response, "response");
+        if (typeof body === "string") return body;
+        if (!body) {
+          const xml = safeResponseValue(response, "responseXML");
+          return serializeDocument(xml);
+        }
+        if (typeof body.text === "function") {
+          try {
+            return await body.text();
+          } catch (_error) {
+            // Continue to the document/object fallbacks below.
+          }
+        }
+        const serialized = serializeDocument(body);
+        if (serialized) return serialized;
+        if (typeof body === "object") {
+          try {
+            return JSON.stringify(body);
+          } catch (_error) {
+            return "";
+          }
+        }
+        return String(body || "");
+      }
+
+      function extractUploadUrl(html) {
+        const source = String(html || "");
+        if (!source) return "";
+        const doc = new DOMParser().parseFromString(source, "text/html");
+        const candidates = [];
+
+        doc.querySelectorAll('input[id^="link_"], input[name^="link"], input[value*="opu.peklo.biz/p/"]')
+          .forEach((input) => candidates.push(input.value));
+        doc.querySelectorAll('a[href*="opu.peklo.biz/p/"], a[href^="/p/"]')
+          .forEach((link) => candidates.push(link.getAttribute("href")));
+        doc.querySelectorAll('img[src*="opu.peklo.biz/p/"], img[src^="/p/"]')
+          .forEach((image) => candidates.push(image.getAttribute("src")));
+
+        for (const value of candidates) {
+          const direct = extractCandidateUrl(value);
+          if (direct) return direct;
+        }
+
+        const unescaped = source.replace(/\\\//g, "/");
+        const rawMatches = unescaped.match(/(?:https?:)?\/\/opu\.peklo\.biz\/p\/[^\s"'<>\\]+|\/p\/[^\s"'<>\\]+/gi) || [];
+        for (const value of rawMatches) {
+          const direct = validateOpuUrl(value);
+          if (direct) return direct;
+        }
+        return "";
+      }
+
+      function extractCandidateUrl(value) {
+        const text = String(value || "");
+        const match = text.match(/(?:href|src)=["']([^"']+)["']/i);
+        return validateOpuUrl(match?.[1] || text);
       }
 
       function validateOpuUrl(value) {
         try {
-          const url = new URL(String(value || "").trim());
+          let candidate = String(value || "").trim().replace(/&amp;/gi, "&");
+          if (candidate.startsWith("//")) candidate = `https:${candidate}`;
+          if (candidate.startsWith("/p/")) candidate = `https://opu.peklo.biz${candidate}`;
+          const url = new URL(candidate);
           if (url.protocol !== "https:" || url.hostname !== "opu.peklo.biz") return "";
           if (!url.pathname.startsWith("/p/")) return "";
           return url.toString();
@@ -2677,6 +2737,11 @@
             onprogress(event) {
               if (typeof details.onprogress === "function") details.onprogress(event);
             },
+            upload: {
+              onprogress(event) {
+                if (typeof details.onprogress === "function") details.onprogress(event);
+              },
+            },
           };
 
           try {
@@ -2714,6 +2779,25 @@
         const error = new Error("OPU upload cancelled.");
         error.name = "AbortError";
         return error;
+      }
+
+      function safeResponseValue(response, name) {
+        try {
+          return response?.[name];
+        } catch (_error) {
+          return undefined;
+        }
+      }
+
+      function serializeDocument(value) {
+        if (!value || typeof value !== "object") return "";
+        if (value.nodeType !== 9 && !value.documentElement) return "";
+        try {
+          if (typeof XMLSerializer === "function") return new XMLSerializer().serializeToString(value);
+        } catch (_error) {
+          // Fall through to outerHTML.
+        }
+        return String(value.documentElement?.outerHTML || "");
       }
     })();
 
@@ -3342,7 +3426,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
+  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.1\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
   embeddedScripts.set("modules/opuc/index.js", function () {
     // Cudloun module registration for OPUc on Kapybara.
     (function () {
@@ -3355,7 +3439,7 @@
         id: "opuc",
         name: "OPUc for Kapybara",
         description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-        version: "0.1.0",
+        version: "0.1.1",
         defaultEnabled: false,
         start(ctx) {
           if (!root.kapyguts?.isKapybara?.()) return null;

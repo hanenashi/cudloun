@@ -9,10 +9,25 @@ const root = path.resolve(__dirname, "..");
 function runtimeContext() {
   class FakeDOMParser {
     parseFromString(html) {
-      const inputMatch = String(html).match(/<input[^>]+id=["']link_[^"']*["'][^>]+value=["']([^"']*)["']/i);
+      const nodes = Array.from(String(html).matchAll(/<(input|a|img)\b([^>]*)>/gi)).map((match) => {
+        const attributes = {};
+        for (const attribute of match[2].matchAll(/([\w-]+)\s*=\s*(["'])(.*?)\2/g)) {
+          attributes[attribute[1].toLowerCase()] = attribute[3];
+        }
+        return {
+          tagName: match[1].toLowerCase(),
+          value: attributes.value || "",
+          getAttribute(name) {
+            return attributes[String(name).toLowerCase()] || null;
+          },
+        };
+      });
       return {
-        querySelector() {
-          return inputMatch ? { value: inputMatch[1] } : null;
+        querySelectorAll(selector) {
+          if (selector.startsWith("input")) return nodes.filter((node) => node.tagName === "input");
+          if (selector.startsWith("a")) return nodes.filter((node) => node.tagName === "a");
+          if (selector.startsWith("img")) return nodes.filter((node) => node.tagName === "img");
+          return [];
         },
       };
     }
@@ -81,6 +96,8 @@ test("OPU URL validation accepts only HTTPS image paths on the expected host", (
   assert.equal(client.validateOpuUrl("http://opu.peklo.biz/p/12/image.png"), "");
   assert.equal(client.validateOpuUrl("https://evil.example/p/12/image.png"), "");
   assert.equal(client.validateOpuUrl("https://opu.peklo.biz/?page=userpanel"), "");
+  assert.equal(client.validateOpuUrl("//opu.peklo.biz/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
+  assert.equal(client.validateOpuUrl("/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
 });
 
 test("OPU response and thumbnail helpers preserve validated URLs", () => {
@@ -90,8 +107,49 @@ test("OPU response and thumbnail helpers preserve validated URLs", () => {
   const image = "https://opu.peklo.biz/p/12/34/56/image.png";
 
   assert.equal(client.extractUploadUrl(`<input id="link_1" value="${image}">`), image);
+  assert.equal(client.extractUploadUrl(`<a href="${image}">uploaded</a>`), image);
+  assert.equal(client.extractUploadUrl(`<img src="/p/12/34/56/image.png">`), image);
+  assert.equal(client.extractUploadUrl(`{"url":"${image.replaceAll("/", "\\/")}"}`), image);
   assert.equal(client.getThumbUrl(image), "https://opu.peklo.biz/p/12/34/56/thumbs/image.png");
   assert.equal(client.getThumbUrl("https://evil.example/image.png"), "");
+});
+
+test("Firefox response variants normalize before OPU URL extraction", async () => {
+  const context = runtimeContext();
+  load(context, "modules/opuc/client.js");
+  const client = context.window.Cudloun.opuc.client;
+  const image = "https://opu.peklo.biz/p/12/34/56/firefox.png";
+  const html = `<input id="link_1" value="${image}">`;
+  const throwingText = {
+    get responseText() { throw new Error("responseText unavailable"); },
+    response: html,
+  };
+
+  assert.equal(await client.responseBodyText({ responseText: html }), html);
+  assert.equal(await client.responseBodyText({ response: html }), html);
+  assert.equal(await client.responseBodyText({ response: new Blob([html], { type: "text/html" }) }), html);
+  assert.equal(await client.responseBodyText({ response: { nodeType: 9, documentElement: { outerHTML: html } } }), html);
+  assert.equal(await client.responseBodyText(throwingText), html);
+  assert.equal(client.extractUploadUrl(await client.responseBodyText({ response: html })), image);
+});
+
+test("upload resolves when Firefox provides HTML only through response", async () => {
+  const context = runtimeContext();
+  load(context, "modules/opuc/client.js");
+  const client = context.window.Cudloun.opuc.client;
+  const image = "https://opu.peklo.biz/p/12/34/56/firefox-upload.png";
+  context.GM_xmlhttpRequest = (details) => {
+    details.onload({
+      status: 200,
+      responseText: undefined,
+      response: `<input id="link_1" value="${image}">`,
+      finalUrl: "https://opu.peklo.biz/opupload.php",
+    });
+    return { abort() {} };
+  };
+
+  const request = client.upload(new Blob(["png"], { type: "image/png" }));
+  assert.equal(await request.promise, image);
 });
 
 test("image validation enforces MIME, emptiness, and configured byte limit", () => {

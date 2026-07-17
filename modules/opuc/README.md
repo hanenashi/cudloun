@@ -21,6 +21,14 @@ composer isolation, simulated upload UI, one real anonymous OPU upload, native
 Lexical insertion, module disable cleanup, and composer-close cleanup. No
 Kapybara post was submitted by these checks.
 
+## Firefox compatibility in Cudloun 0.6.1
+
+Firefox userscript managers may expose successful request content through
+`response` while leaving `responseText` unavailable. OPUc normalizes string,
+Blob, document, XML, and plain-object responses before extracting the returned
+OPU URL. Extraction also accepts the known link input plus direct anchor, image,
+relative, protocol-relative, and safely validated raw URL shapes.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new
