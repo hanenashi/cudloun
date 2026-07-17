@@ -9,11 +9,10 @@
     id: "opuc",
     name: "OPUc for Kapybara",
     description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-    version: "0.1.10",
+    version: "0.1.9",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
-      runtime.firefoxUploadMode = normalizeFirefoxUploadMode(ctx.storage.get("firefoxUploadMode", "tab"));
       return runtime.ui.start(ctx);
     },
     renderSettings(ctx) {
@@ -42,49 +41,15 @@
       label.appendChild(text);
       label.appendChild(input);
       wrap.appendChild(label);
-
-      const modeLabel = document.createElement("label");
-      modeLabel.className = "cudloun-setting-row";
-      const modeText = document.createElement("span");
-      modeText.className = "cudloun-setting-text";
-      modeText.textContent = "Firefox upload mode";
-
-      const mode = document.createElement("select");
-      mode.className = "cudloun-select";
-      mode.appendChild(modeOption("tab", "Native OPU tab (reliable)"));
-      mode.appendChild(modeOption("background", "Background, no tab (experimental)"));
-      mode.value = normalizeFirefoxUploadMode(ctx.storage.get("firefoxUploadMode", "tab"));
-      mode.addEventListener("change", () => {
-        const value = normalizeFirefoxUploadMode(mode.value);
-        mode.value = value;
-        runtime.firefoxUploadMode = value;
-        ctx.storage.set("firefoxUploadMode", value);
-      });
-
-      modeLabel.appendChild(modeText);
-      modeLabel.appendChild(mode);
-      wrap.appendChild(modeLabel);
       return wrap;
     },
     renderHelp() {
       return [
         "Enable the module to add an OPUc button below the native image control in new-post and reply composers.",
         "The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.",
-        "On Firefox, OPUc uploads require Tampermonkey; Greasemonkey is not supported. The reliable mode briefly opens OPU, while the experimental background mode opens no tab.",
-        "The background mode never retries through a tab automatically because OPU could otherwise receive the same image twice.",
+        "On Firefox, OPUc uploads require Tampermonkey; Greasemonkey is not supported. Kiwi uses Tampermonkey's direct upload path.",
         "OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.",
       ];
     },
   });
-
-  function normalizeFirefoxUploadMode(value) {
-    return value === "background" ? "background" : "tab";
-  }
-
-  function modeOption(value, label) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    return option;
-  }
 })();

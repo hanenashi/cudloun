@@ -98,13 +98,6 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
-## Version 0.6.10 TL;DR
-
-- Added an opt-in Firefox/Tampermonkey background upload mode that opens no
-  OPU tab. It seeds the OPU session before sending the multipart upload.
-- The native OPU tab remains the reliable default. Background failures do not
-  auto-fallback, preventing accidental duplicate OPU uploads.
-
 ## Version 0.6.9 TL;DR
 
 - OPUc re-resolves Kapybara's live composer toolbar after upload instead of

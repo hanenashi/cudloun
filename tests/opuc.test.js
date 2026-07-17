@@ -3,7 +3,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
-const { File } = require("node:buffer");
 
 const root = path.resolve(__dirname, "..");
 
@@ -38,7 +37,6 @@ function runtimeContext() {
     Blob,
     DOMParser: FakeDOMParser,
     Error,
-    File,
     FormData,
     Math,
     Map,
@@ -119,15 +117,8 @@ test("Firefox selects the popup only under Tampermonkey", () => {
 
   assert.equal(bridge.managerName(), "Tampermonkey");
   assert.equal(bridge.shouldUse(), true);
-  assert.equal(bridge.shouldUseBackground(), false);
   assert.equal(bridge.unsupportedReason(), "");
 
-  context.window.Cudloun.opuc.firefoxUploadMode = "background";
-  assert.equal(bridge.shouldUse(), false);
-  assert.equal(bridge.shouldUseBackground(), true);
-  assert.equal(bridge.unsupportedReason(), "");
-
-  context.window.Cudloun.opuc.firefoxUploadMode = "tab";
   context.GM_info.scriptHandler = "Greasemonkey";
   assert.equal(bridge.shouldUse(), false);
   assert.match(bridge.unsupportedReason(), /require Tampermonkey/i);
@@ -135,40 +126,6 @@ test("Firefox selects the popup only under Tampermonkey", () => {
   context.window.navigator.userAgent = "Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36";
   assert.equal(bridge.shouldUse(), false);
   assert.equal(bridge.unsupportedReason(), "");
-});
-
-test("Firefox background mode seeds the OPU session and uploads without the popup", async () => {
-  const context = runtimeContext();
-  context.window.location = { hostname: "kapybara.okoun.cz" };
-  context.window.navigator = { userAgent: "Mozilla/5.0 Android Firefox/142.0" };
-  context.window.Cudloun.opuc = { firefoxUploadMode: "background" };
-  context.GM_info = { scriptHandler: "Tampermonkey" };
-  load(context, "modules/opuc/popup-bridge.js");
-
-  const image = "https://opu.peklo.biz/p/12/34/56/firefox-background.png";
-  const requests = [];
-  context.GM_xmlhttpRequest = (details) => {
-    requests.push(details);
-    if (details.method === "GET") {
-      details.onload({ status: 200, responseText: "<form id=xpc></form>", finalUrl: "https://opu.peklo.biz/" });
-    } else {
-      details.onload({ status: 200, responseText: `<input id="link_1" value="${image}">`, finalUrl: "https://opu.peklo.biz/?page=done" });
-    }
-    return { abort() {} };
-  };
-  load(context, "modules/opuc/client.js");
-
-  const file = new File([new Uint8Array([1, 2, 3])], "firefox.png", { type: "image/png" });
-  const request = context.window.Cudloun.opuc.client.upload(file);
-  assert.equal(await request.promise, image);
-  assert.equal(requests.length, 2);
-  assert.equal(requests[0].method, "GET");
-  assert.equal(requests[0].url, "https://opu.peklo.biz/");
-  assert.equal(requests[0].cookiePartition.topLevelSite, "https://kapybara.okoun.cz");
-  assert.equal(requests[1].method, "POST");
-  assert.equal(requests[1].url, "https://opu.peklo.biz/opupload.php");
-  assert.equal(requests[1].cookiePartition.topLevelSite, "https://kapybara.okoun.cz");
-  assert.equal(requests[1].data.get("obrazek[0]").name, "firefox.png");
 });
 
 test("Firefox prepares selected bytes once and reuses the cached result", async () => {
