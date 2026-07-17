@@ -44,6 +44,8 @@ node scripts/build-bundle.js
 The Kapybara port of OPUc is a default-disabled Cudloun module rather than a
 separate userscript or repository. Its architecture, implementation phases, and
 test criteria are in [`modules/opuc/README.md`](modules/opuc/README.md).
+The Firefox Greasemonkey compatibility investigation and final manager-specific
+transport decision are documented in [`grease.md`](grease.md).
 
 ## Kapyguts
 
