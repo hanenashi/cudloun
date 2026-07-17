@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.6";
+  const VERSION = "0.6.7";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -31,10 +31,12 @@
       if (!root) return;
       const runtime = root.opuc = root.opuc || {};
       const pending = new Map();
+      const preparedFiles = new WeakMap();
       let listening = false;
 
       runtime.popupBridge = {
         shouldUse,
+        prepare,
         upload,
       };
 
@@ -56,9 +58,12 @@
             return;
           }
 
+          const bytesPromise = prepare(file);
+          bytesPromise.catch(() => {});
           item = {
             id,
             file,
+            bytesPromise,
             sending: false,
             popup,
             resolve,
@@ -127,35 +132,115 @@
         if (item.sending) return;
         item.sending = true;
         try {
-          const bytes = await readFileBytes(item.file);
+          const bytes = await item.bytesPromise;
           if (!pending.has(item.id)) return;
+          const outgoing = bytes.slice(0);
           item.popup.postMessage({
             type: MESSAGE_TYPE,
             action: "upload",
             id: item.id,
-            bytes,
+            bytes: outgoing,
             name: String(item.file.name || "image"),
             mime: String(item.file.type || "application/octet-stream"),
-          }, OPU_ORIGIN, [bytes]);
-        } catch (_error) {
-          settle(item.id, new Error("Firefox could not read the selected image for the OPU handoff."));
+          }, OPU_ORIGIN, [outgoing]);
+        } catch (error) {
+          settle(item.id, error instanceof Error
+            ? error
+            : new Error("Firefox could not read the selected image for the OPU handoff."));
         }
       }
 
+      function prepare(file) {
+        if (!file || (typeof file !== "object" && typeof file !== "function")) {
+          return Promise.reject(new Error("Firefox did not expose the selected image file."));
+        }
+        const cached = preparedFiles.get(file);
+        if (cached) return cached;
+
+        const promise = readFileBytes(file)
+          .then((bytes) => {
+            if (!isArrayBuffer(bytes) || !bytes.byteLength) {
+              throw new Error("Firefox returned an empty image during the OPU handoff.");
+            }
+            return bytes;
+          })
+          .catch((error) => {
+            preparedFiles.delete(file);
+            throw error;
+          });
+        preparedFiles.set(file, promise);
+        return promise;
+      }
+
       async function readFileBytes(file) {
+        const failures = [];
         if (typeof file.arrayBuffer === "function") {
           try {
             return await file.arrayBuffer();
-          } catch (_error) {
-            // Some Firefox userscript compartments expose but cannot call it.
+          } catch (error) {
+            failures.push(["arrayBuffer", error]);
           }
         }
+
+        try {
+          return await readWithFileReader(file, "array-buffer");
+        } catch (error) {
+          failures.push(["FileReader", error]);
+        }
+
+        let objectUrl = "";
+        try {
+          objectUrl = URL.createObjectURL(file);
+          const response = await fetch(objectUrl);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.arrayBuffer();
+        } catch (error) {
+          failures.push(["object URL", error]);
+        } finally {
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+        }
+
+        try {
+          const dataUrl = await readWithFileReader(file, "data-url");
+          return dataUrlBytes(dataUrl);
+        } catch (error) {
+          failures.push(["data URL", error]);
+        }
+
+        const detail = failures.map(([method, error]) => `${method}: ${safeErrorName(error)}`).join("; ");
+        throw new Error(`Firefox could not read the selected image for the OPU handoff${detail ? ` (${detail})` : ""}.`);
+      }
+
+      function readWithFileReader(file, mode) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.addEventListener("load", () => resolve(reader.result));
           reader.addEventListener("error", () => reject(reader.error || new Error("FileReader failed.")));
-          reader.readAsArrayBuffer(file);
+          reader.addEventListener("abort", () => reject(new Error("FileReader aborted.")));
+          if (mode === "data-url") reader.readAsDataURL(file);
+          else reader.readAsArrayBuffer(file);
         });
+      }
+
+      function dataUrlBytes(value) {
+        const source = String(value || "");
+        const comma = source.indexOf(",");
+        if (comma < 0 || !/;base64$/i.test(source.slice(0, comma))) {
+          throw new Error("FileReader returned an invalid data URL.");
+        }
+        const binary = atob(source.slice(comma + 1));
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return bytes.buffer;
+      }
+
+      function isArrayBuffer(value) {
+        return value instanceof ArrayBuffer || Object.prototype.toString.call(value) === "[object ArrayBuffer]";
+      }
+
+      function safeErrorName(error) {
+        const name = String(error?.name || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+        return name || "Error";
       }
 
       function settle(id, error, value) {
@@ -322,7 +407,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.6\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.7\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -2868,7 +2953,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/popup-bridge.js", "// Firefox first-party OPU upload bridge.\n(function () {\n  \"use strict\";\n\n  const OPU_ORIGIN = \"https://opu.peklo.biz\";\n  const KAPYBARA_ORIGIN = \"https://kapybara.okoun.cz\";\n  const MESSAGE_TYPE = \"cudloun-opu-bridge-v1\";\n  const WINDOW_PREFIX = \"cudloun_opu_\";\n\n  if (window.location.hostname === \"opu.peklo.biz\") {\n    if (document.readyState === \"loading\") {\n      window.addEventListener(\"DOMContentLoaded\", startPopupHost, { once: true });\n    } else {\n      startPopupHost();\n    }\n    return;\n  }\n\n  const root = window.Cudloun;\n  if (!root) return;\n  const runtime = root.opuc = root.opuc || {};\n  const pending = new Map();\n  let listening = false;\n\n  runtime.popupBridge = {\n    shouldUse,\n    upload,\n  };\n\n  function shouldUse() {\n    return /\\bFirefox\\/\\d/i.test(String(window.navigator?.userAgent || \"\"));\n  }\n\n  function upload(file, options = {}) {\n    let item = null;\n    let cancelled = false;\n\n    const promise = new Promise((resolve, reject) => {\n      const id = requestId();\n      const popupName = `${WINDOW_PREFIX}${id}`;\n      const url = `${OPU_ORIGIN}/?cudloun_bridge=${encodeURIComponent(id)}`;\n      const popup = window.open(url, popupName, \"popup=yes,width=560,height=680,resizable=yes,scrollbars=yes\");\n      if (!popup) {\n        reject(new Error(\"Firefox blocked the OPU upload window. Allow pop-ups for kapybara.okoun.cz and retry.\"));\n        return;\n      }\n\n      item = {\n        id,\n        file,\n        sending: false,\n        popup,\n        resolve,\n        reject,\n        onProgress: options.onProgress,\n        timeout: window.setTimeout(() => settle(id, new Error(\"The OPU upload window timed out.\")), 130000),\n        closedPoll: window.setInterval(() => {\n          if (popup.closed) settle(id, new Error(\"The OPU upload window was closed before returning an image URL.\"));\n        }, 400),\n      };\n      pending.set(id, item);\n      ensureListener();\n    });\n\n    return {\n      promise,\n      abort() {\n        if (cancelled) return;\n        cancelled = true;\n        if (!item) return;\n        try {\n          item.popup.postMessage({ type: MESSAGE_TYPE, action: \"cancel\", id: item.id }, OPU_ORIGIN);\n        } catch (_error) {}\n        settle(item.id, abortError());\n      },\n    };\n  }\n\n  function ensureListener() {\n    if (listening) return;\n    listening = true;\n    window.addEventListener(\"message\", onMessage);\n  }\n\n  function onMessage(event) {\n    if (event.origin !== OPU_ORIGIN || event.data?.type !== MESSAGE_TYPE) return;\n    const id = String(event.data.id || \"\");\n    const item = pending.get(id);\n    if (!item || event.source !== item.popup) return;\n\n    if (event.data.action === \"ready\") {\n      sendFileBytes(item);\n      return;\n    }\n    if (event.data.action === \"progress\") {\n      if (typeof item.onProgress === \"function\") {\n        item.onProgress({\n          lengthComputable: !!event.data.lengthComputable,\n          loaded: Number(event.data.loaded) || 0,\n          total: Number(event.data.total) || 0,\n        });\n      }\n      return;\n    }\n    if (event.data.action !== \"result\") return;\n\n    const url = validateOpuUrl(event.data.url);\n    if (url) {\n      settle(id, null, url);\n      return;\n    }\n    settle(id, new Error(String(event.data.error || \"OPU did not return an image URL.\")));\n  }\n\n  async function sendFileBytes(item) {\n    if (item.sending) return;\n    item.sending = true;\n    try {\n      const bytes = await readFileBytes(item.file);\n      if (!pending.has(item.id)) return;\n      item.popup.postMessage({\n        type: MESSAGE_TYPE,\n        action: \"upload\",\n        id: item.id,\n        bytes,\n        name: String(item.file.name || \"image\"),\n        mime: String(item.file.type || \"application/octet-stream\"),\n      }, OPU_ORIGIN, [bytes]);\n    } catch (_error) {\n      settle(item.id, new Error(\"Firefox could not read the selected image for the OPU handoff.\"));\n    }\n  }\n\n  async function readFileBytes(file) {\n    if (typeof file.arrayBuffer === \"function\") {\n      try {\n        return await file.arrayBuffer();\n      } catch (_error) {\n        // Some Firefox userscript compartments expose but cannot call it.\n      }\n    }\n    return new Promise((resolve, reject) => {\n      const reader = new FileReader();\n      reader.addEventListener(\"load\", () => resolve(reader.result));\n      reader.addEventListener(\"error\", () => reject(reader.error || new Error(\"FileReader failed.\")));\n      reader.readAsArrayBuffer(file);\n    });\n  }\n\n  function settle(id, error, value) {\n    const item = pending.get(id);\n    if (!item) return;\n    pending.delete(id);\n    window.clearTimeout(item.timeout);\n    window.clearInterval(item.closedPoll);\n    try { item.popup.close(); } catch (_error) {}\n    if (!pending.size && listening) {\n      listening = false;\n      window.removeEventListener(\"message\", onMessage);\n    }\n    if (error) item.reject(error);\n    else item.resolve(value);\n  }\n\n  function startPopupHost() {\n    if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;\n    const windowId = window.name.slice(WINDOW_PREFIX.length);\n    if (!validRequestId(windowId)) return;\n    const queryId = new URLSearchParams(window.location.search).get(\"cudloun_bridge\") || \"\";\n\n    // The query identifies the initial handoff page. OPU removes it while\n    // redirecting to ?page=done, but window.name survives that navigation.\n    if (!queryId) {\n      completeNativeFormResult(windowId);\n      return;\n    }\n    if (queryId !== windowId) return;\n\n    let submitted = false;\n    const id = windowId;\n    const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"ready\", id }, KAPYBARA_ORIGIN);\n    const readyTimer = window.setInterval(sendReady, 350);\n\n    window.addEventListener(\"message\", (event) => {\n      if (event.origin !== KAPYBARA_ORIGIN || event.source !== window.opener) return;\n      if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;\n      if (event.data.action === \"cancel\") {\n        window.clearInterval(readyTimer);\n        window.close();\n        return;\n      }\n      if (event.data.action !== \"upload\" || submitted) return;\n      window.clearInterval(readyTimer);\n      const bytes = event.data.bytes;\n      const mime = String(event.data.mime || \"\");\n      if (!(bytes instanceof ArrayBuffer) || !bytes.byteLength || !mime.startsWith(\"image/\")) {\n        sendResult(id, \"\", \"The OPU upload window did not receive a valid image file.\");\n        return;\n      }\n      const name = safeFileName(event.data.name);\n      const file = new File([bytes], name, { type: mime });\n      submitted = true;\n      submitNativeOpuForm(id, file);\n    });\n\n    sendReady();\n  }\n\n  function submitNativeOpuForm(id, file) {\n    try {\n      const form = document.querySelector('form#xpc[action*=\"opupload.php\"]');\n      const fileInput = form?.querySelector('input[type=\"file\"][name=\"obrazek[0]\"]');\n      if (!form || !fileInput) {\n        sendResult(id, \"\", \"OPU's native upload form was not found.\");\n        return;\n      }\n\n      const transfer = new DataTransfer();\n      transfer.items.add(file);\n      fileInput.files = transfer.files;\n      setFormValue(form, \"sizep\", \"0\");\n      setFormValue(form, \"outputf\", \"auto\");\n      form.target = \"_self\";\n      const submit = form.querySelector('[type=\"submit\"][name=\"tl_odeslat\"]');\n      if (submit && typeof form.requestSubmit === \"function\") {\n        form.requestSubmit(submit);\n      } else {\n        form.appendChild(hiddenInput(\"tl_odeslat\", \"Odeslat\"));\n        form.submit();\n      }\n    } catch (_error) {\n      sendResult(id, \"\", \"Firefox could not place the selected image into OPU's native upload form.\");\n    }\n  }\n\n  function setFormValue(form, name, value) {\n    const field = form.querySelector(`[name=\"${name}\"][value=\"${value}\"]`);\n    if (field && \"checked\" in field) field.checked = true;\n    else if (field) field.value = value;\n  }\n\n  function hiddenInput(name, value) {\n    const input = document.createElement(\"input\");\n    input.type = \"hidden\";\n    input.name = name;\n    input.value = value;\n    return input;\n  }\n\n  function completeNativeFormResult(id) {\n    const url = extractDocumentUrl(document);\n    const route = `${window.location.pathname}${window.location.search}`.slice(0, 160);\n    sendResult(id, url, url ? \"\" : `OPU returned ${route || \"/\"} without an image URL.`);\n  }\n\n  function sendResult(id, url, error) {\n    window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"result\", id, url, error }, KAPYBARA_ORIGIN);\n    window.setTimeout(() => window.close(), 80);\n  }\n\n  function extractDocumentUrl(doc) {\n    const candidates = [];\n    doc.querySelectorAll('input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], img[src*=\"opu.peklo.biz/p/\"]')\n      .forEach((element) => candidates.push(element.getAttribute(\"href\") || element.getAttribute(\"src\")));\n    for (const value of candidates) {\n      const match = String(value || \"\").match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n      const url = validateOpuUrl(match?.[1] || value);\n      if (url) return url;\n    }\n    return \"\";\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      const url = new URL(String(value || \"\").trim().replace(/&amp;/gi, \"&\"));\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\" || !url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function requestId() {\n    const random = typeof crypto?.randomUUID === \"function\"\n      ? crypto.randomUUID()\n      : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;\n    return random.replace(/[^a-z0-9_-]/gi, \"\").slice(0, 80);\n  }\n\n  function validRequestId(value) {\n    return /^[a-z0-9_-]{12,80}$/i.test(String(value || \"\"));\n  }\n\n  function safeFileName(value) {\n    const name = String(value || \"image\")\n      .replace(/[\\\\/\\x00-\\x1f\\x7f]+/g, \"_\")\n      .trim()\n      .slice(0, 180);\n    return name || \"image\";\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n})();\n");
+  embeddedText.set("modules/opuc/popup-bridge.js", "// Firefox first-party OPU upload bridge.\n(function () {\n  \"use strict\";\n\n  const OPU_ORIGIN = \"https://opu.peklo.biz\";\n  const KAPYBARA_ORIGIN = \"https://kapybara.okoun.cz\";\n  const MESSAGE_TYPE = \"cudloun-opu-bridge-v1\";\n  const WINDOW_PREFIX = \"cudloun_opu_\";\n\n  if (window.location.hostname === \"opu.peklo.biz\") {\n    if (document.readyState === \"loading\") {\n      window.addEventListener(\"DOMContentLoaded\", startPopupHost, { once: true });\n    } else {\n      startPopupHost();\n    }\n    return;\n  }\n\n  const root = window.Cudloun;\n  if (!root) return;\n  const runtime = root.opuc = root.opuc || {};\n  const pending = new Map();\n  const preparedFiles = new WeakMap();\n  let listening = false;\n\n  runtime.popupBridge = {\n    shouldUse,\n    prepare,\n    upload,\n  };\n\n  function shouldUse() {\n    return /\\bFirefox\\/\\d/i.test(String(window.navigator?.userAgent || \"\"));\n  }\n\n  function upload(file, options = {}) {\n    let item = null;\n    let cancelled = false;\n\n    const promise = new Promise((resolve, reject) => {\n      const id = requestId();\n      const popupName = `${WINDOW_PREFIX}${id}`;\n      const url = `${OPU_ORIGIN}/?cudloun_bridge=${encodeURIComponent(id)}`;\n      const popup = window.open(url, popupName, \"popup=yes,width=560,height=680,resizable=yes,scrollbars=yes\");\n      if (!popup) {\n        reject(new Error(\"Firefox blocked the OPU upload window. Allow pop-ups for kapybara.okoun.cz and retry.\"));\n        return;\n      }\n\n      const bytesPromise = prepare(file);\n      bytesPromise.catch(() => {});\n      item = {\n        id,\n        file,\n        bytesPromise,\n        sending: false,\n        popup,\n        resolve,\n        reject,\n        onProgress: options.onProgress,\n        timeout: window.setTimeout(() => settle(id, new Error(\"The OPU upload window timed out.\")), 130000),\n        closedPoll: window.setInterval(() => {\n          if (popup.closed) settle(id, new Error(\"The OPU upload window was closed before returning an image URL.\"));\n        }, 400),\n      };\n      pending.set(id, item);\n      ensureListener();\n    });\n\n    return {\n      promise,\n      abort() {\n        if (cancelled) return;\n        cancelled = true;\n        if (!item) return;\n        try {\n          item.popup.postMessage({ type: MESSAGE_TYPE, action: \"cancel\", id: item.id }, OPU_ORIGIN);\n        } catch (_error) {}\n        settle(item.id, abortError());\n      },\n    };\n  }\n\n  function ensureListener() {\n    if (listening) return;\n    listening = true;\n    window.addEventListener(\"message\", onMessage);\n  }\n\n  function onMessage(event) {\n    if (event.origin !== OPU_ORIGIN || event.data?.type !== MESSAGE_TYPE) return;\n    const id = String(event.data.id || \"\");\n    const item = pending.get(id);\n    if (!item || event.source !== item.popup) return;\n\n    if (event.data.action === \"ready\") {\n      sendFileBytes(item);\n      return;\n    }\n    if (event.data.action === \"progress\") {\n      if (typeof item.onProgress === \"function\") {\n        item.onProgress({\n          lengthComputable: !!event.data.lengthComputable,\n          loaded: Number(event.data.loaded) || 0,\n          total: Number(event.data.total) || 0,\n        });\n      }\n      return;\n    }\n    if (event.data.action !== \"result\") return;\n\n    const url = validateOpuUrl(event.data.url);\n    if (url) {\n      settle(id, null, url);\n      return;\n    }\n    settle(id, new Error(String(event.data.error || \"OPU did not return an image URL.\")));\n  }\n\n  async function sendFileBytes(item) {\n    if (item.sending) return;\n    item.sending = true;\n    try {\n      const bytes = await item.bytesPromise;\n      if (!pending.has(item.id)) return;\n      const outgoing = bytes.slice(0);\n      item.popup.postMessage({\n        type: MESSAGE_TYPE,\n        action: \"upload\",\n        id: item.id,\n        bytes: outgoing,\n        name: String(item.file.name || \"image\"),\n        mime: String(item.file.type || \"application/octet-stream\"),\n      }, OPU_ORIGIN, [outgoing]);\n    } catch (error) {\n      settle(item.id, error instanceof Error\n        ? error\n        : new Error(\"Firefox could not read the selected image for the OPU handoff.\"));\n    }\n  }\n\n  function prepare(file) {\n    if (!file || (typeof file !== \"object\" && typeof file !== \"function\")) {\n      return Promise.reject(new Error(\"Firefox did not expose the selected image file.\"));\n    }\n    const cached = preparedFiles.get(file);\n    if (cached) return cached;\n\n    const promise = readFileBytes(file)\n      .then((bytes) => {\n        if (!isArrayBuffer(bytes) || !bytes.byteLength) {\n          throw new Error(\"Firefox returned an empty image during the OPU handoff.\");\n        }\n        return bytes;\n      })\n      .catch((error) => {\n        preparedFiles.delete(file);\n        throw error;\n      });\n    preparedFiles.set(file, promise);\n    return promise;\n  }\n\n  async function readFileBytes(file) {\n    const failures = [];\n    if (typeof file.arrayBuffer === \"function\") {\n      try {\n        return await file.arrayBuffer();\n      } catch (error) {\n        failures.push([\"arrayBuffer\", error]);\n      }\n    }\n\n    try {\n      return await readWithFileReader(file, \"array-buffer\");\n    } catch (error) {\n      failures.push([\"FileReader\", error]);\n    }\n\n    let objectUrl = \"\";\n    try {\n      objectUrl = URL.createObjectURL(file);\n      const response = await fetch(objectUrl);\n      if (!response.ok) throw new Error(`HTTP ${response.status}`);\n      return await response.arrayBuffer();\n    } catch (error) {\n      failures.push([\"object URL\", error]);\n    } finally {\n      if (objectUrl) URL.revokeObjectURL(objectUrl);\n    }\n\n    try {\n      const dataUrl = await readWithFileReader(file, \"data-url\");\n      return dataUrlBytes(dataUrl);\n    } catch (error) {\n      failures.push([\"data URL\", error]);\n    }\n\n    const detail = failures.map(([method, error]) => `${method}: ${safeErrorName(error)}`).join(\"; \");\n    throw new Error(`Firefox could not read the selected image for the OPU handoff${detail ? ` (${detail})` : \"\"}.`);\n  }\n\n  function readWithFileReader(file, mode) {\n    return new Promise((resolve, reject) => {\n      const reader = new FileReader();\n      reader.addEventListener(\"load\", () => resolve(reader.result));\n      reader.addEventListener(\"error\", () => reject(reader.error || new Error(\"FileReader failed.\")));\n      reader.addEventListener(\"abort\", () => reject(new Error(\"FileReader aborted.\")));\n      if (mode === \"data-url\") reader.readAsDataURL(file);\n      else reader.readAsArrayBuffer(file);\n    });\n  }\n\n  function dataUrlBytes(value) {\n    const source = String(value || \"\");\n    const comma = source.indexOf(\",\");\n    if (comma < 0 || !/;base64$/i.test(source.slice(0, comma))) {\n      throw new Error(\"FileReader returned an invalid data URL.\");\n    }\n    const binary = atob(source.slice(comma + 1));\n    const bytes = new Uint8Array(binary.length);\n    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);\n    return bytes.buffer;\n  }\n\n  function isArrayBuffer(value) {\n    return value instanceof ArrayBuffer || Object.prototype.toString.call(value) === \"[object ArrayBuffer]\";\n  }\n\n  function safeErrorName(error) {\n    const name = String(error?.name || \"\").replace(/[^A-Za-z0-9_-]/g, \"\").slice(0, 40);\n    return name || \"Error\";\n  }\n\n  function settle(id, error, value) {\n    const item = pending.get(id);\n    if (!item) return;\n    pending.delete(id);\n    window.clearTimeout(item.timeout);\n    window.clearInterval(item.closedPoll);\n    try { item.popup.close(); } catch (_error) {}\n    if (!pending.size && listening) {\n      listening = false;\n      window.removeEventListener(\"message\", onMessage);\n    }\n    if (error) item.reject(error);\n    else item.resolve(value);\n  }\n\n  function startPopupHost() {\n    if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;\n    const windowId = window.name.slice(WINDOW_PREFIX.length);\n    if (!validRequestId(windowId)) return;\n    const queryId = new URLSearchParams(window.location.search).get(\"cudloun_bridge\") || \"\";\n\n    // The query identifies the initial handoff page. OPU removes it while\n    // redirecting to ?page=done, but window.name survives that navigation.\n    if (!queryId) {\n      completeNativeFormResult(windowId);\n      return;\n    }\n    if (queryId !== windowId) return;\n\n    let submitted = false;\n    const id = windowId;\n    const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"ready\", id }, KAPYBARA_ORIGIN);\n    const readyTimer = window.setInterval(sendReady, 350);\n\n    window.addEventListener(\"message\", (event) => {\n      if (event.origin !== KAPYBARA_ORIGIN || event.source !== window.opener) return;\n      if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;\n      if (event.data.action === \"cancel\") {\n        window.clearInterval(readyTimer);\n        window.close();\n        return;\n      }\n      if (event.data.action !== \"upload\" || submitted) return;\n      window.clearInterval(readyTimer);\n      const bytes = event.data.bytes;\n      const mime = String(event.data.mime || \"\");\n      if (!(bytes instanceof ArrayBuffer) || !bytes.byteLength || !mime.startsWith(\"image/\")) {\n        sendResult(id, \"\", \"The OPU upload window did not receive a valid image file.\");\n        return;\n      }\n      const name = safeFileName(event.data.name);\n      const file = new File([bytes], name, { type: mime });\n      submitted = true;\n      submitNativeOpuForm(id, file);\n    });\n\n    sendReady();\n  }\n\n  function submitNativeOpuForm(id, file) {\n    try {\n      const form = document.querySelector('form#xpc[action*=\"opupload.php\"]');\n      const fileInput = form?.querySelector('input[type=\"file\"][name=\"obrazek[0]\"]');\n      if (!form || !fileInput) {\n        sendResult(id, \"\", \"OPU's native upload form was not found.\");\n        return;\n      }\n\n      const transfer = new DataTransfer();\n      transfer.items.add(file);\n      fileInput.files = transfer.files;\n      setFormValue(form, \"sizep\", \"0\");\n      setFormValue(form, \"outputf\", \"auto\");\n      form.target = \"_self\";\n      const submit = form.querySelector('[type=\"submit\"][name=\"tl_odeslat\"]');\n      if (submit && typeof form.requestSubmit === \"function\") {\n        form.requestSubmit(submit);\n      } else {\n        form.appendChild(hiddenInput(\"tl_odeslat\", \"Odeslat\"));\n        form.submit();\n      }\n    } catch (_error) {\n      sendResult(id, \"\", \"Firefox could not place the selected image into OPU's native upload form.\");\n    }\n  }\n\n  function setFormValue(form, name, value) {\n    const field = form.querySelector(`[name=\"${name}\"][value=\"${value}\"]`);\n    if (field && \"checked\" in field) field.checked = true;\n    else if (field) field.value = value;\n  }\n\n  function hiddenInput(name, value) {\n    const input = document.createElement(\"input\");\n    input.type = \"hidden\";\n    input.name = name;\n    input.value = value;\n    return input;\n  }\n\n  function completeNativeFormResult(id) {\n    const url = extractDocumentUrl(document);\n    const route = `${window.location.pathname}${window.location.search}`.slice(0, 160);\n    sendResult(id, url, url ? \"\" : `OPU returned ${route || \"/\"} without an image URL.`);\n  }\n\n  function sendResult(id, url, error) {\n    window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"result\", id, url, error }, KAPYBARA_ORIGIN);\n    window.setTimeout(() => window.close(), 80);\n  }\n\n  function extractDocumentUrl(doc) {\n    const candidates = [];\n    doc.querySelectorAll('input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], img[src*=\"opu.peklo.biz/p/\"]')\n      .forEach((element) => candidates.push(element.getAttribute(\"href\") || element.getAttribute(\"src\")));\n    for (const value of candidates) {\n      const match = String(value || \"\").match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n      const url = validateOpuUrl(match?.[1] || value);\n      if (url) return url;\n    }\n    return \"\";\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      const url = new URL(String(value || \"\").trim().replace(/&amp;/gi, \"&\"));\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\" || !url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function requestId() {\n    const random = typeof crypto?.randomUUID === \"function\"\n      ? crypto.randomUUID()\n      : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;\n    return random.replace(/[^a-z0-9_-]/gi, \"\").slice(0, 80);\n  }\n\n  function validRequestId(value) {\n    return /^[a-z0-9_-]{12,80}$/i.test(String(value || \"\"));\n  }\n\n  function safeFileName(value) {\n    const name = String(value || \"image\")\n      .replace(/[\\\\/\\x00-\\x1f\\x7f]+/g, \"_\")\n      .trim()\n      .slice(0, 180);\n    return name || \"image\";\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n})();\n");
   embeddedScripts.set("modules/opuc/popup-bridge.js", function () {
     // Firefox first-party OPU upload bridge.
     (function () {
@@ -2892,10 +2977,12 @@
       if (!root) return;
       const runtime = root.opuc = root.opuc || {};
       const pending = new Map();
+      const preparedFiles = new WeakMap();
       let listening = false;
 
       runtime.popupBridge = {
         shouldUse,
+        prepare,
         upload,
       };
 
@@ -2917,9 +3004,12 @@
             return;
           }
 
+          const bytesPromise = prepare(file);
+          bytesPromise.catch(() => {});
           item = {
             id,
             file,
+            bytesPromise,
             sending: false,
             popup,
             resolve,
@@ -2988,35 +3078,115 @@
         if (item.sending) return;
         item.sending = true;
         try {
-          const bytes = await readFileBytes(item.file);
+          const bytes = await item.bytesPromise;
           if (!pending.has(item.id)) return;
+          const outgoing = bytes.slice(0);
           item.popup.postMessage({
             type: MESSAGE_TYPE,
             action: "upload",
             id: item.id,
-            bytes,
+            bytes: outgoing,
             name: String(item.file.name || "image"),
             mime: String(item.file.type || "application/octet-stream"),
-          }, OPU_ORIGIN, [bytes]);
-        } catch (_error) {
-          settle(item.id, new Error("Firefox could not read the selected image for the OPU handoff."));
+          }, OPU_ORIGIN, [outgoing]);
+        } catch (error) {
+          settle(item.id, error instanceof Error
+            ? error
+            : new Error("Firefox could not read the selected image for the OPU handoff."));
         }
       }
 
+      function prepare(file) {
+        if (!file || (typeof file !== "object" && typeof file !== "function")) {
+          return Promise.reject(new Error("Firefox did not expose the selected image file."));
+        }
+        const cached = preparedFiles.get(file);
+        if (cached) return cached;
+
+        const promise = readFileBytes(file)
+          .then((bytes) => {
+            if (!isArrayBuffer(bytes) || !bytes.byteLength) {
+              throw new Error("Firefox returned an empty image during the OPU handoff.");
+            }
+            return bytes;
+          })
+          .catch((error) => {
+            preparedFiles.delete(file);
+            throw error;
+          });
+        preparedFiles.set(file, promise);
+        return promise;
+      }
+
       async function readFileBytes(file) {
+        const failures = [];
         if (typeof file.arrayBuffer === "function") {
           try {
             return await file.arrayBuffer();
-          } catch (_error) {
-            // Some Firefox userscript compartments expose but cannot call it.
+          } catch (error) {
+            failures.push(["arrayBuffer", error]);
           }
         }
+
+        try {
+          return await readWithFileReader(file, "array-buffer");
+        } catch (error) {
+          failures.push(["FileReader", error]);
+        }
+
+        let objectUrl = "";
+        try {
+          objectUrl = URL.createObjectURL(file);
+          const response = await fetch(objectUrl);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.arrayBuffer();
+        } catch (error) {
+          failures.push(["object URL", error]);
+        } finally {
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+        }
+
+        try {
+          const dataUrl = await readWithFileReader(file, "data-url");
+          return dataUrlBytes(dataUrl);
+        } catch (error) {
+          failures.push(["data URL", error]);
+        }
+
+        const detail = failures.map(([method, error]) => `${method}: ${safeErrorName(error)}`).join("; ");
+        throw new Error(`Firefox could not read the selected image for the OPU handoff${detail ? ` (${detail})` : ""}.`);
+      }
+
+      function readWithFileReader(file, mode) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.addEventListener("load", () => resolve(reader.result));
           reader.addEventListener("error", () => reject(reader.error || new Error("FileReader failed.")));
-          reader.readAsArrayBuffer(file);
+          reader.addEventListener("abort", () => reject(new Error("FileReader aborted.")));
+          if (mode === "data-url") reader.readAsDataURL(file);
+          else reader.readAsArrayBuffer(file);
         });
+      }
+
+      function dataUrlBytes(value) {
+        const source = String(value || "");
+        const comma = source.indexOf(",");
+        if (comma < 0 || !/;base64$/i.test(source.slice(0, comma))) {
+          throw new Error("FileReader returned an invalid data URL.");
+        }
+        const binary = atob(source.slice(comma + 1));
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return bytes.buffer;
+      }
+
+      function isArrayBuffer(value) {
+        return value instanceof ArrayBuffer || Object.prototype.toString.call(value) === "[object ArrayBuffer]";
+      }
+
+      function safeErrorName(error) {
+        const name = String(error?.name || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+        return name || "Error";
       }
 
       function settle(id, error, value) {
@@ -3886,7 +4056,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/ui.js", "// Minimal one-file OPUc staging and upload UI.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const views = new Map();\n  let ctxRef = null;\n  let stopAdapter = null;\n  let loginState = \"unknown\";\n  let loginProbe = null;\n\n  runtime.ui = { start, stop };\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    runtime.styles.install();\n    stopAdapter = runtime.adapter.start(\n      (parts) => mountComposer(parts),\n      (parts) => unmountComposer(parts)\n    );\n    ctx.log.info(\"OPUc composer integration ready\");\n    return stop;\n  }\n\n  function stop() {\n    stopAdapter?.();\n    stopAdapter = null;\n    views.forEach((view) => view.remove());\n    views.clear();\n    runtime.queue?.disposeAll();\n    runtime.styles?.remove();\n    ctxRef = null;\n    loginState = \"unknown\";\n    loginProbe = null;\n  }\n\n  function mountComposer(parts) {\n    if (!ctxRef || views.has(parts.section)) return;\n    const session = runtime.queue.ensure(parts);\n    const binding = runtime.adapter.bindLauncher(parts, () => chooseFile(view));\n    const view = createView(session, binding);\n    views.set(parts.section, view);\n  }\n\n  function unmountComposer(parts) {\n    const view = views.get(parts.section);\n    if (!view) return;\n    view.remove();\n    views.delete(parts.section);\n  }\n\n  function createView(session, binding) {\n    const input = document.createElement(\"input\");\n    input.type = \"file\";\n    input.accept = \"image/*\";\n    input.hidden = true;\n    binding.row.appendChild(input);\n\n    const panel = document.createElement(\"div\");\n    panel.className = \"cudloun-opuc-panel\";\n    panel.dataset.open = \"false\";\n    panel.dataset.state = \"idle\";\n\n    const preview = document.createElement(\"img\");\n    preview.className = \"cudloun-opuc-preview\";\n    preview.alt = \"Selected image preview\";\n\n    const fileInfo = document.createElement(\"div\");\n    fileInfo.className = \"cudloun-opuc-file-info\";\n\n    const status = document.createElement(\"div\");\n    status.className = \"cudloun-opuc-status\";\n    status.setAttribute(\"aria-live\", \"polite\");\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-opuc-actions\";\n\n    const clear = actionButton(\"Clear\", false);\n    const upload = actionButton(\"Upload to OPU\", true);\n    actions.appendChild(clear);\n    actions.appendChild(upload);\n\n    panel.appendChild(preview);\n    panel.appendChild(fileInfo);\n    panel.appendChild(status);\n    panel.appendChild(actions);\n    binding.row.insertAdjacentElement(\"afterend\", panel);\n\n    const view = {\n      session,\n      binding,\n      input,\n      panel,\n      preview,\n      fileInfo,\n      status,\n      clear,\n      upload,\n      unsubscribe: null,\n      removed: false,\n      remove() {\n        if (this.removed) return;\n        this.removed = true;\n        this.unsubscribe?.();\n        input.removeEventListener(\"change\", onFileChange);\n        clear.removeEventListener(\"click\", onClear);\n        upload.removeEventListener(\"click\", onUpload);\n        panel.remove();\n        binding.remove();\n        runtime.queue.dispose(session);\n      },\n    };\n\n    const onFileChange = () => selectFile(view, input.files?.[0] || null);\n    const onClear = () => session.clear();\n    const onUpload = () => {\n      if (session.status === \"uploading\") session.request?.abort?.();\n      else uploadFile(view);\n    };\n    input.addEventListener(\"change\", onFileChange);\n    clear.addEventListener(\"click\", onClear);\n    upload.addEventListener(\"click\", onUpload);\n    view.unsubscribe = session.subscribe(() => render(view));\n    render(view);\n    return view;\n  }\n\n  function chooseFile(view) {\n    if (!view.session.parts.section.isConnected) return;\n    probeLogin(view);\n    view.input.click();\n  }\n\n  function selectFile(view, file) {\n    view.input.value = \"\";\n    if (!file) return;\n    try {\n      const maxMb = validMaxMb(ctxRef?.storage.get(\"maxUploadMb\", 25));\n      runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);\n      view.session.setFile(file);\n    } catch (error) {\n      view.session.update({ status: \"error\", message: safeMessage(error), progress: 0 });\n    }\n  }\n\n  async function uploadFile(view) {\n    const session = view.session;\n    if (!session.file || session.disposed) return;\n\n    session.update({ status: \"uploading\", message: \"Uploading to OPU…\", progress: 0 });\n    const request = runtime.client.upload(session.file, {\n      onProgress(event) {\n        if (!event.lengthComputable || !event.total) return;\n        const progress = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));\n        session.update({ progress, message: `Uploading to OPU… ${progress}%` });\n      },\n    });\n    session.request = request;\n\n    try {\n      const url = await request.promise;\n      if (session.disposed || !session.parts.section.isConnected) {\n        throw new Error(\"The originating Kapybara composer was closed.\");\n      }\n      session.update({ status: \"inserting\", message: \"Adding the image to Kapybara…\", uploadedUrl: url });\n      await runtime.adapter.insertImageUrl(session.parts, url);\n      session.update({ status: \"success\", message: \"Uploaded and inserted. Review the post before sending.\", progress: 100 });\n    } catch (error) {\n      const cancelled = error?.name === \"AbortError\";\n      session.update({\n        status: cancelled ? \"ready\" : \"error\",\n        message: cancelled ? \"Upload cancelled. The image is still staged.\" : safeMessage(error),\n        progress: 0,\n      });\n    } finally {\n      session.request = null;\n      render(view);\n    }\n  }\n\n  function render(view) {\n    const session = view.session;\n    const hasFile = !!session.file;\n    view.panel.dataset.open = hasFile || session.status === \"error\" ? \"true\" : \"false\";\n    view.panel.dataset.state = session.status;\n    view.preview.hidden = !session.previewUrl;\n    if (session.previewUrl) view.preview.src = session.previewUrl;\n\n    const info = runtime.imagePipeline.describeFile(session.file);\n    view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : \"No image selected\";\n    view.status.textContent = session.message || loginMessage();\n    view.clear.disabled = session.status === \"uploading\" || session.status === \"inserting\";\n    view.upload.disabled = !hasFile || session.status === \"inserting\" || session.status === \"success\";\n    view.upload.textContent = session.status === \"uploading\" ? \"Cancel upload\" : session.status === \"error\" ? \"Retry upload\" : \"Upload to OPU\";\n  }\n\n  function probeLogin(view) {\n    if (loginState !== \"unknown\" || loginProbe) return loginProbe;\n    loginState = \"checking\";\n    render(view);\n    loginProbe = runtime.client.checkLoginStatus()\n      .then((loggedIn) => {\n        loginState = loggedIn ? \"logged-in\" : \"logged-out\";\n        return loggedIn;\n      })\n      .catch(() => {\n        loginState = \"unavailable\";\n        return false;\n      })\n      .finally(() => {\n        loginProbe = null;\n        views.forEach(render);\n      });\n    return loginProbe;\n  }\n\n  function loginMessage() {\n    if (loginState === \"checking\") return \"Checking OPU session…\";\n    if (loginState === \"logged-out\") return \"OPU is not signed in; account features may be limited.\";\n    if (loginState === \"unavailable\") return \"OPU session could not be checked; upload may still work.\";\n    return \"\";\n  }\n\n  function actionButton(label, primary) {\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-action\";\n    button.dataset.primary = primary ? \"true\" : \"false\";\n    button.textContent = label;\n    return button;\n  }\n\n  function validMaxMb(value) {\n    const parsed = Number(value);\n    return Number.isFinite(parsed) && parsed >= 1 && parsed <= 100 ? parsed : 25;\n  }\n\n  function safeMessage(error) {\n    return error instanceof Error && error.message ? error.message : \"The OPU operation failed.\";\n  }\n})();\n");
+  embeddedText.set("modules/opuc/ui.js", "// Minimal one-file OPUc staging and upload UI.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const views = new Map();\n  let ctxRef = null;\n  let stopAdapter = null;\n  let loginState = \"unknown\";\n  let loginProbe = null;\n\n  runtime.ui = { start, stop };\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    runtime.styles.install();\n    stopAdapter = runtime.adapter.start(\n      (parts) => mountComposer(parts),\n      (parts) => unmountComposer(parts)\n    );\n    ctx.log.info(\"OPUc composer integration ready\");\n    return stop;\n  }\n\n  function stop() {\n    stopAdapter?.();\n    stopAdapter = null;\n    views.forEach((view) => view.remove());\n    views.clear();\n    runtime.queue?.disposeAll();\n    runtime.styles?.remove();\n    ctxRef = null;\n    loginState = \"unknown\";\n    loginProbe = null;\n  }\n\n  function mountComposer(parts) {\n    if (!ctxRef || views.has(parts.section)) return;\n    const session = runtime.queue.ensure(parts);\n    const binding = runtime.adapter.bindLauncher(parts, () => chooseFile(view));\n    const view = createView(session, binding);\n    views.set(parts.section, view);\n  }\n\n  function unmountComposer(parts) {\n    const view = views.get(parts.section);\n    if (!view) return;\n    view.remove();\n    views.delete(parts.section);\n  }\n\n  function createView(session, binding) {\n    const input = document.createElement(\"input\");\n    input.type = \"file\";\n    input.accept = \"image/*\";\n    input.hidden = true;\n    binding.row.appendChild(input);\n\n    const panel = document.createElement(\"div\");\n    panel.className = \"cudloun-opuc-panel\";\n    panel.dataset.open = \"false\";\n    panel.dataset.state = \"idle\";\n\n    const preview = document.createElement(\"img\");\n    preview.className = \"cudloun-opuc-preview\";\n    preview.alt = \"Selected image preview\";\n\n    const fileInfo = document.createElement(\"div\");\n    fileInfo.className = \"cudloun-opuc-file-info\";\n\n    const status = document.createElement(\"div\");\n    status.className = \"cudloun-opuc-status\";\n    status.setAttribute(\"aria-live\", \"polite\");\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-opuc-actions\";\n\n    const clear = actionButton(\"Clear\", false);\n    const upload = actionButton(\"Upload to OPU\", true);\n    actions.appendChild(clear);\n    actions.appendChild(upload);\n\n    panel.appendChild(preview);\n    panel.appendChild(fileInfo);\n    panel.appendChild(status);\n    panel.appendChild(actions);\n    binding.row.insertAdjacentElement(\"afterend\", panel);\n\n    const view = {\n      session,\n      binding,\n      input,\n      panel,\n      preview,\n      fileInfo,\n      status,\n      clear,\n      upload,\n      unsubscribe: null,\n      removed: false,\n      remove() {\n        if (this.removed) return;\n        this.removed = true;\n        this.unsubscribe?.();\n        input.removeEventListener(\"change\", onFileChange);\n        clear.removeEventListener(\"click\", onClear);\n        upload.removeEventListener(\"click\", onUpload);\n        panel.remove();\n        binding.remove();\n        runtime.queue.dispose(session);\n      },\n    };\n\n    const onFileChange = () => selectFile(view, input.files?.[0] || null);\n    const onClear = () => {\n      input.value = \"\";\n      session.clear();\n    };\n    const onUpload = () => {\n      if (session.status === \"uploading\") session.request?.abort?.();\n      else uploadFile(view);\n    };\n    input.addEventListener(\"change\", onFileChange);\n    clear.addEventListener(\"click\", onClear);\n    upload.addEventListener(\"click\", onUpload);\n    view.unsubscribe = session.subscribe(() => render(view));\n    render(view);\n    return view;\n  }\n\n  function chooseFile(view) {\n    if (!view.session.parts.section.isConnected) return;\n    probeLogin(view);\n    view.input.click();\n  }\n\n  function selectFile(view, file) {\n    if (!file) return;\n    try {\n      const maxMb = validMaxMb(ctxRef?.storage.get(\"maxUploadMb\", 25));\n      runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);\n      view.session.setFile(file);\n      prepareFirefoxFile(view, file);\n    } catch (error) {\n      view.input.value = \"\";\n      view.session.update({ status: \"error\", message: safeMessage(error), progress: 0 });\n    }\n  }\n\n  function prepareFirefoxFile(view, file) {\n    const bridge = runtime.popupBridge;\n    if (!bridge?.shouldUse?.()) {\n      view.input.value = \"\";\n      return;\n    }\n\n    const session = view.session;\n    session.update({ status: \"preparing\", message: \"Preparing image for Firefox…\", progress: 0 });\n    bridge.prepare(file)\n      .then(() => {\n        if (session.disposed || session.file !== file) return;\n        view.input.value = \"\";\n        if (session.status === \"preparing\") {\n          session.update({ status: \"ready\", message: \"Ready to upload.\", progress: 0 });\n        }\n      })\n      .catch((error) => {\n        if (session.disposed || session.file !== file) return;\n        session.update({ status: \"error\", message: safeMessage(error), progress: 0 });\n      });\n  }\n\n  async function uploadFile(view) {\n    const session = view.session;\n    if (!session.file || session.disposed) return;\n\n    session.update({ status: \"uploading\", message: \"Uploading to OPU…\", progress: 0 });\n    const request = runtime.client.upload(session.file, {\n      onProgress(event) {\n        if (!event.lengthComputable || !event.total) return;\n        const progress = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));\n        session.update({ progress, message: `Uploading to OPU… ${progress}%` });\n      },\n    });\n    session.request = request;\n\n    try {\n      const url = await request.promise;\n      if (session.disposed || !session.parts.section.isConnected) {\n        throw new Error(\"The originating Kapybara composer was closed.\");\n      }\n      session.update({ status: \"inserting\", message: \"Adding the image to Kapybara…\", uploadedUrl: url });\n      await runtime.adapter.insertImageUrl(session.parts, url);\n      session.update({ status: \"success\", message: \"Uploaded and inserted. Review the post before sending.\", progress: 100 });\n    } catch (error) {\n      const cancelled = error?.name === \"AbortError\";\n      session.update({\n        status: cancelled ? \"ready\" : \"error\",\n        message: cancelled ? \"Upload cancelled. The image is still staged.\" : safeMessage(error),\n        progress: 0,\n      });\n    } finally {\n      session.request = null;\n      render(view);\n    }\n  }\n\n  function render(view) {\n    const session = view.session;\n    const hasFile = !!session.file;\n    view.panel.dataset.open = hasFile || session.status === \"error\" ? \"true\" : \"false\";\n    view.panel.dataset.state = session.status;\n    view.preview.hidden = !session.previewUrl;\n    if (session.previewUrl) view.preview.src = session.previewUrl;\n\n    const info = runtime.imagePipeline.describeFile(session.file);\n    view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : \"No image selected\";\n    view.status.textContent = session.message || loginMessage();\n    view.clear.disabled = session.status === \"uploading\" || session.status === \"inserting\";\n    view.upload.disabled = !hasFile || session.status === \"preparing\" || session.status === \"inserting\" || session.status === \"success\";\n    view.upload.textContent = session.status === \"uploading\" ? \"Cancel upload\" : session.status === \"error\" ? \"Retry upload\" : \"Upload to OPU\";\n  }\n\n  function probeLogin(view) {\n    if (loginState !== \"unknown\" || loginProbe) return loginProbe;\n    loginState = \"checking\";\n    render(view);\n    loginProbe = runtime.client.checkLoginStatus()\n      .then((loggedIn) => {\n        loginState = loggedIn ? \"logged-in\" : \"logged-out\";\n        return loggedIn;\n      })\n      .catch(() => {\n        loginState = \"unavailable\";\n        return false;\n      })\n      .finally(() => {\n        loginProbe = null;\n        views.forEach(render);\n      });\n    return loginProbe;\n  }\n\n  function loginMessage() {\n    if (loginState === \"checking\") return \"Checking OPU session…\";\n    if (loginState === \"logged-out\") return \"OPU is not signed in; account features may be limited.\";\n    if (loginState === \"unavailable\") return \"OPU session could not be checked; upload may still work.\";\n    return \"\";\n  }\n\n  function actionButton(label, primary) {\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-action\";\n    button.dataset.primary = primary ? \"true\" : \"false\";\n    button.textContent = label;\n    return button;\n  }\n\n  function validMaxMb(value) {\n    const parsed = Number(value);\n    return Number.isFinite(parsed) && parsed >= 1 && parsed <= 100 ? parsed : 25;\n  }\n\n  function safeMessage(error) {\n    return error instanceof Error && error.message ? error.message : \"The OPU operation failed.\";\n  }\n})();\n");
   embeddedScripts.set("modules/opuc/ui.js", function () {
     // Minimal one-file OPUc staging and upload UI.
     (function () {
@@ -4004,7 +4174,10 @@
         };
 
         const onFileChange = () => selectFile(view, input.files?.[0] || null);
-        const onClear = () => session.clear();
+        const onClear = () => {
+          input.value = "";
+          session.clear();
+        };
         const onUpload = () => {
           if (session.status === "uploading") session.request?.abort?.();
           else uploadFile(view);
@@ -4024,15 +4197,39 @@
       }
 
       function selectFile(view, file) {
-        view.input.value = "";
         if (!file) return;
         try {
           const maxMb = validMaxMb(ctxRef?.storage.get("maxUploadMb", 25));
           runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);
           view.session.setFile(file);
+          prepareFirefoxFile(view, file);
         } catch (error) {
+          view.input.value = "";
           view.session.update({ status: "error", message: safeMessage(error), progress: 0 });
         }
+      }
+
+      function prepareFirefoxFile(view, file) {
+        const bridge = runtime.popupBridge;
+        if (!bridge?.shouldUse?.()) {
+          view.input.value = "";
+          return;
+        }
+
+        const session = view.session;
+        session.update({ status: "preparing", message: "Preparing image for Firefox…", progress: 0 });
+        bridge.prepare(file)
+          .then(() => {
+            if (session.disposed || session.file !== file) return;
+            view.input.value = "";
+            if (session.status === "preparing") {
+              session.update({ status: "ready", message: "Ready to upload.", progress: 0 });
+            }
+          })
+          .catch((error) => {
+            if (session.disposed || session.file !== file) return;
+            session.update({ status: "error", message: safeMessage(error), progress: 0 });
+          });
       }
 
       async function uploadFile(view) {
@@ -4082,7 +4279,7 @@
         view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : "No image selected";
         view.status.textContent = session.message || loginMessage();
         view.clear.disabled = session.status === "uploading" || session.status === "inserting";
-        view.upload.disabled = !hasFile || session.status === "inserting" || session.status === "success";
+        view.upload.disabled = !hasFile || session.status === "preparing" || session.status === "inserting" || session.status === "success";
         view.upload.textContent = session.status === "uploading" ? "Cancel upload" : session.status === "error" ? "Retry upload" : "Upload to OPU";
       }
 
@@ -4134,7 +4331,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.6\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
+  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.7\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
   embeddedScripts.set("modules/opuc/index.js", function () {
     // Cudloun module registration for OPUc on Kapybara.
     (function () {
@@ -4147,7 +4344,7 @@
         id: "opuc",
         name: "OPUc for Kapybara",
         description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-        version: "0.1.6",
+        version: "0.1.7",
         defaultEnabled: false,
         start(ctx) {
           if (!root.kapyguts?.isKapybara?.()) return null;

@@ -20,10 +20,12 @@
   if (!root) return;
   const runtime = root.opuc = root.opuc || {};
   const pending = new Map();
+  const preparedFiles = new WeakMap();
   let listening = false;
 
   runtime.popupBridge = {
     shouldUse,
+    prepare,
     upload,
   };
 
@@ -45,9 +47,12 @@
         return;
       }
 
+      const bytesPromise = prepare(file);
+      bytesPromise.catch(() => {});
       item = {
         id,
         file,
+        bytesPromise,
         sending: false,
         popup,
         resolve,
@@ -116,35 +121,115 @@
     if (item.sending) return;
     item.sending = true;
     try {
-      const bytes = await readFileBytes(item.file);
+      const bytes = await item.bytesPromise;
       if (!pending.has(item.id)) return;
+      const outgoing = bytes.slice(0);
       item.popup.postMessage({
         type: MESSAGE_TYPE,
         action: "upload",
         id: item.id,
-        bytes,
+        bytes: outgoing,
         name: String(item.file.name || "image"),
         mime: String(item.file.type || "application/octet-stream"),
-      }, OPU_ORIGIN, [bytes]);
-    } catch (_error) {
-      settle(item.id, new Error("Firefox could not read the selected image for the OPU handoff."));
+      }, OPU_ORIGIN, [outgoing]);
+    } catch (error) {
+      settle(item.id, error instanceof Error
+        ? error
+        : new Error("Firefox could not read the selected image for the OPU handoff."));
     }
   }
 
+  function prepare(file) {
+    if (!file || (typeof file !== "object" && typeof file !== "function")) {
+      return Promise.reject(new Error("Firefox did not expose the selected image file."));
+    }
+    const cached = preparedFiles.get(file);
+    if (cached) return cached;
+
+    const promise = readFileBytes(file)
+      .then((bytes) => {
+        if (!isArrayBuffer(bytes) || !bytes.byteLength) {
+          throw new Error("Firefox returned an empty image during the OPU handoff.");
+        }
+        return bytes;
+      })
+      .catch((error) => {
+        preparedFiles.delete(file);
+        throw error;
+      });
+    preparedFiles.set(file, promise);
+    return promise;
+  }
+
   async function readFileBytes(file) {
+    const failures = [];
     if (typeof file.arrayBuffer === "function") {
       try {
         return await file.arrayBuffer();
-      } catch (_error) {
-        // Some Firefox userscript compartments expose but cannot call it.
+      } catch (error) {
+        failures.push(["arrayBuffer", error]);
       }
     }
+
+    try {
+      return await readWithFileReader(file, "array-buffer");
+    } catch (error) {
+      failures.push(["FileReader", error]);
+    }
+
+    let objectUrl = "";
+    try {
+      objectUrl = URL.createObjectURL(file);
+      const response = await fetch(objectUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.arrayBuffer();
+    } catch (error) {
+      failures.push(["object URL", error]);
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }
+
+    try {
+      const dataUrl = await readWithFileReader(file, "data-url");
+      return dataUrlBytes(dataUrl);
+    } catch (error) {
+      failures.push(["data URL", error]);
+    }
+
+    const detail = failures.map(([method, error]) => `${method}: ${safeErrorName(error)}`).join("; ");
+    throw new Error(`Firefox could not read the selected image for the OPU handoff${detail ? ` (${detail})` : ""}.`);
+  }
+
+  function readWithFileReader(file, mode) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.addEventListener("load", () => resolve(reader.result));
       reader.addEventListener("error", () => reject(reader.error || new Error("FileReader failed.")));
-      reader.readAsArrayBuffer(file);
+      reader.addEventListener("abort", () => reject(new Error("FileReader aborted.")));
+      if (mode === "data-url") reader.readAsDataURL(file);
+      else reader.readAsArrayBuffer(file);
     });
+  }
+
+  function dataUrlBytes(value) {
+    const source = String(value || "");
+    const comma = source.indexOf(",");
+    if (comma < 0 || !/;base64$/i.test(source.slice(0, comma))) {
+      throw new Error("FileReader returned an invalid data URL.");
+    }
+    const binary = atob(source.slice(comma + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes.buffer;
+  }
+
+  function isArrayBuffer(value) {
+    return value instanceof ArrayBuffer || Object.prototype.toString.call(value) === "[object ArrayBuffer]";
+  }
+
+  function safeErrorName(error) {
+    const name = String(error?.name || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+    return name || "Error";
   }
 
   function settle(id, error, value) {

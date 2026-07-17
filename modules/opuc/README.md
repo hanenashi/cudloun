@@ -76,6 +76,15 @@ selected image into an `ArrayBuffer`, transfers those raw bytes to the OPU tab,
 sanitizes the filename, and constructs a new OPU-realm `File`. Only that local
 File is assigned to OPU's native file input.
 
+## Android Greasemonkey file preparation in Cudloun 0.6.7
+
+Firefox for Android may expose a selected file through Greasemonkey only while
+the originating native input remains attached to it. Cudloun now begins byte
+preparation immediately after selection, retains the input value until that
+preparation succeeds, and caches the bytes for the later first-party OPU
+handoff. It tries `Blob.arrayBuffer()`, `FileReader`, an object-URL fetch, and a
+data-URL conversion in order. Failures report only safe reader/error names.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

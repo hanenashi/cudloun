@@ -118,6 +118,62 @@ test("Firefox selects the first-party OPU popup transport", () => {
   assert.equal(context.window.Cudloun.opuc.popupBridge.shouldUse(), false);
 });
 
+test("Firefox prepares selected bytes once and reuses the cached result", async () => {
+  const context = runtimeContext();
+  context.window.location = { hostname: "kapybara.okoun.cz" };
+  context.window.navigator = { userAgent: "Mozilla/5.0 Firefox/142.0" };
+  load(context, "modules/opuc/popup-bridge.js");
+
+  let reads = 0;
+  const expected = new Uint8Array([1, 2, 3, 4]).buffer;
+  const file = {
+    async arrayBuffer() {
+      reads += 1;
+      return expected;
+    },
+  };
+  const bridge = context.window.Cudloun.opuc.popupBridge;
+  const [first, second] = await Promise.all([bridge.prepare(file), bridge.prepare(file)]);
+
+  assert.equal(reads, 1);
+  assert.equal(first.byteLength, 4);
+  assert.equal(second, first);
+});
+
+test("Firefox preparation falls back to reading the selected file through an object URL", async () => {
+  const context = runtimeContext();
+  context.window.location = { hostname: "kapybara.okoun.cz" };
+  context.window.navigator = { userAgent: "Mozilla/5.0 Android Firefox/142.0" };
+  context.URL = class FakeURL extends URL {
+    static createObjectURL() { return "blob:greasemonkey-file"; }
+    static revokeObjectURL() {}
+  };
+  context.FileReader = class FailingFileReader {
+    addEventListener() {}
+    readAsArrayBuffer() {
+      const error = new Error("blocked");
+      error.name = "NotReadableError";
+      throw error;
+    }
+  };
+  const expected = new Uint8Array([5, 6, 7]).buffer;
+  context.fetch = async (url) => {
+    assert.equal(url, "blob:greasemonkey-file");
+    return { ok: true, arrayBuffer: async () => expected };
+  };
+  load(context, "modules/opuc/popup-bridge.js");
+
+  const file = {
+    async arrayBuffer() {
+      const error = new Error("blocked");
+      error.name = "SecurityError";
+      throw error;
+    },
+  };
+  const bytes = await context.window.Cudloun.opuc.popupBridge.prepare(file);
+  assert.equal(bytes.byteLength, 3);
+});
+
 test("OPU client delegates Firefox uploads before starting a GM request", () => {
   const context = runtimeContext();
   const expected = { promise: Promise.resolve("popup"), abort() {} };

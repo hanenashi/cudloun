@@ -96,6 +96,12 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.7 TL;DR
+
+- Firefox prepares selected image bytes while the native file input is still
+  attached, avoiding Android Greasemonkey's detached-file limitation.
+- Added FileReader, object-URL, and data-URL fallbacks with safe error names.
+
 ## Version 0.6.6 TL;DR
 
 - Firefox now transfers raw bytes to OPU and reconstructs a fresh OPU-realm

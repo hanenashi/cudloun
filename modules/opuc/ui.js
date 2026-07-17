@@ -114,7 +114,10 @@
     };
 
     const onFileChange = () => selectFile(view, input.files?.[0] || null);
-    const onClear = () => session.clear();
+    const onClear = () => {
+      input.value = "";
+      session.clear();
+    };
     const onUpload = () => {
       if (session.status === "uploading") session.request?.abort?.();
       else uploadFile(view);
@@ -134,15 +137,39 @@
   }
 
   function selectFile(view, file) {
-    view.input.value = "";
     if (!file) return;
     try {
       const maxMb = validMaxMb(ctxRef?.storage.get("maxUploadMb", 25));
       runtime.imagePipeline.validateFile(file, maxMb * 1024 * 1024);
       view.session.setFile(file);
+      prepareFirefoxFile(view, file);
     } catch (error) {
+      view.input.value = "";
       view.session.update({ status: "error", message: safeMessage(error), progress: 0 });
     }
+  }
+
+  function prepareFirefoxFile(view, file) {
+    const bridge = runtime.popupBridge;
+    if (!bridge?.shouldUse?.()) {
+      view.input.value = "";
+      return;
+    }
+
+    const session = view.session;
+    session.update({ status: "preparing", message: "Preparing image for Firefox…", progress: 0 });
+    bridge.prepare(file)
+      .then(() => {
+        if (session.disposed || session.file !== file) return;
+        view.input.value = "";
+        if (session.status === "preparing") {
+          session.update({ status: "ready", message: "Ready to upload.", progress: 0 });
+        }
+      })
+      .catch((error) => {
+        if (session.disposed || session.file !== file) return;
+        session.update({ status: "error", message: safeMessage(error), progress: 0 });
+      });
   }
 
   async function uploadFile(view) {
@@ -192,7 +219,7 @@
     view.fileInfo.textContent = hasFile ? `${info.name} · ${info.sizeText}` : "No image selected";
     view.status.textContent = session.message || loginMessage();
     view.clear.disabled = session.status === "uploading" || session.status === "inserting";
-    view.upload.disabled = !hasFile || session.status === "inserting" || session.status === "success";
+    view.upload.disabled = !hasFile || session.status === "preparing" || session.status === "inserting" || session.status === "success";
     view.upload.textContent = session.status === "uploading" ? "Cancel upload" : session.status === "error" ? "Retry upload" : "Upload to OPU";
   }
 
