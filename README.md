@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.6 TL;DR
+
+- Firefox now transfers raw bytes to OPU and reconstructs a fresh OPU-realm
+  `File` before populating the native form.
+- This avoids cross-compartment `File` wrappers that Firefox may accept as a
+  Blob but silently omit from multipart form submission.
+
 ## Version 0.6.5 TL;DR
 
 - Firefox now submits OPU's own native upload form inside the first-party tab

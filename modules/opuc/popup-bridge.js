@@ -48,6 +48,7 @@
       item = {
         id,
         file,
+        sending: false,
         popup,
         resolve,
         reject,
@@ -88,7 +89,7 @@
     if (!item || event.source !== item.popup) return;
 
     if (event.data.action === "ready") {
-      item.popup.postMessage({ type: MESSAGE_TYPE, action: "upload", id, file: item.file }, OPU_ORIGIN);
+      sendFileBytes(item);
       return;
     }
     if (event.data.action === "progress") {
@@ -109,6 +110,41 @@
       return;
     }
     settle(id, new Error(String(event.data.error || "OPU did not return an image URL.")));
+  }
+
+  async function sendFileBytes(item) {
+    if (item.sending) return;
+    item.sending = true;
+    try {
+      const bytes = await readFileBytes(item.file);
+      if (!pending.has(item.id)) return;
+      item.popup.postMessage({
+        type: MESSAGE_TYPE,
+        action: "upload",
+        id: item.id,
+        bytes,
+        name: String(item.file.name || "image"),
+        mime: String(item.file.type || "application/octet-stream"),
+      }, OPU_ORIGIN, [bytes]);
+    } catch (_error) {
+      settle(item.id, new Error("Firefox could not read the selected image for the OPU handoff."));
+    }
+  }
+
+  async function readFileBytes(file) {
+    if (typeof file.arrayBuffer === "function") {
+      try {
+        return await file.arrayBuffer();
+      } catch (_error) {
+        // Some Firefox userscript compartments expose but cannot call it.
+      }
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => resolve(reader.result));
+      reader.addEventListener("error", () => reject(reader.error || new Error("FileReader failed.")));
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   function settle(id, error, value) {
@@ -155,11 +191,14 @@
       }
       if (event.data.action !== "upload" || submitted) return;
       window.clearInterval(readyTimer);
-      const file = event.data.file;
-      if (!(file instanceof Blob) || !String(file.type || "").startsWith("image/")) {
+      const bytes = event.data.bytes;
+      const mime = String(event.data.mime || "");
+      if (!(bytes instanceof ArrayBuffer) || !bytes.byteLength || !mime.startsWith("image/")) {
         sendResult(id, "", "The OPU upload window did not receive a valid image file.");
         return;
       }
+      const name = safeFileName(event.data.name);
+      const file = new File([bytes], name, { type: mime });
       submitted = true;
       submitNativeOpuForm(id, file);
     });
@@ -210,7 +249,8 @@
 
   function completeNativeFormResult(id) {
     const url = extractDocumentUrl(document);
-    sendResult(id, url, url ? "" : "OPU's native result page did not contain an image URL.");
+    const route = `${window.location.pathname}${window.location.search}`.slice(0, 160);
+    sendResult(id, url, url ? "" : `OPU returned ${route || "/"} without an image URL.`);
   }
 
   function sendResult(id, url, error) {
@@ -251,6 +291,14 @@
 
   function validRequestId(value) {
     return /^[a-z0-9_-]{12,80}$/i.test(String(value || ""));
+  }
+
+  function safeFileName(value) {
+    const name = String(value || "image")
+      .replace(/[\\/\x00-\x1f\x7f]+/g, "_")
+      .trim()
+      .slice(0, 180);
+    return name || "image";
   }
 
   function abortError() {

@@ -68,6 +68,14 @@ and submits that native form to itself. OPU performs its ordinary navigation to
 the reloaded OPU-side bridge to validate the rendered result URL and return it
 to the matching Kapybara opener.
 
+## Firefox File reconstruction in Cudloun 0.6.6
+
+Firefox userscript compartments may expose a cross-window File as a Blob while
+silently omitting it from a native multipart submission. Cudloun now reads the
+selected image into an `ArrayBuffer`, transfers those raw bytes to the OPU tab,
+sanitizes the filename, and constructs a new OPU-realm `File`. Only that local
+File is assigned to OPU's native file input.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new
