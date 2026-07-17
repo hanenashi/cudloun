@@ -151,6 +151,12 @@
 
   function prepareFirefoxFile(view, file) {
     const bridge = runtime.popupBridge;
+    const unsupported = bridge?.unsupportedReason?.();
+    if (unsupported) {
+      view.input.value = "";
+      view.session.update({ status: "error", message: unsupported, progress: 0 });
+      return;
+    }
     if (!bridge?.shouldUse?.()) {
       view.input.value = "";
       return;

@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.8 TL;DR
+
+- Firefox uses the first-party OPU tab only under Tampermonkey; Greasemonkey
+  receives an explicit unsupported-manager message.
+- Kiwi and other Chromium browsers again use the original single-request OPU
+  upload path without Firefox cookie/session overrides.
+
 ## Version 0.6.7 TL;DR
 
 - Firefox prepares selected image bytes while the native file input is still

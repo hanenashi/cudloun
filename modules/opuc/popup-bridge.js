@@ -24,13 +24,36 @@
   let listening = false;
 
   runtime.popupBridge = {
+    managerName,
     shouldUse,
+    unsupportedReason,
     prepare,
     upload,
   };
 
   function shouldUse() {
+    return isFirefox() && /tampermonkey/i.test(managerName());
+  }
+
+  function unsupportedReason() {
+    if (!isFirefox() || shouldUse()) return "";
+    const manager = managerName();
+    const managerHint = manager ? ` ${manager} is not supported for this upload path.` : " The active userscript manager could not be identified.";
+    return `Firefox OPU uploads require Tampermonkey.${managerHint} Disable Cudloun in Greasemonkey and install it in Tampermonkey.`;
+  }
+
+  function isFirefox() {
     return /\bFirefox\/\d/i.test(String(window.navigator?.userAgent || ""));
+  }
+
+  function managerName() {
+    try {
+      if (typeof GM_info !== "undefined" && GM_info?.scriptHandler) return String(GM_info.scriptHandler);
+    } catch (_error) {}
+    try {
+      if (typeof GM !== "undefined" && GM?.info?.scriptHandler) return String(GM.info.scriptHandler);
+    } catch (_error) {}
+    return "";
   }
 
   function upload(file, options = {}) {

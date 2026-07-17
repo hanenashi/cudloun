@@ -85,6 +85,15 @@ preparation succeeds, and caches the bytes for the later first-party OPU
 handoff. It tries `Blob.arrayBuffer()`, `FileReader`, an object-URL fetch, and a
 data-URL conversion in order. Failures report only safe reader/error names.
 
+## Manager-specific transports in Cudloun 0.6.8
+
+The supported mobile routes are deliberately narrow: Firefox with Tampermonkey
+uses the first-party OPU tab, while Kiwi/Chromium uses the original direct
+`GM_xmlhttpRequest` multipart upload. Firefox with Greasemonkey is rejected
+before upload because its file and cookie compartments break both transports.
+The direct route no longer applies Firefox-only session preflights, cookie
+relays, cookie partitions, forced credentials, or result-page retries.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

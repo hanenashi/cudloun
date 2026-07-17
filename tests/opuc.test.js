@@ -107,15 +107,25 @@ test("OPU URL validation accepts only HTTPS image paths on the expected host", (
   assert.equal(client.validateOpuUrl("/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
 });
 
-test("Firefox selects the first-party OPU popup transport", () => {
+test("Firefox selects the popup only under Tampermonkey", () => {
   const context = runtimeContext();
   context.window.location = { hostname: "kapybara.okoun.cz" };
   context.window.navigator = { userAgent: "Mozilla/5.0 Firefox/141.0" };
+  context.GM_info = { scriptHandler: "Tampermonkey" };
   load(context, "modules/opuc/popup-bridge.js");
+  const bridge = context.window.Cudloun.opuc.popupBridge;
 
-  assert.equal(context.window.Cudloun.opuc.popupBridge.shouldUse(), true);
+  assert.equal(bridge.managerName(), "Tampermonkey");
+  assert.equal(bridge.shouldUse(), true);
+  assert.equal(bridge.unsupportedReason(), "");
+
+  context.GM_info.scriptHandler = "Greasemonkey";
+  assert.equal(bridge.shouldUse(), false);
+  assert.match(bridge.unsupportedReason(), /require Tampermonkey/i);
+
   context.window.navigator.userAgent = "Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36";
-  assert.equal(context.window.Cudloun.opuc.popupBridge.shouldUse(), false);
+  assert.equal(bridge.shouldUse(), false);
+  assert.equal(bridge.unsupportedReason(), "");
 });
 
 test("Firefox prepares selected bytes once and reuses the cached result", async () => {
@@ -193,6 +203,20 @@ test("OPU client delegates Firefox uploads before starting a GM request", () => 
   assert.equal(delegated, true);
 });
 
+test("OPU client rejects unsupported Firefox managers before uploading", async () => {
+  const context = runtimeContext();
+  context.window.Cudloun.opuc = {
+    popupBridge: {
+      unsupportedReason: () => "Firefox OPU uploads require Tampermonkey.",
+      shouldUse: () => false,
+    },
+  };
+  load(context, "modules/opuc/client.js");
+
+  const request = context.window.Cudloun.opuc.client.upload(new Blob(["png"], { type: "image/png" }));
+  await assert.rejects(request.promise, /require Tampermonkey/);
+});
+
 test("OPU response and thumbnail helpers preserve validated URLs", () => {
   const context = runtimeContext();
   load(context, "modules/opuc/client.js");
@@ -226,103 +250,34 @@ test("Firefox response variants normalize before OPU URL extraction", async () =
   assert.equal(client.extractUploadUrl(await client.responseBodyText({ response: html })), image);
 });
 
-test("OPU response cookie relay accepts only safe OPU cookie pairs", () => {
+test("Kiwi direct upload uses the original single POST request", async () => {
   const context = runtimeContext();
   load(context, "modules/opuc/client.js");
   const client = context.window.Cudloun.opuc.client;
-
-  assert.equal(
-    client.extractResponseCookies([
-      "date: Fri, 17 Jul 2026 03:00:00 GMT",
-      "set-cookie: opu260706=safe_session-123; path=/; secure; HttpOnly",
-      "set-cookie: unrelated=ignored; path=/",
-      "set-cookie: opu260706=duplicate-ignored; path=/",
-    ].join("\r\n")),
-    "opu260706=safe_session-123"
-  );
-  assert.equal(client.extractResponseCookies("set-cookie: opu260706=bad value; path=/"), "");
-});
-
-test("upload establishes a credentialed OPU session before posting", async () => {
-  const context = runtimeContext();
-  load(context, "modules/opuc/client.js");
-  const client = context.window.Cudloun.opuc.client;
-  const image = "https://opu.peklo.biz/p/12/34/56/firefox-upload.png";
+  const image = "https://opu.peklo.biz/p/12/34/56/kiwi-upload.png";
   const requests = [];
   context.GM_xmlhttpRequest = (details) => {
     requests.push(details);
-    if (details.method === "GET") {
-      details.onload({
-        status: 200,
-        response: "<html>OPU</html>",
-        responseHeaders: "set-cookie: opu260706=firefox_session; path=/; secure; HttpOnly",
-        finalUrl: "https://opu.peklo.biz/",
-      });
-    } else {
-      details.onload({
-        status: 200,
-        responseText: undefined,
-        response: `<input id="link_1" value="${image}">`,
-        finalUrl: "https://opu.peklo.biz/?page=done",
-      });
-    }
+    details.onload({
+      status: 200,
+      responseText: `<input id="link_1" value="${image}">`,
+      finalUrl: "https://opu.peklo.biz/?page=done",
+    });
     return { abort() {} };
   };
 
   const request = client.upload(new Blob(["png"], { type: "image/png" }));
   assert.equal(await request.promise, image);
-  assert.deepEqual(requests.map(({ method }) => method), ["GET", "POST"]);
-  requests.forEach((details) => {
-    assert.equal(details.anonymous, false);
-    assert.equal(details.withCredentials, true);
-    assert.equal(details.responseType, "text");
-    assert.equal(details.cookiePartition.topLevelSite, "https://opu.peklo.biz");
-  });
-  assert.equal(requests[1].cookie, "opu260706=firefox_session");
-  assert.equal(requests[1].headers.Cookie, "opu260706=firefox_session");
-});
-
-test("upload recovers Firefox's session-backed result after a blank redirect page", async () => {
-  const context = runtimeContext();
-  load(context, "modules/opuc/client.js");
-  const client = context.window.Cudloun.opuc.client;
-  const image = "https://opu.peklo.biz/p/26/07/17/firefox-recovered.png";
-  const requests = [];
-  const requestDetails = [];
-  context.GM_xmlhttpRequest = (details) => {
-    requests.push(`${details.method} ${details.url}`);
-    requestDetails.push(details);
-    if (details.method === "POST") {
-      details.onload({
-        status: 200,
-        response: '<form id="xpc"><input name="obrazek[0]" type="file"></form>',
-        finalUrl: "https://opu.peklo.biz/",
-      });
-    } else if (details.url.includes("page=done")) {
-      details.onload({
-        status: 200,
-        response: `<input id="html_0" value="${image}">`,
-        finalUrl: "https://opu.peklo.biz/?page=done",
-      });
-    } else {
-      details.onload({
-        status: 200,
-        response: "<html>OPU</html>",
-        responseHeaders: "set-cookie: opu260706=recovery_session; path=/; secure; HttpOnly",
-        finalUrl: details.url,
-      });
-    }
-    return { abort() {} };
-  };
-
-  assert.equal(await client.upload(new Blob(["png"], { type: "image/png" })).promise, image);
-  assert.deepEqual(requests, [
-    "GET https://opu.peklo.biz/",
-    "POST https://opu.peklo.biz/opupload.php",
-    "GET https://opu.peklo.biz/?page=done",
-  ]);
-  assert.equal(requestDetails[1].headers.Cookie, "opu260706=recovery_session");
-  assert.equal(requestDetails[2].headers.Cookie, "opu260706=recovery_session");
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].method, "POST");
+  assert.equal(requests[0].url, "https://opu.peklo.biz/opupload.php");
+  assert.equal(requests[0].data.get("sizep"), "0");
+  assert.equal(requests[0].data.get("outputf"), "auto");
+  assert.equal(requests[0].data.get("tl_odeslat"), "Odeslat");
+  assert.equal("anonymous" in requests[0], false);
+  assert.equal("withCredentials" in requests[0], false);
+  assert.equal("cookiePartition" in requests[0], false);
+  assert.equal("responseType" in requests[0], false);
 });
 
 test("image validation enforces MIME, emptiness, and configured byte limit", () => {
