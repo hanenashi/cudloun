@@ -94,6 +94,14 @@ before upload because its file and cookie compartments break both transports.
 The direct route no longer applies Firefox-only session preflights, cookie
 relays, cookie partitions, forced credentials, or result-page retries.
 
+## Live Kapybara insertion in Cudloun 0.6.9
+
+Kapybara may replace a composer's React-owned toolbar while OPU upload is in
+progress. Cudloun now re-resolves the originating composer's current native
+image button immediately before insertion. The adapter recognizes desktop
+dialogs and mobile bottom sheets, accepts tab controls implemented as tabs or
+buttons, and re-finds the active surface after each React rerender.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

@@ -77,29 +77,36 @@
     if (!parts?.section?.isConnected) throw new Error("The originating Kapybara composer was closed.");
     const validated = runtime.client.validateOpuUrl(imageUrl);
     if (!validated) throw new Error("OPU returned an invalid image URL.");
+    const liveParts = root.kapyguts?.composerParts?.(parts.section) || parts;
+    const imageButton = liveParts?.imageButton?.isConnected ? liveParts.imageButton : null;
+    if (!imageButton) throw new Error("Kapybara's current image button was not found.");
 
     const existingCount = Array.from(parts.section.querySelectorAll("img"))
       .filter((image) => image.src === validated).length;
 
-    parts.imageButton.click();
-    const dialog = await waitFor(findImageDialog, 5000, "Kapybara's image dialog did not open.");
-    const urlTab = findControlByText(dialog, '[role="tab"]', "Z URL");
+    root.log?.debug?.("opuc", "opening native image flow", {
+      composerKind: liveParts.kind || parts.kind || "unknown",
+      refreshedButton: imageButton !== parts.imageButton,
+    });
+    imageButton.click();
+    const surface = await waitFor(findImageSurface, 7000, "Kapybara's image dialog did not open.");
+    const urlTab = findImageUrlControl(surface);
     if (!urlTab) throw new Error("Kapybara's URL image tab was not found.");
     urlTab.click();
 
     const input = await waitFor(
-      () => dialog.querySelector('input[type="url"]'),
-      3000,
+      () => findImageUrlInput(currentImageSurface(surface)),
+      5000,
       "Kapybara's image URL field was not found."
     );
     setInputValue(input, validated);
 
     const insert = await waitFor(
       () => {
-        const control = findControlByText(dialog, "button", "Vložit");
+        const control = findInsertControl(currentImageSurface(surface));
         return control && !control.disabled ? control : null;
       },
-      3000,
+      5000,
       "Kapybara did not enable image insertion."
     );
     insert.click();
@@ -110,7 +117,7 @@
       5000,
       "Kapybara did not confirm the inserted OPU image."
     );
-    parts.editable?.focus();
+    (root.kapyguts?.composerParts?.(parts.section)?.editable || parts.editable)?.focus();
     return validated;
   }
 
@@ -124,15 +131,76 @@
     row.style.setProperty("--cudloun-opuc-launcher-offset", `${safe}px`);
   }
 
-  function findImageDialog() {
-    return Array.from(document.querySelectorAll('[role="dialog"]'))
-      .filter(isVisible)
-      .find((dialog) => findControlByText(dialog, '[role="tab"]', "Z URL")) || null;
+  function findImageSurface() {
+    const controls = visibleControls(document)
+      .filter((control) => isImageUrlLabel(control.textContent));
+    for (const control of controls) {
+      const structural = control.closest([
+        '[role="dialog"]',
+        '[role="menu"]',
+        ".bottom-sheet",
+        "[class*='sheet']",
+        "[class*='dialog']",
+      ].join(","));
+      if (structural && isVisible(structural)) return structural;
+
+      let ancestor = control.parentElement;
+      while (ancestor && ancestor !== document.body) {
+        if (isVisible(ancestor) && imageOptionCount(ancestor) >= 2) return ancestor;
+        ancestor = ancestor.parentElement;
+      }
+      if (control.parentElement && isVisible(control.parentElement)) return control.parentElement;
+    }
+    return null;
   }
 
-  function findControlByText(scope, selector, text) {
-    return Array.from(scope.querySelectorAll(selector))
-      .find((node) => cleanText(node.textContent) === text) || null;
+  function currentImageSurface(fallback) {
+    return findImageSurface() || (fallback?.isConnected ? fallback : document);
+  }
+
+  function findImageUrlControl(scope) {
+    return visibleControls(scope)
+      .find((node) => isImageUrlLabel(node.textContent)) || null;
+  }
+
+  function findImageUrlInput(scope) {
+    const selectors = [
+      'input[type="url"]',
+      'input[inputmode="url"]',
+      'input[name*="url" i]',
+      'input[placeholder*="http" i]',
+    ];
+    for (const selector of selectors) {
+      const input = Array.from(scope.querySelectorAll(selector)).find(isVisible);
+      if (input) return input;
+    }
+    return Array.from(scope.querySelectorAll('input[type="text"], input:not([type])')).find(isVisible) || null;
+  }
+
+  function findInsertControl(scope) {
+    return visibleControls(scope)
+      .find((node) => isInsertLabel(node.textContent)) || null;
+  }
+
+  function visibleControls(scope) {
+    return Array.from(scope.querySelectorAll('button, [role="tab"], [role="button"]')).filter(isVisible);
+  }
+
+  function imageOptionCount(scope) {
+    const labels = visibleControls(scope).map((node) => cleanText(node.textContent));
+    return [
+      labels.some((label) => /^(ze souboru|soubor)$/i.test(label)),
+      labels.some((label) => /^(z mých obrázků|moje obrázky)$/i.test(label)),
+      labels.some(isImageUrlLabel),
+    ].filter(Boolean).length;
+  }
+
+  function isImageUrlLabel(value) {
+    return /^(z url|url|z odkazu|odkaz)$/i.test(cleanText(value));
+  }
+
+  function isInsertLabel(value) {
+    return /^(vložit|vložit obrázek|přidat|potvrdit)$/i.test(cleanText(value));
   }
 
   function setInputValue(input, value) {

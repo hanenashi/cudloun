@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.9 TL;DR
+
+- OPUc re-resolves Kapybara's live composer toolbar after upload instead of
+  clicking a stale React-owned image button.
+- Native image insertion now recognizes dialogs, menus, and mobile bottom
+  sheets, and re-finds controls after Kapybara rerenders the image flow.
+
 ## Version 0.6.8 TL;DR
 
 - Firefox uses the first-party OPU tab only under Tampermonkey; Greasemonkey

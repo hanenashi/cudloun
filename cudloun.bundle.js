@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.8";
+  const VERSION = "0.6.9";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -430,7 +430,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.8\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.9\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -3696,7 +3696,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/kapybara-adapter.js", "// Kapybara composer discovery, launcher placement, and native image insertion.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const bindings = new Map();\n  let stopObserver = null;\n\n  runtime.adapter = {\n    start,\n    stop,\n    bindLauncher,\n    insertImageUrl,\n  };\n\n  function start(onComposer, onRemoved) {\n    stop();\n    stopObserver = root.kapyguts.observeComposers(\n      (parts) => onComposer(parts),\n      document.body,\n      (parts) => {\n        bindings.get(parts.section)?.remove();\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      }\n    );\n    return stop;\n  }\n\n  function stop() {\n    stopObserver?.();\n    stopObserver = null;\n    Array.from(bindings.values()).forEach((binding) => binding.remove());\n    bindings.clear();\n  }\n\n  function bindLauncher(parts, onClick) {\n    if (bindings.has(parts.section)) return bindings.get(parts.section);\n\n    const row = document.createElement(\"div\");\n    row.className = \"cudloun-opuc-launcher-row\";\n    row.dataset.composerKind = parts.kind;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-launcher\";\n    button.setAttribute(\"aria-label\", \"OPUc upload\");\n    button.title = \"Upload an image through OPUc\";\n    button.textContent = \"OPUc\";\n    button.addEventListener(\"click\", onClick);\n    row.appendChild(button);\n    parts.toolbarSlot.insertAdjacentElement(\"afterend\", row);\n\n    const align = () => alignBelowImageButton(parts, row);\n    window.requestAnimationFrame(align);\n    const resizeObserver = typeof ResizeObserver === \"function\" ? new ResizeObserver(align) : null;\n    resizeObserver?.observe(parts.toolbarSlot);\n    window.addEventListener(\"resize\", align);\n\n    const binding = {\n      parts,\n      row,\n      button,\n      remove() {\n        resizeObserver?.disconnect();\n        window.removeEventListener(\"resize\", align);\n        button.removeEventListener(\"click\", onClick);\n        row.remove();\n        bindings.delete(parts.section);\n      },\n    };\n    bindings.set(parts.section, binding);\n    return binding;\n  }\n\n  async function insertImageUrl(parts, imageUrl) {\n    if (!parts?.section?.isConnected) throw new Error(\"The originating Kapybara composer was closed.\");\n    const validated = runtime.client.validateOpuUrl(imageUrl);\n    if (!validated) throw new Error(\"OPU returned an invalid image URL.\");\n\n    const existingCount = Array.from(parts.section.querySelectorAll(\"img\"))\n      .filter((image) => image.src === validated).length;\n\n    parts.imageButton.click();\n    const dialog = await waitFor(findImageDialog, 5000, \"Kapybara's image dialog did not open.\");\n    const urlTab = findControlByText(dialog, '[role=\"tab\"]', \"Z URL\");\n    if (!urlTab) throw new Error(\"Kapybara's URL image tab was not found.\");\n    urlTab.click();\n\n    const input = await waitFor(\n      () => dialog.querySelector('input[type=\"url\"]'),\n      3000,\n      \"Kapybara's image URL field was not found.\"\n    );\n    setInputValue(input, validated);\n\n    const insert = await waitFor(\n      () => {\n        const control = findControlByText(dialog, \"button\", \"Vložit\");\n        return control && !control.disabled ? control : null;\n      },\n      3000,\n      \"Kapybara did not enable image insertion.\"\n    );\n    insert.click();\n\n    await waitFor(\n      () => Array.from(parts.section.querySelectorAll(\"img\"))\n        .filter((image) => image.src === validated).length > existingCount,\n      5000,\n      \"Kapybara did not confirm the inserted OPU image.\"\n    );\n    parts.editable?.focus();\n    return validated;\n  }\n\n  function alignBelowImageButton(parts, row) {\n    if (!row.isConnected || !parts.imageButton?.isConnected || !parts.toolbarSlot?.isConnected) return;\n    const slotRect = parts.toolbarSlot.getBoundingClientRect();\n    const imageRect = parts.imageButton.getBoundingClientRect();\n    const rowWidth = row.getBoundingClientRect().width;\n    const desired = Math.max(0, Math.round(imageRect.left - slotRect.left));\n    const safe = desired + 64 < rowWidth ? desired : 0;\n    row.style.setProperty(\"--cudloun-opuc-launcher-offset\", `${safe}px`);\n  }\n\n  function findImageDialog() {\n    return Array.from(document.querySelectorAll('[role=\"dialog\"]'))\n      .filter(isVisible)\n      .find((dialog) => findControlByText(dialog, '[role=\"tab\"]', \"Z URL\")) || null;\n  }\n\n  function findControlByText(scope, selector, text) {\n    return Array.from(scope.querySelectorAll(selector))\n      .find((node) => cleanText(node.textContent) === text) || null;\n  }\n\n  function setInputValue(input, value) {\n    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\")?.set;\n    if (setter) setter.call(input, value);\n    else input.value = value;\n    input.dispatchEvent(new InputEvent(\"input\", { bubbles: true, inputType: \"insertText\", data: value }));\n    input.dispatchEvent(new Event(\"change\", { bubbles: true }));\n  }\n\n  function waitFor(probe, timeout, message) {\n    const started = Date.now();\n    return new Promise((resolve, reject) => {\n      const check = () => {\n        try {\n          const result = probe();\n          if (result) {\n            resolve(result);\n            return;\n          }\n        } catch (_error) {\n          // Retry until timeout so transient rerenders do not fail insertion.\n        }\n        if (Date.now() - started >= timeout) {\n          reject(new Error(message));\n          return;\n        }\n        window.setTimeout(check, 50);\n      };\n      check();\n    });\n  }\n\n  function isVisible(node) {\n    const rect = node.getBoundingClientRect();\n    const style = window.getComputedStyle(node);\n    return rect.width > 0 && rect.height > 0 && style.display !== \"none\" && style.visibility !== \"hidden\";\n  }\n\n  function cleanText(value) {\n    return String(value || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedText.set("modules/opuc/kapybara-adapter.js", "// Kapybara composer discovery, launcher placement, and native image insertion.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const bindings = new Map();\n  let stopObserver = null;\n\n  runtime.adapter = {\n    start,\n    stop,\n    bindLauncher,\n    insertImageUrl,\n  };\n\n  function start(onComposer, onRemoved) {\n    stop();\n    stopObserver = root.kapyguts.observeComposers(\n      (parts) => onComposer(parts),\n      document.body,\n      (parts) => {\n        bindings.get(parts.section)?.remove();\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      }\n    );\n    return stop;\n  }\n\n  function stop() {\n    stopObserver?.();\n    stopObserver = null;\n    Array.from(bindings.values()).forEach((binding) => binding.remove());\n    bindings.clear();\n  }\n\n  function bindLauncher(parts, onClick) {\n    if (bindings.has(parts.section)) return bindings.get(parts.section);\n\n    const row = document.createElement(\"div\");\n    row.className = \"cudloun-opuc-launcher-row\";\n    row.dataset.composerKind = parts.kind;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-opuc-launcher\";\n    button.setAttribute(\"aria-label\", \"OPUc upload\");\n    button.title = \"Upload an image through OPUc\";\n    button.textContent = \"OPUc\";\n    button.addEventListener(\"click\", onClick);\n    row.appendChild(button);\n    parts.toolbarSlot.insertAdjacentElement(\"afterend\", row);\n\n    const align = () => alignBelowImageButton(parts, row);\n    window.requestAnimationFrame(align);\n    const resizeObserver = typeof ResizeObserver === \"function\" ? new ResizeObserver(align) : null;\n    resizeObserver?.observe(parts.toolbarSlot);\n    window.addEventListener(\"resize\", align);\n\n    const binding = {\n      parts,\n      row,\n      button,\n      remove() {\n        resizeObserver?.disconnect();\n        window.removeEventListener(\"resize\", align);\n        button.removeEventListener(\"click\", onClick);\n        row.remove();\n        bindings.delete(parts.section);\n      },\n    };\n    bindings.set(parts.section, binding);\n    return binding;\n  }\n\n  async function insertImageUrl(parts, imageUrl) {\n    if (!parts?.section?.isConnected) throw new Error(\"The originating Kapybara composer was closed.\");\n    const validated = runtime.client.validateOpuUrl(imageUrl);\n    if (!validated) throw new Error(\"OPU returned an invalid image URL.\");\n    const liveParts = root.kapyguts?.composerParts?.(parts.section) || parts;\n    const imageButton = liveParts?.imageButton?.isConnected ? liveParts.imageButton : null;\n    if (!imageButton) throw new Error(\"Kapybara's current image button was not found.\");\n\n    const existingCount = Array.from(parts.section.querySelectorAll(\"img\"))\n      .filter((image) => image.src === validated).length;\n\n    root.log?.debug?.(\"opuc\", \"opening native image flow\", {\n      composerKind: liveParts.kind || parts.kind || \"unknown\",\n      refreshedButton: imageButton !== parts.imageButton,\n    });\n    imageButton.click();\n    const surface = await waitFor(findImageSurface, 7000, \"Kapybara's image dialog did not open.\");\n    const urlTab = findImageUrlControl(surface);\n    if (!urlTab) throw new Error(\"Kapybara's URL image tab was not found.\");\n    urlTab.click();\n\n    const input = await waitFor(\n      () => findImageUrlInput(currentImageSurface(surface)),\n      5000,\n      \"Kapybara's image URL field was not found.\"\n    );\n    setInputValue(input, validated);\n\n    const insert = await waitFor(\n      () => {\n        const control = findInsertControl(currentImageSurface(surface));\n        return control && !control.disabled ? control : null;\n      },\n      5000,\n      \"Kapybara did not enable image insertion.\"\n    );\n    insert.click();\n\n    await waitFor(\n      () => Array.from(parts.section.querySelectorAll(\"img\"))\n        .filter((image) => image.src === validated).length > existingCount,\n      5000,\n      \"Kapybara did not confirm the inserted OPU image.\"\n    );\n    (root.kapyguts?.composerParts?.(parts.section)?.editable || parts.editable)?.focus();\n    return validated;\n  }\n\n  function alignBelowImageButton(parts, row) {\n    if (!row.isConnected || !parts.imageButton?.isConnected || !parts.toolbarSlot?.isConnected) return;\n    const slotRect = parts.toolbarSlot.getBoundingClientRect();\n    const imageRect = parts.imageButton.getBoundingClientRect();\n    const rowWidth = row.getBoundingClientRect().width;\n    const desired = Math.max(0, Math.round(imageRect.left - slotRect.left));\n    const safe = desired + 64 < rowWidth ? desired : 0;\n    row.style.setProperty(\"--cudloun-opuc-launcher-offset\", `${safe}px`);\n  }\n\n  function findImageSurface() {\n    const controls = visibleControls(document)\n      .filter((control) => isImageUrlLabel(control.textContent));\n    for (const control of controls) {\n      const structural = control.closest([\n        '[role=\"dialog\"]',\n        '[role=\"menu\"]',\n        \".bottom-sheet\",\n        \"[class*='sheet']\",\n        \"[class*='dialog']\",\n      ].join(\",\"));\n      if (structural && isVisible(structural)) return structural;\n\n      let ancestor = control.parentElement;\n      while (ancestor && ancestor !== document.body) {\n        if (isVisible(ancestor) && imageOptionCount(ancestor) >= 2) return ancestor;\n        ancestor = ancestor.parentElement;\n      }\n      if (control.parentElement && isVisible(control.parentElement)) return control.parentElement;\n    }\n    return null;\n  }\n\n  function currentImageSurface(fallback) {\n    return findImageSurface() || (fallback?.isConnected ? fallback : document);\n  }\n\n  function findImageUrlControl(scope) {\n    return visibleControls(scope)\n      .find((node) => isImageUrlLabel(node.textContent)) || null;\n  }\n\n  function findImageUrlInput(scope) {\n    const selectors = [\n      'input[type=\"url\"]',\n      'input[inputmode=\"url\"]',\n      'input[name*=\"url\" i]',\n      'input[placeholder*=\"http\" i]',\n    ];\n    for (const selector of selectors) {\n      const input = Array.from(scope.querySelectorAll(selector)).find(isVisible);\n      if (input) return input;\n    }\n    return Array.from(scope.querySelectorAll('input[type=\"text\"], input:not([type])')).find(isVisible) || null;\n  }\n\n  function findInsertControl(scope) {\n    return visibleControls(scope)\n      .find((node) => isInsertLabel(node.textContent)) || null;\n  }\n\n  function visibleControls(scope) {\n    return Array.from(scope.querySelectorAll('button, [role=\"tab\"], [role=\"button\"]')).filter(isVisible);\n  }\n\n  function imageOptionCount(scope) {\n    const labels = visibleControls(scope).map((node) => cleanText(node.textContent));\n    return [\n      labels.some((label) => /^(ze souboru|soubor)$/i.test(label)),\n      labels.some((label) => /^(z mých obrázků|moje obrázky)$/i.test(label)),\n      labels.some(isImageUrlLabel),\n    ].filter(Boolean).length;\n  }\n\n  function isImageUrlLabel(value) {\n    return /^(z url|url|z odkazu|odkaz)$/i.test(cleanText(value));\n  }\n\n  function isInsertLabel(value) {\n    return /^(vložit|vložit obrázek|přidat|potvrdit)$/i.test(cleanText(value));\n  }\n\n  function setInputValue(input, value) {\n    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, \"value\")?.set;\n    if (setter) setter.call(input, value);\n    else input.value = value;\n    input.dispatchEvent(new InputEvent(\"input\", { bubbles: true, inputType: \"insertText\", data: value }));\n    input.dispatchEvent(new Event(\"change\", { bubbles: true }));\n  }\n\n  function waitFor(probe, timeout, message) {\n    const started = Date.now();\n    return new Promise((resolve, reject) => {\n      const check = () => {\n        try {\n          const result = probe();\n          if (result) {\n            resolve(result);\n            return;\n          }\n        } catch (_error) {\n          // Retry until timeout so transient rerenders do not fail insertion.\n        }\n        if (Date.now() - started >= timeout) {\n          reject(new Error(message));\n          return;\n        }\n        window.setTimeout(check, 50);\n      };\n      check();\n    });\n  }\n\n  function isVisible(node) {\n    const rect = node.getBoundingClientRect();\n    const style = window.getComputedStyle(node);\n    return rect.width > 0 && rect.height > 0 && style.display !== \"none\" && style.visibility !== \"hidden\";\n  }\n\n  function cleanText(value) {\n    return String(value || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
   embeddedScripts.set("modules/opuc/kapybara-adapter.js", function () {
     // Kapybara composer discovery, launcher placement, and native image insertion.
     (function () {
@@ -3777,29 +3777,36 @@
         if (!parts?.section?.isConnected) throw new Error("The originating Kapybara composer was closed.");
         const validated = runtime.client.validateOpuUrl(imageUrl);
         if (!validated) throw new Error("OPU returned an invalid image URL.");
+        const liveParts = root.kapyguts?.composerParts?.(parts.section) || parts;
+        const imageButton = liveParts?.imageButton?.isConnected ? liveParts.imageButton : null;
+        if (!imageButton) throw new Error("Kapybara's current image button was not found.");
 
         const existingCount = Array.from(parts.section.querySelectorAll("img"))
           .filter((image) => image.src === validated).length;
 
-        parts.imageButton.click();
-        const dialog = await waitFor(findImageDialog, 5000, "Kapybara's image dialog did not open.");
-        const urlTab = findControlByText(dialog, '[role="tab"]', "Z URL");
+        root.log?.debug?.("opuc", "opening native image flow", {
+          composerKind: liveParts.kind || parts.kind || "unknown",
+          refreshedButton: imageButton !== parts.imageButton,
+        });
+        imageButton.click();
+        const surface = await waitFor(findImageSurface, 7000, "Kapybara's image dialog did not open.");
+        const urlTab = findImageUrlControl(surface);
         if (!urlTab) throw new Error("Kapybara's URL image tab was not found.");
         urlTab.click();
 
         const input = await waitFor(
-          () => dialog.querySelector('input[type="url"]'),
-          3000,
+          () => findImageUrlInput(currentImageSurface(surface)),
+          5000,
           "Kapybara's image URL field was not found."
         );
         setInputValue(input, validated);
 
         const insert = await waitFor(
           () => {
-            const control = findControlByText(dialog, "button", "Vložit");
+            const control = findInsertControl(currentImageSurface(surface));
             return control && !control.disabled ? control : null;
           },
-          3000,
+          5000,
           "Kapybara did not enable image insertion."
         );
         insert.click();
@@ -3810,7 +3817,7 @@
           5000,
           "Kapybara did not confirm the inserted OPU image."
         );
-        parts.editable?.focus();
+        (root.kapyguts?.composerParts?.(parts.section)?.editable || parts.editable)?.focus();
         return validated;
       }
 
@@ -3824,15 +3831,76 @@
         row.style.setProperty("--cudloun-opuc-launcher-offset", `${safe}px`);
       }
 
-      function findImageDialog() {
-        return Array.from(document.querySelectorAll('[role="dialog"]'))
-          .filter(isVisible)
-          .find((dialog) => findControlByText(dialog, '[role="tab"]', "Z URL")) || null;
+      function findImageSurface() {
+        const controls = visibleControls(document)
+          .filter((control) => isImageUrlLabel(control.textContent));
+        for (const control of controls) {
+          const structural = control.closest([
+            '[role="dialog"]',
+            '[role="menu"]',
+            ".bottom-sheet",
+            "[class*='sheet']",
+            "[class*='dialog']",
+          ].join(","));
+          if (structural && isVisible(structural)) return structural;
+
+          let ancestor = control.parentElement;
+          while (ancestor && ancestor !== document.body) {
+            if (isVisible(ancestor) && imageOptionCount(ancestor) >= 2) return ancestor;
+            ancestor = ancestor.parentElement;
+          }
+          if (control.parentElement && isVisible(control.parentElement)) return control.parentElement;
+        }
+        return null;
       }
 
-      function findControlByText(scope, selector, text) {
-        return Array.from(scope.querySelectorAll(selector))
-          .find((node) => cleanText(node.textContent) === text) || null;
+      function currentImageSurface(fallback) {
+        return findImageSurface() || (fallback?.isConnected ? fallback : document);
+      }
+
+      function findImageUrlControl(scope) {
+        return visibleControls(scope)
+          .find((node) => isImageUrlLabel(node.textContent)) || null;
+      }
+
+      function findImageUrlInput(scope) {
+        const selectors = [
+          'input[type="url"]',
+          'input[inputmode="url"]',
+          'input[name*="url" i]',
+          'input[placeholder*="http" i]',
+        ];
+        for (const selector of selectors) {
+          const input = Array.from(scope.querySelectorAll(selector)).find(isVisible);
+          if (input) return input;
+        }
+        return Array.from(scope.querySelectorAll('input[type="text"], input:not([type])')).find(isVisible) || null;
+      }
+
+      function findInsertControl(scope) {
+        return visibleControls(scope)
+          .find((node) => isInsertLabel(node.textContent)) || null;
+      }
+
+      function visibleControls(scope) {
+        return Array.from(scope.querySelectorAll('button, [role="tab"], [role="button"]')).filter(isVisible);
+      }
+
+      function imageOptionCount(scope) {
+        const labels = visibleControls(scope).map((node) => cleanText(node.textContent));
+        return [
+          labels.some((label) => /^(ze souboru|soubor)$/i.test(label)),
+          labels.some((label) => /^(z mých obrázků|moje obrázky)$/i.test(label)),
+          labels.some(isImageUrlLabel),
+        ].filter(Boolean).length;
+      }
+
+      function isImageUrlLabel(value) {
+        return /^(z url|url|z odkazu|odkaz)$/i.test(cleanText(value));
+      }
+
+      function isInsertLabel(value) {
+        return /^(vložit|vložit obrázek|přidat|potvrdit)$/i.test(cleanText(value));
       }
 
       function setInputValue(input, value) {
@@ -4306,7 +4374,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.8\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"On Firefox, OPUc uploads require Tampermonkey; Greasemonkey is not supported. Kiwi uses Tampermonkey's direct upload path.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
+  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.9\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"On Firefox, OPUc uploads require Tampermonkey; Greasemonkey is not supported. Kiwi uses Tampermonkey's direct upload path.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
   embeddedScripts.set("modules/opuc/index.js", function () {
     // Cudloun module registration for OPUc on Kapybara.
     (function () {
@@ -4319,7 +4387,7 @@
         id: "opuc",
         name: "OPUc for Kapybara",
         description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-        version: "0.1.8",
+        version: "0.1.9",
         defaultEnabled: false,
         start(ctx) {
           if (!root.kapyguts?.isKapybara?.()) return null;
