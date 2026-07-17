@@ -9,7 +9,7 @@
     id: "opuc",
     name: "OPUc for Kapybara",
     description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-    version: "0.1.2",
+    version: "0.1.3",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;

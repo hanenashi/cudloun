@@ -133,6 +133,23 @@ test("Firefox response variants normalize before OPU URL extraction", async () =
   assert.equal(client.extractUploadUrl(await client.responseBodyText({ response: html })), image);
 });
 
+test("OPU response cookie relay accepts only safe OPU cookie pairs", () => {
+  const context = runtimeContext();
+  load(context, "modules/opuc/client.js");
+  const client = context.window.Cudloun.opuc.client;
+
+  assert.equal(
+    client.extractResponseCookies([
+      "date: Fri, 17 Jul 2026 03:00:00 GMT",
+      "set-cookie: opu260706=safe_session-123; path=/; secure; HttpOnly",
+      "set-cookie: unrelated=ignored; path=/",
+      "set-cookie: opu260706=duplicate-ignored; path=/",
+    ].join("\r\n")),
+    "opu260706=safe_session-123"
+  );
+  assert.equal(client.extractResponseCookies("set-cookie: opu260706=bad value; path=/"), "");
+});
+
 test("upload establishes a credentialed OPU session before posting", async () => {
   const context = runtimeContext();
   load(context, "modules/opuc/client.js");
@@ -142,7 +159,12 @@ test("upload establishes a credentialed OPU session before posting", async () =>
   context.GM_xmlhttpRequest = (details) => {
     requests.push(details);
     if (details.method === "GET") {
-      details.onload({ status: 200, response: "<html>OPU</html>", finalUrl: "https://opu.peklo.biz/" });
+      details.onload({
+        status: 200,
+        response: "<html>OPU</html>",
+        responseHeaders: "set-cookie: opu260706=firefox_session; path=/; secure; HttpOnly",
+        finalUrl: "https://opu.peklo.biz/",
+      });
     } else {
       details.onload({
         status: 200,
@@ -161,7 +183,10 @@ test("upload establishes a credentialed OPU session before posting", async () =>
     assert.equal(details.anonymous, false);
     assert.equal(details.withCredentials, true);
     assert.equal(details.responseType, "text");
+    assert.equal(details.cookiePartition.topLevelSite, "https://opu.peklo.biz");
   });
+  assert.equal(requests[1].cookie, "opu260706=firefox_session");
+  assert.equal(requests[1].headers.Cookie, "opu260706=firefox_session");
 });
 
 test("upload recovers Firefox's session-backed result after a blank redirect page", async () => {
@@ -170,8 +195,10 @@ test("upload recovers Firefox's session-backed result after a blank redirect pag
   const client = context.window.Cudloun.opuc.client;
   const image = "https://opu.peklo.biz/p/26/07/17/firefox-recovered.png";
   const requests = [];
+  const requestDetails = [];
   context.GM_xmlhttpRequest = (details) => {
     requests.push(`${details.method} ${details.url}`);
+    requestDetails.push(details);
     if (details.method === "POST") {
       details.onload({
         status: 200,
@@ -185,7 +212,12 @@ test("upload recovers Firefox's session-backed result after a blank redirect pag
         finalUrl: "https://opu.peklo.biz/?page=done",
       });
     } else {
-      details.onload({ status: 200, response: "<html>OPU</html>", finalUrl: details.url });
+      details.onload({
+        status: 200,
+        response: "<html>OPU</html>",
+        responseHeaders: "set-cookie: opu260706=recovery_session; path=/; secure; HttpOnly",
+        finalUrl: details.url,
+      });
     }
     return { abort() {} };
   };
@@ -196,6 +228,8 @@ test("upload recovers Firefox's session-backed result after a blank redirect pag
     "POST https://opu.peklo.biz/opupload.php",
     "GET https://opu.peklo.biz/?page=done",
   ]);
+  assert.equal(requestDetails[1].headers.Cookie, "opu260706=recovery_session");
+  assert.equal(requestDetails[2].headers.Cookie, "opu260706=recovery_session");
 });
 
 test("image validation enforces MIME, emptiness, and configured byte limit", () => {

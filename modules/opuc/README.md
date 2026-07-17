@@ -38,6 +38,16 @@ form instead of the result. OPUc now establishes a credentialed OPU session
 before posting, explicitly enables credentials on GM requests, and retries the
 session-backed result page once when the upload response contains no URL.
 
+## Firefox blocked-cookie compatibility in Cudloun 0.6.3
+
+When Firefox isolates the userscript manager's OPU cookie store, credential
+flags alone may not preserve the PHP session. OPUc now explicitly selects the
+`https://opu.peklo.biz` cookie partition. As a fallback, it extracts only safe
+OPU-prefixed cookie name/value pairs from OPU's privileged response headers,
+then supplies the pair explicitly to the upload and result requests. The cookie
+value is kept in the request closure and is never logged, stored, or included
+in error messages.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

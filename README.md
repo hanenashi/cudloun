@@ -96,6 +96,12 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.3 TL;DR
+
+- Added OPU-targeted cookie partitioning plus an explicit, host-scoped session
+  relay for Firefox userscript managers that isolate cross-site cookies.
+- OPU session tokens are never logged or included in errors.
+
 ## Version 0.6.2 TL;DR
 
 - Fixed OPU result recovery when Firefox loses OPU's session cookie while

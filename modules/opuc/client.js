@@ -15,6 +15,7 @@
     checkLoginStatus,
     upload,
     responseBodyText,
+    extractResponseCookies,
     extractUploadUrl,
     validateOpuUrl,
     getThumbUrl,
@@ -42,7 +43,9 @@
       // ?page=done. Firefox userscript managers can otherwise follow that
       // redirect before retaining its Set-Cookie header, yielding a blank
       // upload form instead of the result. Establish the session first.
-      await startRequest({ method: "GET", url: SESSION_URL, timeout: 20000 });
+      const session = await startRequest({ method: "GET", url: SESSION_URL, timeout: 20000 });
+      const sessionCookie = extractResponseCookies(safeResponseValue(session, "responseHeaders"));
+      const sessionRelay = cookieRelay(sessionCookie);
 
       const formData = new FormData();
       formData.append("obrazek[0]", file);
@@ -56,6 +59,7 @@
         data: formData,
         timeout: 120000,
         onprogress: options.onProgress,
+        ...sessionRelay,
       });
 
       if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);
@@ -66,7 +70,12 @@
       // after the redirect chain finishes. A separate request then sees the
       // session-backed result page and recovers the URL without re-uploading.
       if (!url) {
-        const result = await startRequest({ method: "GET", url: RESULT_URL, timeout: 20000 });
+        const result = await startRequest({
+          method: "GET",
+          url: RESULT_URL,
+          timeout: 20000,
+          ...sessionRelay,
+        });
         if (result.status === 200) {
           const resultBody = await responseBodyText(result);
           url = extractUploadUrl(resultBody) || validateOpuUrl(safeResponseValue(result, "finalUrl"));
@@ -75,7 +84,8 @@
 
       if (!url) {
         const responseHint = body ? `${body.length} response characters were checked` : "the response body was empty";
-        const pageHint = looksLikeUploadForm(body) ? " OPU returned its blank upload form, which usually means its session cookie was blocked." : "";
+        const relayHint = sessionCookie ? " The explicit OPU session relay was also rejected." : " The userscript manager did not expose OPU's session header for an explicit relay.";
+        const pageHint = looksLikeUploadForm(body) ? ` OPU returned its blank upload form.${relayHint}` : "";
         throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).${pageHint}`);
       }
       return url;
@@ -152,6 +162,29 @@
     return /<form\b[^>]*\bid=["']xpc["']/i.test(source) && /name=["']obrazek\[0\]["']/i.test(source);
   }
 
+  function extractResponseCookies(responseHeaders) {
+    const cookies = [];
+    const seen = new Set();
+    String(responseHeaders || "").split(/\r?\n/).forEach((line) => {
+      const match = line.match(/^set-cookie:\s*([A-Za-z0-9_]+)=([^;\s\x00-\x1f\x7f]+)(?:;|$)/i);
+      if (!match) return;
+      const name = match[1];
+      const value = match[2];
+      if (!/^opu[A-Za-z0-9_]*$/i.test(name) || seen.has(name.toLowerCase())) return;
+      seen.add(name.toLowerCase());
+      cookies.push(`${name}=${value}`);
+    });
+    return cookies.join("; ");
+  }
+
+  function cookieRelay(cookie) {
+    if (!cookie) return {};
+    return {
+      cookie,
+      headers: { Cookie: cookie },
+    };
+  }
+
   function extractCandidateUrl(value) {
     const text = String(value || "");
     const match = text.match(/(?:href|src)=["']([^"']+)["']/i);
@@ -200,6 +233,7 @@
         responseType: details.responseType || "text",
         anonymous: false,
         withCredentials: true,
+        cookiePartition: details.cookiePartition || { topLevelSite: "https://opu.peklo.biz" },
         onload(response) {
           if (settled) return;
           settled = true;
