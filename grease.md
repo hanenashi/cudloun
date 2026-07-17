@@ -203,6 +203,20 @@ can read an Android-selected file and preserve OPU's first-party result session
 under the exact current Firefox and Greasemonkey versions. Until both are
 demonstrated, Firefox Tampermonkey remains the supported solution.
 
+## Follow-up: Kapybara Markdown insertion experiment
+
+Cudloun 0.6.11 separates upload transport from editor insertion. After an OPU
+URL is validated, OPUc switches the originating Kapybara composer to its `<>`
+Markdown mode, inserts `![](OPU_URL)` through the Lexical contenteditable, and
+restores formatted mode when that was the user's original mode. This avoids
+Kapybara's native image dialog completely.
+
+The Greasemonkey direct request is re-enabled experimentally using the same
+multipart shape as OPUc Ultimate, while keeping the selected file input
+attached. There is still no automatic retry: an unreadable result could follow
+a successful OPU upload, so retrying through another transport might create a
+duplicate.
+
 ## Safety and validation notes
 
 - OPU URLs are accepted only from HTTPS `opu.peklo.biz/p/…` paths.

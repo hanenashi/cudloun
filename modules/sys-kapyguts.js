@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const SELECTORS = {
     boardPost: "article.post",
     avatarColumn: ".avatar-col",
@@ -31,6 +31,8 @@
     composerToolbarSlot: ".composer-toolbar-slot",
     composerToolbar: "[role='toolbar'][aria-label='Formátování textu']",
     composerImageButton: "button[aria-label='Vložit obrázek']",
+    composerModeToggle: "button.mode-toggle[aria-pressed]",
+    composerMarkdownNode: "code[data-language='markdown']",
   };
   const TEXT = {
     postMenu: ["Smazat", "Upravit", "Označit"],
@@ -205,6 +207,8 @@
     const toolbar = section.querySelector(SELECTORS.composerToolbar);
     const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||
       section.querySelector(SELECTORS.composerImageButton);
+    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);
+    const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;
 
     return {
       section,
@@ -215,6 +219,9 @@
       toolbarSlot,
       toolbar,
       imageButton,
+      modeToggle,
+      markdownNode,
+      markdownMode: !!markdownNode || modeToggle?.getAttribute("aria-pressed") === "true",
       ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),
     };
   }

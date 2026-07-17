@@ -9,7 +9,7 @@
     id: "opuc",
     name: "OPUc for Kapybara",
     description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-    version: "0.1.9",
+    version: "0.2.0",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
@@ -47,7 +47,8 @@
       return [
         "Enable the module to add an OPUc button below the native image control in new-post and reply composers.",
         "The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.",
-        "On Firefox, OPUc uploads require Tampermonkey; Greasemonkey is not supported. Kiwi uses Tampermonkey's direct upload path.",
+        "Firefox/Tampermonkey uses the reliable OPU handoff tab. Firefox/Greasemonkey uses OPUc Ultimate's direct request pattern experimentally and keeps the selected file input attached.",
+        "Uploaded URLs are inserted as Markdown through Kapybara's text mode, bypassing the native image dialog. OPUc restores formatted mode when that was the editor's original mode.",
         "OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.",
       ];
     },

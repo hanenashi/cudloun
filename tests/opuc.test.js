@@ -107,7 +107,19 @@ test("OPU URL validation accepts only HTTPS image paths on the expected host", (
   assert.equal(client.validateOpuUrl("/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
 });
 
-test("Firefox selects the popup only under Tampermonkey", () => {
+test("Kapybara adapter builds separated Markdown image text", () => {
+  const context = runtimeContext();
+  load(context, "modules/opuc/kapybara-adapter.js");
+  const markdown = context.window.Cudloun.opuc.adapter.imageMarkdown;
+  const image = "https://opu.peklo.biz/p/12/34/56/image.png";
+
+  assert.equal(markdown(image), `![](${image})`);
+  assert.equal(markdown(image, "Existing text"), `\n\n![](${image})`);
+  assert.equal(markdown(image, "Existing text\n"), `\n![](${image})`);
+  assert.equal(markdown(image, "Existing text\n\n"), `![](${image})`);
+});
+
+test("Firefox uses the popup under Tampermonkey and direct upload under Greasemonkey", () => {
   const context = runtimeContext();
   context.window.location = { hostname: "kapybara.okoun.cz" };
   context.window.navigator = { userAgent: "Mozilla/5.0 Firefox/141.0" };
@@ -117,10 +129,17 @@ test("Firefox selects the popup only under Tampermonkey", () => {
 
   assert.equal(bridge.managerName(), "Tampermonkey");
   assert.equal(bridge.shouldUse(), true);
+  assert.equal(bridge.shouldKeepInputAttached(), false);
   assert.equal(bridge.unsupportedReason(), "");
 
   context.GM_info.scriptHandler = "Greasemonkey";
   assert.equal(bridge.shouldUse(), false);
+  assert.equal(bridge.shouldKeepInputAttached(), true);
+  assert.equal(bridge.unsupportedReason(), "");
+
+  context.GM_info.scriptHandler = "Violentmonkey";
+  assert.equal(bridge.shouldUse(), false);
+  assert.equal(bridge.shouldKeepInputAttached(), false);
   assert.match(bridge.unsupportedReason(), /require Tampermonkey/i);
 
   context.window.navigator.userAgent = "Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36";
@@ -278,6 +297,33 @@ test("Kiwi direct upload uses the original single POST request", async () => {
   assert.equal("withCredentials" in requests[0], false);
   assert.equal("cookiePartition" in requests[0], false);
   assert.equal("responseType" in requests[0], false);
+});
+
+test("Firefox Greasemonkey uses the OPUc Ultimate-style direct POST", async () => {
+  const context = runtimeContext();
+  context.window.location = { hostname: "kapybara.okoun.cz" };
+  context.window.navigator = { userAgent: "Mozilla/5.0 Android Firefox/142.0" };
+  context.GM_info = { scriptHandler: "Greasemonkey" };
+  load(context, "modules/opuc/popup-bridge.js");
+  load(context, "modules/opuc/client.js");
+
+  const image = "https://opu.peklo.biz/p/12/34/56/greasemonkey-upload.png";
+  const requests = [];
+  context.GM_xmlhttpRequest = (details) => {
+    requests.push(details);
+    details.onload({
+      status: 200,
+      responseText: `<input id="link_1" value="${image}">`,
+      finalUrl: "https://opu.peklo.biz/?page=done",
+    });
+    return { abort() {} };
+  };
+
+  const request = context.window.Cudloun.opuc.client.upload(new Blob(["png"], { type: "image/png" }));
+  assert.equal(await request.promise, image);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].method, "POST");
+  assert.equal(requests[0].url, "https://opu.peklo.biz/opupload.php");
 });
 
 test("image validation enforces MIME, emptiness, and configured byte limit", () => {

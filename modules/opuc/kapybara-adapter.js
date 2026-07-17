@@ -1,4 +1,4 @@
-// Kapybara composer discovery, launcher placement, and native image insertion.
+// Kapybara composer discovery, launcher placement, and Markdown image insertion.
 (function () {
   "use strict";
 
@@ -12,6 +12,7 @@
     stop,
     bindLauncher,
     insertImageUrl,
+    imageMarkdown,
   };
 
   function start(onComposer, onRemoved) {
@@ -77,48 +78,94 @@
     if (!parts?.section?.isConnected) throw new Error("The originating Kapybara composer was closed.");
     const validated = runtime.client.validateOpuUrl(imageUrl);
     if (!validated) throw new Error("OPU returned an invalid image URL.");
-    const liveParts = root.kapyguts?.composerParts?.(parts.section) || parts;
-    const imageButton = liveParts?.imageButton?.isConnected ? liveParts.imageButton : null;
-    if (!imageButton) throw new Error("Kapybara's current image button was not found.");
+    const section = parts.section;
+    const wasMarkdown = isMarkdownMode(section);
 
-    const existingCount = Array.from(parts.section.querySelectorAll("img"))
-      .filter((image) => image.src === validated).length;
+    if (!wasMarkdown) {
+      const toggle = findModeToggle(section);
+      if (!toggle) throw new Error("Kapybara's Markdown mode toggle was not found.");
+      toggle.click();
+    }
 
-    root.log?.debug?.("opuc", "opening native image flow", {
-      composerKind: liveParts.kind || parts.kind || "unknown",
-      refreshedButton: imageButton !== parts.imageButton,
-    });
-    imageButton.click();
-    const surface = await waitFor(findImageSurface, 7000, "Kapybara's image dialog did not open.");
-    const urlTab = findImageUrlControl(surface);
-    if (!urlTab) throw new Error("Kapybara's URL image tab was not found.");
-    urlTab.click();
-
-    const input = await waitFor(
-      () => findImageUrlInput(currentImageSurface(surface)),
+    const editor = await waitFor(
+      () => findMarkdownEditor(section),
       5000,
-      "Kapybara's image URL field was not found."
+      "Kapybara did not switch to Markdown mode."
     );
-    setInputValue(input, validated);
-
-    const insert = await waitFor(
-      () => {
-        const control = findInsertControl(currentImageSurface(surface));
-        return control && !control.disabled ? control : null;
-      },
-      5000,
-      "Kapybara did not enable image insertion."
-    );
-    insert.click();
-
+    const markdown = imageMarkdown(validated, editor.innerText);
+    if (!insertTextAtEnd(editor, markdown)) {
+      throw new Error("Kapybara did not accept the OPU image Markdown.");
+    }
     await waitFor(
-      () => Array.from(parts.section.querySelectorAll("img"))
-        .filter((image) => image.src === validated).length > existingCount,
-      5000,
-      "Kapybara did not confirm the inserted OPU image."
+      () => String(editor.innerText || "").includes(`![](${validated})`),
+      3000,
+      "Kapybara did not retain the OPU image Markdown."
     );
-    (root.kapyguts?.composerParts?.(parts.section)?.editable || parts.editable)?.focus();
+
+    root.log?.debug?.("opuc", "inserted image through Markdown mode", {
+      composerKind: parts.kind || "unknown",
+      restoredFormattedMode: !wasMarkdown,
+    });
+
+    if (!wasMarkdown) {
+      const toggle = await waitFor(
+        () => isMarkdownMode(section) ? findModeToggle(section) : null,
+        3000,
+        "Kapybara's formatted-text toggle was not found."
+      );
+      toggle.click();
+      await waitFor(
+        () => Array.from(section.querySelectorAll("img")).some((image) => image.src === validated),
+        5000,
+        "Kapybara did not render the inserted OPU image."
+      );
+    }
+
+    (root.kapyguts?.composerParts?.(section)?.editable || editor)?.focus();
     return validated;
+  }
+
+  function imageMarkdown(imageUrl, existingText = "") {
+    const tag = `![](${imageUrl})`;
+    const text = String(existingText || "").replace(/\u00a0/g, " ");
+    if (!text.trim()) return tag;
+    const trailingNewlines = text.match(/\n*$/)?.[0].length || 0;
+    return `${"\n".repeat(Math.max(0, 2 - trailingNewlines))}${tag}`;
+  }
+
+  function findModeToggle(section) {
+    const selector = root.kapyguts?.selectors?.composerModeToggle || "button.mode-toggle[aria-pressed]";
+    return section.querySelector(selector);
+  }
+
+  function isMarkdownMode(section) {
+    const selector = root.kapyguts?.selectors?.composerMarkdownNode || "code[data-language='markdown']";
+    return !!section.querySelector(selector) || findModeToggle(section)?.getAttribute("aria-pressed") === "true";
+  }
+
+  function findMarkdownEditor(section) {
+    if (!isMarkdownMode(section)) return null;
+    const selector = root.kapyguts?.selectors?.composerEditable ||
+      ".composer-content-editable[role='textbox'][contenteditable='true']";
+    const editor = section.querySelector(selector);
+    return editor?.querySelector("code[data-language='markdown']") ? editor : null;
+  }
+
+  function insertTextAtEnd(editor, text) {
+    try {
+      // Lexical tracks browser editing commands; mutating textContent directly
+      // would leave its internal editor state stale and be reverted on render.
+      editor.focus();
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return document.execCommand("insertText", false, text);
+    } catch (_error) {
+      return false;
+    }
   }
 
   function alignBelowImageButton(parts, row) {
@@ -129,86 +176,6 @@
     const desired = Math.max(0, Math.round(imageRect.left - slotRect.left));
     const safe = desired + 64 < rowWidth ? desired : 0;
     row.style.setProperty("--cudloun-opuc-launcher-offset", `${safe}px`);
-  }
-
-  function findImageSurface() {
-    const controls = visibleControls(document)
-      .filter((control) => isImageUrlLabel(control.textContent));
-    for (const control of controls) {
-      const structural = control.closest([
-        '[role="dialog"]',
-        '[role="menu"]',
-        ".bottom-sheet",
-        "[class*='sheet']",
-        "[class*='dialog']",
-      ].join(","));
-      if (structural && isVisible(structural)) return structural;
-
-      let ancestor = control.parentElement;
-      while (ancestor && ancestor !== document.body) {
-        if (isVisible(ancestor) && imageOptionCount(ancestor) >= 2) return ancestor;
-        ancestor = ancestor.parentElement;
-      }
-      if (control.parentElement && isVisible(control.parentElement)) return control.parentElement;
-    }
-    return null;
-  }
-
-  function currentImageSurface(fallback) {
-    return findImageSurface() || (fallback?.isConnected ? fallback : document);
-  }
-
-  function findImageUrlControl(scope) {
-    return visibleControls(scope)
-      .find((node) => isImageUrlLabel(node.textContent)) || null;
-  }
-
-  function findImageUrlInput(scope) {
-    const selectors = [
-      'input[type="url"]',
-      'input[inputmode="url"]',
-      'input[name*="url" i]',
-      'input[placeholder*="http" i]',
-    ];
-    for (const selector of selectors) {
-      const input = Array.from(scope.querySelectorAll(selector)).find(isVisible);
-      if (input) return input;
-    }
-    return Array.from(scope.querySelectorAll('input[type="text"], input:not([type])')).find(isVisible) || null;
-  }
-
-  function findInsertControl(scope) {
-    return visibleControls(scope)
-      .find((node) => isInsertLabel(node.textContent)) || null;
-  }
-
-  function visibleControls(scope) {
-    return Array.from(scope.querySelectorAll('button, [role="tab"], [role="button"]')).filter(isVisible);
-  }
-
-  function imageOptionCount(scope) {
-    const labels = visibleControls(scope).map((node) => cleanText(node.textContent));
-    return [
-      labels.some((label) => /^(ze souboru|soubor)$/i.test(label)),
-      labels.some((label) => /^(z mých obrázků|moje obrázky)$/i.test(label)),
-      labels.some(isImageUrlLabel),
-    ].filter(Boolean).length;
-  }
-
-  function isImageUrlLabel(value) {
-    return /^(z url|url|z odkazu|odkaz)$/i.test(cleanText(value));
-  }
-
-  function isInsertLabel(value) {
-    return /^(vložit|vložit obrázek|přidat|potvrdit)$/i.test(cleanText(value));
-  }
-
-  function setInputValue(input, value) {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    if (setter) setter.call(input, value);
-    else input.value = value;
-    input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: value }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   function waitFor(probe, timeout, message) {
@@ -234,13 +201,4 @@
     });
   }
 
-  function isVisible(node) {
-    const rect = node.getBoundingClientRect();
-    const style = window.getComputedStyle(node);
-    return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
-  }
-
-  function cleanText(value) {
-    return String(value || "").replace(/\s+/g, " ").trim();
-  }
 })();

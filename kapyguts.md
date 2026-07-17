@@ -157,9 +157,14 @@ section.reply-composer[aria-label="Odpověď"]
 .composer-toolbar-slot
 [role="toolbar"][aria-label="Formátování textu"]
 button[aria-label="Vložit obrázek"]
+button.mode-toggle[aria-pressed]
+code[data-language="markdown"]
 ```
 
-The composer is dynamic and uses a Lexical editor, not a textarea. Native URL
+The composer is dynamic and uses a Lexical editor, not a textarea. Its `<>`
+mode is also Lexical: Markdown source lives in a
+`code[data-language="markdown"]` node inside the same contenteditable editor.
+The mode toggle exposes `aria-pressed` and localized accessible labels. Native URL
 image insertion creates a decorator node marked with:
 
 ```text

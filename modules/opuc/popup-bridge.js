@@ -26,6 +26,7 @@
   runtime.popupBridge = {
     managerName,
     shouldUse,
+    shouldKeepInputAttached,
     unsupportedReason,
     prepare,
     upload,
@@ -35,8 +36,12 @@
     return isFirefox() && /tampermonkey/i.test(managerName());
   }
 
+  function shouldKeepInputAttached() {
+    return isFirefox() && /greasemonkey/i.test(managerName());
+  }
+
   function unsupportedReason() {
-    if (!isFirefox() || shouldUse()) return "";
+    if (!isFirefox() || shouldUse() || shouldKeepInputAttached()) return "";
     const manager = managerName();
     const managerHint = manager ? ` ${manager} is not supported for this upload path.` : " The active userscript manager could not be identified.";
     return `Firefox OPU uploads require Tampermonkey.${managerHint} Disable Cudloun in Greasemonkey and install it in Tampermonkey.`;

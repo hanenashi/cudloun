@@ -158,7 +158,7 @@
       return;
     }
     if (!bridge?.shouldUse?.()) {
-      view.input.value = "";
+      if (!bridge?.shouldKeepInputAttached?.()) view.input.value = "";
       return;
     }
 

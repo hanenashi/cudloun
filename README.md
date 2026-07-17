@@ -98,6 +98,14 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.11 TL;DR
+
+- OPUc now switches Kapybara to Markdown mode, inserts `![](OPU_URL)` as
+  editor text, and restores formatted mode when appropriate. This bypasses the
+  fragile native image dialog in both new-post and reply composers.
+- Firefox/Greasemonkey's OPUc Ultimate-style direct upload is available again
+  experimentally, with the selected native file input kept attached.
+
 ## Version 0.6.9 TL;DR
 
 - OPUc re-resolves Kapybara's live composer toolbar after upload instead of
