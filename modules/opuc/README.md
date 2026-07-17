@@ -48,6 +48,17 @@ then supplies the pair explicitly to the upload and result requests. The cookie
 value is kept in the request closure and is never logged, stored, or included
 in error messages.
 
+## Firefox first-party handoff in Cudloun 0.6.4
+
+Some Firefox userscript managers both isolate OPU cookies and redact the
+`Set-Cookie` response header, leaving no cookie-based repair available to the
+Kapybara page. Firefox therefore opens a small first-party OPU upload window
+from the user's Upload click. The selected file is passed to that exact window,
+which performs a same-origin multipart request with first-party cookies. The
+OPU-side Cudloun bridge validates the returned `https://opu.peklo.biz/p/` URL,
+sends only that URL back to `https://kapybara.okoun.cz`, and closes. The bridge
+accepts results only from the exact OPU origin and matching popup.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

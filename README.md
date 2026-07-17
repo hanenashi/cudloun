@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.4 TL;DR
+
+- Firefox uploads now use a first-party OPU popup handoff because some
+  userscript managers redact and isolate OPU's PHP session cookie completely.
+- The popup is opened by the Upload click, returns only a validated OPU image
+  URL to Kapybara, and closes automatically. Kiwi keeps the GM request path.
+
 ## Version 0.6.3 TL;DR
 
 - Added OPU-targeted cookie partitioning plus an explicit, host-scoped session

@@ -63,6 +63,7 @@ test("manifest registers OPUc as an ordered, default-disabled multi-file module"
   assert.ok(module);
   assert.equal(module.defaultEnabled, false);
   assert.deepEqual(module.files, [
+    "modules/opuc/popup-bridge.js",
     "modules/opuc/client.js",
     "modules/opuc/image-pipeline.js",
     "modules/opuc/kapybara-adapter.js",
@@ -82,6 +83,12 @@ test("seed and manifest release versions stay synchronized", () => {
 
   assert.equal(version, manifest.version);
   assert.equal(bundleVersion, manifest.version);
+  assert.match(seed, /^\/\/ @match\s+https:\/\/opu\.peklo\.biz\/\*$/m);
+
+  const bundle = fs.readFileSync(path.join(root, "cudloun.bundle.js"), "utf8");
+  const bridgeEntry = bundle.indexOf('if (window.location.hostname === "opu.peklo.biz")');
+  const coreEntry = bundle.indexOf("// Cudloun modular core.");
+  assert.ok(bridgeEntry >= 0 && coreEntry > bridgeEntry, "OPU bridge must run before the Kapybara core");
 });
 
 test("OPU URL validation accepts only HTTPS image paths on the expected host", () => {
@@ -98,6 +105,36 @@ test("OPU URL validation accepts only HTTPS image paths on the expected host", (
   assert.equal(client.validateOpuUrl("https://opu.peklo.biz/?page=userpanel"), "");
   assert.equal(client.validateOpuUrl("//opu.peklo.biz/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
   assert.equal(client.validateOpuUrl("/p/12/image.png"), "https://opu.peklo.biz/p/12/image.png");
+});
+
+test("Firefox selects the first-party OPU popup transport", () => {
+  const context = runtimeContext();
+  context.window.location = { hostname: "kapybara.okoun.cz" };
+  context.window.navigator = { userAgent: "Mozilla/5.0 Firefox/141.0" };
+  load(context, "modules/opuc/popup-bridge.js");
+
+  assert.equal(context.window.Cudloun.opuc.popupBridge.shouldUse(), true);
+  context.window.navigator.userAgent = "Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36";
+  assert.equal(context.window.Cudloun.opuc.popupBridge.shouldUse(), false);
+});
+
+test("OPU client delegates Firefox uploads before starting a GM request", () => {
+  const context = runtimeContext();
+  const expected = { promise: Promise.resolve("popup"), abort() {} };
+  let delegated = false;
+  context.window.Cudloun.opuc = {
+    popupBridge: {
+      shouldUse: () => true,
+      upload() {
+        delegated = true;
+        return expected;
+      },
+    },
+  };
+  load(context, "modules/opuc/client.js");
+
+  assert.equal(context.window.Cudloun.opuc.client.upload(new Blob(["png"], { type: "image/png" })), expected);
+  assert.equal(delegated, true);
 });
 
 test("OPU response and thumbnail helpers preserve validated URLs", () => {

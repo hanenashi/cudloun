@@ -5,6 +5,7 @@ const root = path.resolve(__dirname, "..");
 const manifest = readJson("modules.json");
 const containers = fs.existsSync(path.join(root, "containers.json")) ? readJson("containers.json") : { containers: [] };
 const core = readText("modules/core.js");
+const opuPopupBridge = readText("modules/opuc/popup-bridge.js");
 const scriptFiles = [
   ...manifest.system.flatMap(itemFiles),
   ...manifest.modules.flatMap(itemFiles),
@@ -22,6 +23,15 @@ line('  const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudlou
 line("  const CACHE_BUST = String(Date.now());");
 line("  const embeddedText = new Map();");
 line("  const embeddedScripts = new Map();");
+line("");
+line('  if (window.location.hostname === "opu.peklo.biz") {');
+out += opuPopupBridge.split(/\r?\n/).map((item) => {
+  const trimmed = item.replace(/[ \t]+$/g, "");
+  return trimmed ? `    ${trimmed}` : "";
+}).join("\n");
+line("");
+line("    return;");
+line("  }");
 line("");
 line(`  embeddedText.set("modules.json", ${quote(JSON.stringify(manifest, null, 2))});`);
 line(`  embeddedText.set("containers.json", ${quote(JSON.stringify(containers, null, 2))});`);

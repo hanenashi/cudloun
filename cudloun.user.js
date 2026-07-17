@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.6.3
+// @version      0.6.4
 // @description  Modular userscript hub for Kapybara.
 // @author       hanenashi
 // @match        https://kapybara.okoun.cz/*
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.6.3
+// @match        https://opu.peklo.biz/*
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.6.4
 // @icon         https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.ico
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
@@ -20,7 +21,7 @@
 (function () {
   "use strict";
 
-  if (!window.Cudloun) {
+  if (window.location.hostname !== "opu.peklo.biz" && !window.Cudloun) {
     console.error("[cudloun:seed] bundled runtime did not load");
   }
 })();

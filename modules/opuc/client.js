@@ -29,6 +29,8 @@
   }
 
   function upload(file, options = {}) {
+    if (runtime.popupBridge?.shouldUse?.()) return runtime.popupBridge.upload(file, options);
+
     let activeRequest = null;
     let cancelled = false;
 

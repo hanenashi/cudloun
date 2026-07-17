@@ -2,13 +2,258 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.3";
+  const VERSION = "0.6.4";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
   const embeddedScripts = new Map();
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.3\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  if (window.location.hostname === "opu.peklo.biz") {
+    // Firefox first-party OPU upload bridge.
+    (function () {
+      "use strict";
+
+      const OPU_ORIGIN = "https://opu.peklo.biz";
+      const KAPYBARA_ORIGIN = "https://kapybara.okoun.cz";
+      const MESSAGE_TYPE = "cudloun-opu-bridge-v1";
+      const WINDOW_PREFIX = "cudloun_opu_";
+
+      if (window.location.hostname === "opu.peklo.biz") {
+        if (document.readyState === "loading") {
+          window.addEventListener("DOMContentLoaded", startPopupHost, { once: true });
+        } else {
+          startPopupHost();
+        }
+        return;
+      }
+
+      const root = window.Cudloun;
+      if (!root) return;
+      const runtime = root.opuc = root.opuc || {};
+      const pending = new Map();
+      let listening = false;
+
+      runtime.popupBridge = {
+        shouldUse,
+        upload,
+      };
+
+      function shouldUse() {
+        return /\bFirefox\/\d/i.test(String(window.navigator?.userAgent || ""));
+      }
+
+      function upload(file, options = {}) {
+        let item = null;
+        let cancelled = false;
+
+        const promise = new Promise((resolve, reject) => {
+          const id = requestId();
+          const popupName = `${WINDOW_PREFIX}${id}`;
+          const url = `${OPU_ORIGIN}/?cudloun_bridge=${encodeURIComponent(id)}`;
+          const popup = window.open(url, popupName, "popup=yes,width=560,height=680,resizable=yes,scrollbars=yes");
+          if (!popup) {
+            reject(new Error("Firefox blocked the OPU upload window. Allow pop-ups for kapybara.okoun.cz and retry."));
+            return;
+          }
+
+          item = {
+            id,
+            file,
+            popup,
+            resolve,
+            reject,
+            onProgress: options.onProgress,
+            timeout: window.setTimeout(() => settle(id, new Error("The OPU upload window timed out.")), 130000),
+            closedPoll: window.setInterval(() => {
+              if (popup.closed) settle(id, new Error("The OPU upload window was closed before returning an image URL."));
+            }, 400),
+          };
+          pending.set(id, item);
+          ensureListener();
+        });
+
+        return {
+          promise,
+          abort() {
+            if (cancelled) return;
+            cancelled = true;
+            if (!item) return;
+            try {
+              item.popup.postMessage({ type: MESSAGE_TYPE, action: "cancel", id: item.id }, OPU_ORIGIN);
+            } catch (_error) {}
+            settle(item.id, abortError());
+          },
+        };
+      }
+
+      function ensureListener() {
+        if (listening) return;
+        listening = true;
+        window.addEventListener("message", onMessage);
+      }
+
+      function onMessage(event) {
+        if (event.origin !== OPU_ORIGIN || event.data?.type !== MESSAGE_TYPE) return;
+        const id = String(event.data.id || "");
+        const item = pending.get(id);
+        if (!item || event.source !== item.popup) return;
+
+        if (event.data.action === "ready") {
+          item.popup.postMessage({ type: MESSAGE_TYPE, action: "upload", id, file: item.file }, OPU_ORIGIN);
+          return;
+        }
+        if (event.data.action === "progress") {
+          if (typeof item.onProgress === "function") {
+            item.onProgress({
+              lengthComputable: !!event.data.lengthComputable,
+              loaded: Number(event.data.loaded) || 0,
+              total: Number(event.data.total) || 0,
+            });
+          }
+          return;
+        }
+        if (event.data.action !== "result") return;
+
+        const url = validateOpuUrl(event.data.url);
+        if (url) {
+          settle(id, null, url);
+          return;
+        }
+        settle(id, new Error(String(event.data.error || "OPU did not return an image URL.")));
+      }
+
+      function settle(id, error, value) {
+        const item = pending.get(id);
+        if (!item) return;
+        pending.delete(id);
+        window.clearTimeout(item.timeout);
+        window.clearInterval(item.closedPoll);
+        try { item.popup.close(); } catch (_error) {}
+        if (!pending.size && listening) {
+          listening = false;
+          window.removeEventListener("message", onMessage);
+        }
+        if (error) item.reject(error);
+        else item.resolve(value);
+      }
+
+      function startPopupHost() {
+        if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;
+        const id = new URLSearchParams(window.location.search).get("cudloun_bridge") || "";
+        if (window.name !== `${WINDOW_PREFIX}${id}` || !validRequestId(id)) return;
+        let request = null;
+        const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: "ready", id }, KAPYBARA_ORIGIN);
+        const readyTimer = window.setInterval(sendReady, 350);
+
+        window.addEventListener("message", (event) => {
+          if (event.origin !== KAPYBARA_ORIGIN || event.source !== window.opener) return;
+          if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;
+          if (event.data.action === "cancel") {
+            window.clearInterval(readyTimer);
+            request?.abort?.();
+            window.close();
+            return;
+          }
+          if (event.data.action !== "upload" || request) return;
+          window.clearInterval(readyTimer);
+          const file = event.data.file;
+          if (!(file instanceof Blob) || !String(file.type || "").startsWith("image/")) {
+            sendResult(id, "", "The OPU upload window did not receive a valid image file.");
+            return;
+          }
+          request = uploadOnOpu(id, file);
+        });
+
+        sendReady();
+      }
+
+      function uploadOnOpu(id, file) {
+        const formData = new FormData();
+        formData.append("obrazek[0]", file, String(file.name || "image"));
+        formData.append("sizep", "0");
+        formData.append("outputf", "auto");
+        formData.append("tl_odeslat", "Odeslat");
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${OPU_ORIGIN}/opupload.php`);
+        xhr.withCredentials = true;
+        xhr.timeout = 120000;
+        xhr.upload.addEventListener("progress", (event) => {
+          window.opener?.postMessage({
+            type: MESSAGE_TYPE,
+            action: "progress",
+            id,
+            lengthComputable: event.lengthComputable,
+            loaded: event.loaded,
+            total: event.total,
+          }, KAPYBARA_ORIGIN);
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status !== 200) {
+            sendResult(id, "", `OPU upload failed with HTTP ${xhr.status}.`);
+            return;
+          }
+          const url = extractHtmlUrl(xhr.responseText);
+          sendResult(id, url, url ? "" : "OPU uploaded the file, but its result page did not contain an image URL.");
+        });
+        xhr.addEventListener("error", () => sendResult(id, "", "The first-party OPU upload request failed."));
+        xhr.addEventListener("timeout", () => sendResult(id, "", "The first-party OPU upload request timed out."));
+        xhr.send(formData);
+        return xhr;
+      }
+
+      function sendResult(id, url, error) {
+        window.opener?.postMessage({ type: MESSAGE_TYPE, action: "result", id, url, error }, KAPYBARA_ORIGIN);
+        window.setTimeout(() => window.close(), 80);
+      }
+
+      function extractHtmlUrl(html) {
+        const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+        const candidates = [];
+        doc.querySelectorAll('input[value*="opu.peklo.biz/p/"]')
+          .forEach((input) => candidates.push(input.value));
+        doc.querySelectorAll('a[href*="opu.peklo.biz/p/"], img[src*="opu.peklo.biz/p/"]')
+          .forEach((element) => candidates.push(element.getAttribute("href") || element.getAttribute("src")));
+        for (const value of candidates) {
+          const match = String(value || "").match(/(?:href|src)=["']([^"']+)["']/i);
+          const url = validateOpuUrl(match?.[1] || value);
+          if (url) return url;
+        }
+        return "";
+      }
+
+      function validateOpuUrl(value) {
+        try {
+          const url = new URL(String(value || "").trim().replace(/&amp;/gi, "&"));
+          if (url.protocol !== "https:" || url.hostname !== "opu.peklo.biz" || !url.pathname.startsWith("/p/")) return "";
+          return url.toString();
+        } catch (_error) {
+          return "";
+        }
+      }
+
+      function requestId() {
+        const random = typeof crypto?.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+        return random.replace(/[^a-z0-9_-]/gi, "").slice(0, 80);
+      }
+
+      function validRequestId(value) {
+        return /^[a-z0-9_-]{12,80}$/i.test(String(value || ""));
+      }
+
+      function abortError() {
+        const error = new Error("OPU upload cancelled.");
+        error.name = "AbortError";
+        return error;
+      }
+    })();
+
+    return;
+  }
+
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.4\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -2554,7 +2799,252 @@
 
   });
 
-  embeddedText.set("modules/opuc/client.js", "// OPU transport and response helpers for the Cudloun OPUc module.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const SESSION_URL = \"https://opu.peklo.biz/\";\n  const GALLERY_URL = \"https://opu.peklo.biz/?page=userpanel\";\n  const UPLOAD_URL = \"https://opu.peklo.biz/opupload.php\";\n  const RESULT_URL = \"https://opu.peklo.biz/?page=done\";\n\n  runtime.client = {\n    galleryUrl: GALLERY_URL,\n    uploadUrl: UPLOAD_URL,\n    checkLoginStatus,\n    upload,\n    responseBodyText,\n    extractResponseCookies,\n    extractUploadUrl,\n    validateOpuUrl,\n    getThumbUrl,\n  };\n\n  async function checkLoginStatus() {\n    const request = gmRequest({ method: \"GET\", url: GALLERY_URL, timeout: 20000 });\n    const response = await request.promise;\n    const finalUrl = String(response.finalUrl || response.responseURL || \"\");\n    return finalUrl ? !finalUrl.includes(\"page=prihlaseni\") : false;\n  }\n\n  function upload(file, options = {}) {\n    let activeRequest = null;\n    let cancelled = false;\n\n    const startRequest = (details) => {\n      if (cancelled) throw abortError();\n      activeRequest = gmRequest(details);\n      return activeRequest.promise;\n    };\n\n    const promise = (async () => {\n      // OPU stores the uploaded result in a PHP session before redirecting to\n      // ?page=done. Firefox userscript managers can otherwise follow that\n      // redirect before retaining its Set-Cookie header, yielding a blank\n      // upload form instead of the result. Establish the session first.\n      const session = await startRequest({ method: \"GET\", url: SESSION_URL, timeout: 20000 });\n      const sessionCookie = extractResponseCookies(safeResponseValue(session, \"responseHeaders\"));\n      const sessionRelay = cookieRelay(sessionCookie);\n\n      const formData = new FormData();\n      formData.append(\"obrazek[0]\", file);\n      formData.append(\"sizep\", \"0\");\n      formData.append(\"outputf\", \"auto\");\n      formData.append(\"tl_odeslat\", \"Odeslat\");\n\n      const response = await startRequest({\n        method: \"POST\",\n        url: UPLOAD_URL,\n        data: formData,\n        timeout: 120000,\n        onprogress: options.onProgress,\n        ...sessionRelay,\n      });\n\n      if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);\n      const body = await responseBodyText(response);\n      let url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, \"finalUrl\"));\n\n      // Some Firefox/userscript-manager combinations retain OPU's cookie only\n      // after the redirect chain finishes. A separate request then sees the\n      // session-backed result page and recovers the URL without re-uploading.\n      if (!url) {\n        const result = await startRequest({\n          method: \"GET\",\n          url: RESULT_URL,\n          timeout: 20000,\n          ...sessionRelay,\n        });\n        if (result.status === 200) {\n          const resultBody = await responseBodyText(result);\n          url = extractUploadUrl(resultBody) || validateOpuUrl(safeResponseValue(result, \"finalUrl\"));\n        }\n      }\n\n      if (!url) {\n        const responseHint = body ? `${body.length} response characters were checked` : \"the response body was empty\";\n        const relayHint = sessionCookie ? \" The explicit OPU session relay was also rejected.\" : \" The userscript manager did not expose OPU's session header for an explicit relay.\";\n        const pageHint = looksLikeUploadForm(body) ? ` OPU returned its blank upload form.${relayHint}` : \"\";\n        throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).${pageHint}`);\n      }\n      return url;\n    })();\n\n    return {\n      promise,\n      abort() {\n        if (cancelled) return;\n        cancelled = true;\n        activeRequest?.abort?.();\n      },\n    };\n  }\n\n  async function responseBodyText(response) {\n    const responseText = safeResponseValue(response, \"responseText\");\n    if (typeof responseText === \"string\" && responseText) return responseText;\n\n    const body = safeResponseValue(response, \"response\");\n    if (typeof body === \"string\") return body;\n    if (!body) {\n      const xml = safeResponseValue(response, \"responseXML\");\n      return serializeDocument(xml);\n    }\n    if (typeof body.text === \"function\") {\n      try {\n        return await body.text();\n      } catch (_error) {\n        // Continue to the document/object fallbacks below.\n      }\n    }\n    const serialized = serializeDocument(body);\n    if (serialized) return serialized;\n    if (typeof body === \"object\") {\n      try {\n        return JSON.stringify(body);\n      } catch (_error) {\n        return \"\";\n      }\n    }\n    return String(body || \"\");\n  }\n\n  function extractUploadUrl(html) {\n    const source = String(html || \"\");\n    if (!source) return \"\";\n    const doc = new DOMParser().parseFromString(source, \"text/html\");\n    const candidates = [];\n\n    doc.querySelectorAll('input[id^=\"link_\"], input[name^=\"link\"], input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], a[href^=\"/p/\"]')\n      .forEach((link) => candidates.push(link.getAttribute(\"href\")));\n    doc.querySelectorAll('img[src*=\"opu.peklo.biz/p/\"], img[src^=\"/p/\"]')\n      .forEach((image) => candidates.push(image.getAttribute(\"src\")));\n\n    for (const value of candidates) {\n      const direct = extractCandidateUrl(value);\n      if (direct) return direct;\n    }\n\n    const unescaped = source.replace(/\\\\\\//g, \"/\");\n    const rawMatches = unescaped.match(/(?:https?:)?\\/\\/opu\\.peklo\\.biz\\/p\\/[^\\s\"'<>\\\\]+|\\/p\\/[^\\s\"'<>\\\\]+/gi) || [];\n    for (const value of rawMatches) {\n      const direct = validateOpuUrl(value);\n      if (direct) return direct;\n    }\n    return \"\";\n  }\n\n  function looksLikeUploadForm(html) {\n    const source = String(html || \"\");\n    return /<form\\b[^>]*\\bid=[\"']xpc[\"']/i.test(source) && /name=[\"']obrazek\\[0\\][\"']/i.test(source);\n  }\n\n  function extractResponseCookies(responseHeaders) {\n    const cookies = [];\n    const seen = new Set();\n    String(responseHeaders || \"\").split(/\\r?\\n/).forEach((line) => {\n      const match = line.match(/^set-cookie:\\s*([A-Za-z0-9_]+)=([^;\\s\\x00-\\x1f\\x7f]+)(?:;|$)/i);\n      if (!match) return;\n      const name = match[1];\n      const value = match[2];\n      if (!/^opu[A-Za-z0-9_]*$/i.test(name) || seen.has(name.toLowerCase())) return;\n      seen.add(name.toLowerCase());\n      cookies.push(`${name}=${value}`);\n    });\n    return cookies.join(\"; \");\n  }\n\n  function cookieRelay(cookie) {\n    if (!cookie) return {};\n    return {\n      cookie,\n      headers: { Cookie: cookie },\n    };\n  }\n\n  function extractCandidateUrl(value) {\n    const text = String(value || \"\");\n    const match = text.match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n    return validateOpuUrl(match?.[1] || text);\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      let candidate = String(value || \"\").trim().replace(/&amp;/gi, \"&\");\n      if (candidate.startsWith(\"//\")) candidate = `https:${candidate}`;\n      if (candidate.startsWith(\"/p/\")) candidate = `https://opu.peklo.biz${candidate}`;\n      const url = new URL(candidate);\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\") return \"\";\n      if (!url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function getThumbUrl(imageUrl) {\n    const validated = validateOpuUrl(imageUrl);\n    if (!validated) return \"\";\n\n    const url = new URL(validated);\n    const parts = url.pathname.split(\"/\");\n    const fileName = parts.pop();\n    if (!fileName || parts.includes(\"thumbs\")) return url.toString();\n\n    const pIndex = parts.indexOf(\"p\");\n    if (pIndex < 0) return url.toString();\n    parts.push(\"thumbs\", fileName);\n    url.pathname = parts.join(\"/\");\n    return url.toString();\n  }\n\n  function gmRequest(details) {\n    let handle = null;\n    let settled = false;\n    let rejectPromise = null;\n\n    const promise = new Promise((resolve, reject) => {\n      rejectPromise = reject;\n      const requestDetails = {\n        ...details,\n        responseType: details.responseType || \"text\",\n        anonymous: false,\n        withCredentials: true,\n        cookiePartition: details.cookiePartition || { topLevelSite: \"https://opu.peklo.biz\" },\n        onload(response) {\n          if (settled) return;\n          settled = true;\n          resolve(response);\n        },\n        onerror() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request failed.\"));\n        },\n        ontimeout() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request timed out.\"));\n        },\n        onabort() {\n          if (settled) return;\n          settled = true;\n          reject(abortError());\n        },\n        onprogress(event) {\n          if (typeof details.onprogress === \"function\") details.onprogress(event);\n        },\n        upload: {\n          onprogress(event) {\n            if (typeof details.onprogress === \"function\") details.onprogress(event);\n          },\n        },\n      };\n\n      try {\n        if (typeof GM_xmlhttpRequest === \"function\") {\n          handle = GM_xmlhttpRequest(requestDetails);\n          return;\n        }\n        if (typeof GM !== \"undefined\" && GM && typeof GM.xmlHttpRequest === \"function\") {\n          handle = GM.xmlHttpRequest(requestDetails);\n          return;\n        }\n        settled = true;\n        reject(new Error(\"The userscript network bridge is unavailable.\"));\n      } catch (_error) {\n        settled = true;\n        reject(new Error(\"The OPU request could not be started.\"));\n      }\n    });\n\n    return {\n      promise,\n      abort() {\n        if (settled) return;\n        if (handle && typeof handle.abort === \"function\") {\n          handle.abort();\n          return;\n        }\n        settled = true;\n        rejectPromise?.(abortError());\n      },\n    };\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n\n  function safeResponseValue(response, name) {\n    try {\n      return response?.[name];\n    } catch (_error) {\n      return undefined;\n    }\n  }\n\n  function serializeDocument(value) {\n    if (!value || typeof value !== \"object\") return \"\";\n    if (value.nodeType !== 9 && !value.documentElement) return \"\";\n    try {\n      if (typeof XMLSerializer === \"function\") return new XMLSerializer().serializeToString(value);\n    } catch (_error) {\n      // Fall through to outerHTML.\n    }\n    return String(value.documentElement?.outerHTML || \"\");\n  }\n})();\n");
+  embeddedText.set("modules/opuc/popup-bridge.js", "// Firefox first-party OPU upload bridge.\n(function () {\n  \"use strict\";\n\n  const OPU_ORIGIN = \"https://opu.peklo.biz\";\n  const KAPYBARA_ORIGIN = \"https://kapybara.okoun.cz\";\n  const MESSAGE_TYPE = \"cudloun-opu-bridge-v1\";\n  const WINDOW_PREFIX = \"cudloun_opu_\";\n\n  if (window.location.hostname === \"opu.peklo.biz\") {\n    if (document.readyState === \"loading\") {\n      window.addEventListener(\"DOMContentLoaded\", startPopupHost, { once: true });\n    } else {\n      startPopupHost();\n    }\n    return;\n  }\n\n  const root = window.Cudloun;\n  if (!root) return;\n  const runtime = root.opuc = root.opuc || {};\n  const pending = new Map();\n  let listening = false;\n\n  runtime.popupBridge = {\n    shouldUse,\n    upload,\n  };\n\n  function shouldUse() {\n    return /\\bFirefox\\/\\d/i.test(String(window.navigator?.userAgent || \"\"));\n  }\n\n  function upload(file, options = {}) {\n    let item = null;\n    let cancelled = false;\n\n    const promise = new Promise((resolve, reject) => {\n      const id = requestId();\n      const popupName = `${WINDOW_PREFIX}${id}`;\n      const url = `${OPU_ORIGIN}/?cudloun_bridge=${encodeURIComponent(id)}`;\n      const popup = window.open(url, popupName, \"popup=yes,width=560,height=680,resizable=yes,scrollbars=yes\");\n      if (!popup) {\n        reject(new Error(\"Firefox blocked the OPU upload window. Allow pop-ups for kapybara.okoun.cz and retry.\"));\n        return;\n      }\n\n      item = {\n        id,\n        file,\n        popup,\n        resolve,\n        reject,\n        onProgress: options.onProgress,\n        timeout: window.setTimeout(() => settle(id, new Error(\"The OPU upload window timed out.\")), 130000),\n        closedPoll: window.setInterval(() => {\n          if (popup.closed) settle(id, new Error(\"The OPU upload window was closed before returning an image URL.\"));\n        }, 400),\n      };\n      pending.set(id, item);\n      ensureListener();\n    });\n\n    return {\n      promise,\n      abort() {\n        if (cancelled) return;\n        cancelled = true;\n        if (!item) return;\n        try {\n          item.popup.postMessage({ type: MESSAGE_TYPE, action: \"cancel\", id: item.id }, OPU_ORIGIN);\n        } catch (_error) {}\n        settle(item.id, abortError());\n      },\n    };\n  }\n\n  function ensureListener() {\n    if (listening) return;\n    listening = true;\n    window.addEventListener(\"message\", onMessage);\n  }\n\n  function onMessage(event) {\n    if (event.origin !== OPU_ORIGIN || event.data?.type !== MESSAGE_TYPE) return;\n    const id = String(event.data.id || \"\");\n    const item = pending.get(id);\n    if (!item || event.source !== item.popup) return;\n\n    if (event.data.action === \"ready\") {\n      item.popup.postMessage({ type: MESSAGE_TYPE, action: \"upload\", id, file: item.file }, OPU_ORIGIN);\n      return;\n    }\n    if (event.data.action === \"progress\") {\n      if (typeof item.onProgress === \"function\") {\n        item.onProgress({\n          lengthComputable: !!event.data.lengthComputable,\n          loaded: Number(event.data.loaded) || 0,\n          total: Number(event.data.total) || 0,\n        });\n      }\n      return;\n    }\n    if (event.data.action !== \"result\") return;\n\n    const url = validateOpuUrl(event.data.url);\n    if (url) {\n      settle(id, null, url);\n      return;\n    }\n    settle(id, new Error(String(event.data.error || \"OPU did not return an image URL.\")));\n  }\n\n  function settle(id, error, value) {\n    const item = pending.get(id);\n    if (!item) return;\n    pending.delete(id);\n    window.clearTimeout(item.timeout);\n    window.clearInterval(item.closedPoll);\n    try { item.popup.close(); } catch (_error) {}\n    if (!pending.size && listening) {\n      listening = false;\n      window.removeEventListener(\"message\", onMessage);\n    }\n    if (error) item.reject(error);\n    else item.resolve(value);\n  }\n\n  function startPopupHost() {\n    if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;\n    const id = new URLSearchParams(window.location.search).get(\"cudloun_bridge\") || \"\";\n    if (window.name !== `${WINDOW_PREFIX}${id}` || !validRequestId(id)) return;\n    let request = null;\n    const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"ready\", id }, KAPYBARA_ORIGIN);\n    const readyTimer = window.setInterval(sendReady, 350);\n\n    window.addEventListener(\"message\", (event) => {\n      if (event.origin !== KAPYBARA_ORIGIN || event.source !== window.opener) return;\n      if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;\n      if (event.data.action === \"cancel\") {\n        window.clearInterval(readyTimer);\n        request?.abort?.();\n        window.close();\n        return;\n      }\n      if (event.data.action !== \"upload\" || request) return;\n      window.clearInterval(readyTimer);\n      const file = event.data.file;\n      if (!(file instanceof Blob) || !String(file.type || \"\").startsWith(\"image/\")) {\n        sendResult(id, \"\", \"The OPU upload window did not receive a valid image file.\");\n        return;\n      }\n      request = uploadOnOpu(id, file);\n    });\n\n    sendReady();\n  }\n\n  function uploadOnOpu(id, file) {\n    const formData = new FormData();\n    formData.append(\"obrazek[0]\", file, String(file.name || \"image\"));\n    formData.append(\"sizep\", \"0\");\n    formData.append(\"outputf\", \"auto\");\n    formData.append(\"tl_odeslat\", \"Odeslat\");\n\n    const xhr = new XMLHttpRequest();\n    xhr.open(\"POST\", `${OPU_ORIGIN}/opupload.php`);\n    xhr.withCredentials = true;\n    xhr.timeout = 120000;\n    xhr.upload.addEventListener(\"progress\", (event) => {\n      window.opener?.postMessage({\n        type: MESSAGE_TYPE,\n        action: \"progress\",\n        id,\n        lengthComputable: event.lengthComputable,\n        loaded: event.loaded,\n        total: event.total,\n      }, KAPYBARA_ORIGIN);\n    });\n    xhr.addEventListener(\"load\", () => {\n      if (xhr.status !== 200) {\n        sendResult(id, \"\", `OPU upload failed with HTTP ${xhr.status}.`);\n        return;\n      }\n      const url = extractHtmlUrl(xhr.responseText);\n      sendResult(id, url, url ? \"\" : \"OPU uploaded the file, but its result page did not contain an image URL.\");\n    });\n    xhr.addEventListener(\"error\", () => sendResult(id, \"\", \"The first-party OPU upload request failed.\"));\n    xhr.addEventListener(\"timeout\", () => sendResult(id, \"\", \"The first-party OPU upload request timed out.\"));\n    xhr.send(formData);\n    return xhr;\n  }\n\n  function sendResult(id, url, error) {\n    window.opener?.postMessage({ type: MESSAGE_TYPE, action: \"result\", id, url, error }, KAPYBARA_ORIGIN);\n    window.setTimeout(() => window.close(), 80);\n  }\n\n  function extractHtmlUrl(html) {\n    const doc = new DOMParser().parseFromString(String(html || \"\"), \"text/html\");\n    const candidates = [];\n    doc.querySelectorAll('input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], img[src*=\"opu.peklo.biz/p/\"]')\n      .forEach((element) => candidates.push(element.getAttribute(\"href\") || element.getAttribute(\"src\")));\n    for (const value of candidates) {\n      const match = String(value || \"\").match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n      const url = validateOpuUrl(match?.[1] || value);\n      if (url) return url;\n    }\n    return \"\";\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      const url = new URL(String(value || \"\").trim().replace(/&amp;/gi, \"&\"));\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\" || !url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function requestId() {\n    const random = typeof crypto?.randomUUID === \"function\"\n      ? crypto.randomUUID()\n      : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;\n    return random.replace(/[^a-z0-9_-]/gi, \"\").slice(0, 80);\n  }\n\n  function validRequestId(value) {\n    return /^[a-z0-9_-]{12,80}$/i.test(String(value || \"\"));\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n})();\n");
+  embeddedScripts.set("modules/opuc/popup-bridge.js", function () {
+    // Firefox first-party OPU upload bridge.
+    (function () {
+      "use strict";
+
+      const OPU_ORIGIN = "https://opu.peklo.biz";
+      const KAPYBARA_ORIGIN = "https://kapybara.okoun.cz";
+      const MESSAGE_TYPE = "cudloun-opu-bridge-v1";
+      const WINDOW_PREFIX = "cudloun_opu_";
+
+      if (window.location.hostname === "opu.peklo.biz") {
+        if (document.readyState === "loading") {
+          window.addEventListener("DOMContentLoaded", startPopupHost, { once: true });
+        } else {
+          startPopupHost();
+        }
+        return;
+      }
+
+      const root = window.Cudloun;
+      if (!root) return;
+      const runtime = root.opuc = root.opuc || {};
+      const pending = new Map();
+      let listening = false;
+
+      runtime.popupBridge = {
+        shouldUse,
+        upload,
+      };
+
+      function shouldUse() {
+        return /\bFirefox\/\d/i.test(String(window.navigator?.userAgent || ""));
+      }
+
+      function upload(file, options = {}) {
+        let item = null;
+        let cancelled = false;
+
+        const promise = new Promise((resolve, reject) => {
+          const id = requestId();
+          const popupName = `${WINDOW_PREFIX}${id}`;
+          const url = `${OPU_ORIGIN}/?cudloun_bridge=${encodeURIComponent(id)}`;
+          const popup = window.open(url, popupName, "popup=yes,width=560,height=680,resizable=yes,scrollbars=yes");
+          if (!popup) {
+            reject(new Error("Firefox blocked the OPU upload window. Allow pop-ups for kapybara.okoun.cz and retry."));
+            return;
+          }
+
+          item = {
+            id,
+            file,
+            popup,
+            resolve,
+            reject,
+            onProgress: options.onProgress,
+            timeout: window.setTimeout(() => settle(id, new Error("The OPU upload window timed out.")), 130000),
+            closedPoll: window.setInterval(() => {
+              if (popup.closed) settle(id, new Error("The OPU upload window was closed before returning an image URL."));
+            }, 400),
+          };
+          pending.set(id, item);
+          ensureListener();
+        });
+
+        return {
+          promise,
+          abort() {
+            if (cancelled) return;
+            cancelled = true;
+            if (!item) return;
+            try {
+              item.popup.postMessage({ type: MESSAGE_TYPE, action: "cancel", id: item.id }, OPU_ORIGIN);
+            } catch (_error) {}
+            settle(item.id, abortError());
+          },
+        };
+      }
+
+      function ensureListener() {
+        if (listening) return;
+        listening = true;
+        window.addEventListener("message", onMessage);
+      }
+
+      function onMessage(event) {
+        if (event.origin !== OPU_ORIGIN || event.data?.type !== MESSAGE_TYPE) return;
+        const id = String(event.data.id || "");
+        const item = pending.get(id);
+        if (!item || event.source !== item.popup) return;
+
+        if (event.data.action === "ready") {
+          item.popup.postMessage({ type: MESSAGE_TYPE, action: "upload", id, file: item.file }, OPU_ORIGIN);
+          return;
+        }
+        if (event.data.action === "progress") {
+          if (typeof item.onProgress === "function") {
+            item.onProgress({
+              lengthComputable: !!event.data.lengthComputable,
+              loaded: Number(event.data.loaded) || 0,
+              total: Number(event.data.total) || 0,
+            });
+          }
+          return;
+        }
+        if (event.data.action !== "result") return;
+
+        const url = validateOpuUrl(event.data.url);
+        if (url) {
+          settle(id, null, url);
+          return;
+        }
+        settle(id, new Error(String(event.data.error || "OPU did not return an image URL.")));
+      }
+
+      function settle(id, error, value) {
+        const item = pending.get(id);
+        if (!item) return;
+        pending.delete(id);
+        window.clearTimeout(item.timeout);
+        window.clearInterval(item.closedPoll);
+        try { item.popup.close(); } catch (_error) {}
+        if (!pending.size && listening) {
+          listening = false;
+          window.removeEventListener("message", onMessage);
+        }
+        if (error) item.reject(error);
+        else item.resolve(value);
+      }
+
+      function startPopupHost() {
+        if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;
+        const id = new URLSearchParams(window.location.search).get("cudloun_bridge") || "";
+        if (window.name !== `${WINDOW_PREFIX}${id}` || !validRequestId(id)) return;
+        let request = null;
+        const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: "ready", id }, KAPYBARA_ORIGIN);
+        const readyTimer = window.setInterval(sendReady, 350);
+
+        window.addEventListener("message", (event) => {
+          if (event.origin !== KAPYBARA_ORIGIN || event.source !== window.opener) return;
+          if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;
+          if (event.data.action === "cancel") {
+            window.clearInterval(readyTimer);
+            request?.abort?.();
+            window.close();
+            return;
+          }
+          if (event.data.action !== "upload" || request) return;
+          window.clearInterval(readyTimer);
+          const file = event.data.file;
+          if (!(file instanceof Blob) || !String(file.type || "").startsWith("image/")) {
+            sendResult(id, "", "The OPU upload window did not receive a valid image file.");
+            return;
+          }
+          request = uploadOnOpu(id, file);
+        });
+
+        sendReady();
+      }
+
+      function uploadOnOpu(id, file) {
+        const formData = new FormData();
+        formData.append("obrazek[0]", file, String(file.name || "image"));
+        formData.append("sizep", "0");
+        formData.append("outputf", "auto");
+        formData.append("tl_odeslat", "Odeslat");
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${OPU_ORIGIN}/opupload.php`);
+        xhr.withCredentials = true;
+        xhr.timeout = 120000;
+        xhr.upload.addEventListener("progress", (event) => {
+          window.opener?.postMessage({
+            type: MESSAGE_TYPE,
+            action: "progress",
+            id,
+            lengthComputable: event.lengthComputable,
+            loaded: event.loaded,
+            total: event.total,
+          }, KAPYBARA_ORIGIN);
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status !== 200) {
+            sendResult(id, "", `OPU upload failed with HTTP ${xhr.status}.`);
+            return;
+          }
+          const url = extractHtmlUrl(xhr.responseText);
+          sendResult(id, url, url ? "" : "OPU uploaded the file, but its result page did not contain an image URL.");
+        });
+        xhr.addEventListener("error", () => sendResult(id, "", "The first-party OPU upload request failed."));
+        xhr.addEventListener("timeout", () => sendResult(id, "", "The first-party OPU upload request timed out."));
+        xhr.send(formData);
+        return xhr;
+      }
+
+      function sendResult(id, url, error) {
+        window.opener?.postMessage({ type: MESSAGE_TYPE, action: "result", id, url, error }, KAPYBARA_ORIGIN);
+        window.setTimeout(() => window.close(), 80);
+      }
+
+      function extractHtmlUrl(html) {
+        const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+        const candidates = [];
+        doc.querySelectorAll('input[value*="opu.peklo.biz/p/"]')
+          .forEach((input) => candidates.push(input.value));
+        doc.querySelectorAll('a[href*="opu.peklo.biz/p/"], img[src*="opu.peklo.biz/p/"]')
+          .forEach((element) => candidates.push(element.getAttribute("href") || element.getAttribute("src")));
+        for (const value of candidates) {
+          const match = String(value || "").match(/(?:href|src)=["']([^"']+)["']/i);
+          const url = validateOpuUrl(match?.[1] || value);
+          if (url) return url;
+        }
+        return "";
+      }
+
+      function validateOpuUrl(value) {
+        try {
+          const url = new URL(String(value || "").trim().replace(/&amp;/gi, "&"));
+          if (url.protocol !== "https:" || url.hostname !== "opu.peklo.biz" || !url.pathname.startsWith("/p/")) return "";
+          return url.toString();
+        } catch (_error) {
+          return "";
+        }
+      }
+
+      function requestId() {
+        const random = typeof crypto?.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+        return random.replace(/[^a-z0-9_-]/gi, "").slice(0, 80);
+      }
+
+      function validRequestId(value) {
+        return /^[a-z0-9_-]{12,80}$/i.test(String(value || ""));
+      }
+
+      function abortError() {
+        const error = new Error("OPU upload cancelled.");
+        error.name = "AbortError";
+        return error;
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/opuc/client.js", "// OPU transport and response helpers for the Cudloun OPUc module.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n  const SESSION_URL = \"https://opu.peklo.biz/\";\n  const GALLERY_URL = \"https://opu.peklo.biz/?page=userpanel\";\n  const UPLOAD_URL = \"https://opu.peklo.biz/opupload.php\";\n  const RESULT_URL = \"https://opu.peklo.biz/?page=done\";\n\n  runtime.client = {\n    galleryUrl: GALLERY_URL,\n    uploadUrl: UPLOAD_URL,\n    checkLoginStatus,\n    upload,\n    responseBodyText,\n    extractResponseCookies,\n    extractUploadUrl,\n    validateOpuUrl,\n    getThumbUrl,\n  };\n\n  async function checkLoginStatus() {\n    const request = gmRequest({ method: \"GET\", url: GALLERY_URL, timeout: 20000 });\n    const response = await request.promise;\n    const finalUrl = String(response.finalUrl || response.responseURL || \"\");\n    return finalUrl ? !finalUrl.includes(\"page=prihlaseni\") : false;\n  }\n\n  function upload(file, options = {}) {\n    if (runtime.popupBridge?.shouldUse?.()) return runtime.popupBridge.upload(file, options);\n\n    let activeRequest = null;\n    let cancelled = false;\n\n    const startRequest = (details) => {\n      if (cancelled) throw abortError();\n      activeRequest = gmRequest(details);\n      return activeRequest.promise;\n    };\n\n    const promise = (async () => {\n      // OPU stores the uploaded result in a PHP session before redirecting to\n      // ?page=done. Firefox userscript managers can otherwise follow that\n      // redirect before retaining its Set-Cookie header, yielding a blank\n      // upload form instead of the result. Establish the session first.\n      const session = await startRequest({ method: \"GET\", url: SESSION_URL, timeout: 20000 });\n      const sessionCookie = extractResponseCookies(safeResponseValue(session, \"responseHeaders\"));\n      const sessionRelay = cookieRelay(sessionCookie);\n\n      const formData = new FormData();\n      formData.append(\"obrazek[0]\", file);\n      formData.append(\"sizep\", \"0\");\n      formData.append(\"outputf\", \"auto\");\n      formData.append(\"tl_odeslat\", \"Odeslat\");\n\n      const response = await startRequest({\n        method: \"POST\",\n        url: UPLOAD_URL,\n        data: formData,\n        timeout: 120000,\n        onprogress: options.onProgress,\n        ...sessionRelay,\n      });\n\n      if (response.status !== 200) throw new Error(`OPU upload failed with HTTP ${response.status}.`);\n      const body = await responseBodyText(response);\n      let url = extractUploadUrl(body) || validateOpuUrl(safeResponseValue(response, \"finalUrl\"));\n\n      // Some Firefox/userscript-manager combinations retain OPU's cookie only\n      // after the redirect chain finishes. A separate request then sees the\n      // session-backed result page and recovers the URL without re-uploading.\n      if (!url) {\n        const result = await startRequest({\n          method: \"GET\",\n          url: RESULT_URL,\n          timeout: 20000,\n          ...sessionRelay,\n        });\n        if (result.status === 200) {\n          const resultBody = await responseBodyText(result);\n          url = extractUploadUrl(resultBody) || validateOpuUrl(safeResponseValue(result, \"finalUrl\"));\n        }\n      }\n\n      if (!url) {\n        const responseHint = body ? `${body.length} response characters were checked` : \"the response body was empty\";\n        const relayHint = sessionCookie ? \" The explicit OPU session relay was also rejected.\" : \" The userscript manager did not expose OPU's session header for an explicit relay.\";\n        const pageHint = looksLikeUploadForm(body) ? ` OPU returned its blank upload form.${relayHint}` : \"\";\n        throw new Error(`OPU upload finished, but no image URL was found (${responseHint}).${pageHint}`);\n      }\n      return url;\n    })();\n\n    return {\n      promise,\n      abort() {\n        if (cancelled) return;\n        cancelled = true;\n        activeRequest?.abort?.();\n      },\n    };\n  }\n\n  async function responseBodyText(response) {\n    const responseText = safeResponseValue(response, \"responseText\");\n    if (typeof responseText === \"string\" && responseText) return responseText;\n\n    const body = safeResponseValue(response, \"response\");\n    if (typeof body === \"string\") return body;\n    if (!body) {\n      const xml = safeResponseValue(response, \"responseXML\");\n      return serializeDocument(xml);\n    }\n    if (typeof body.text === \"function\") {\n      try {\n        return await body.text();\n      } catch (_error) {\n        // Continue to the document/object fallbacks below.\n      }\n    }\n    const serialized = serializeDocument(body);\n    if (serialized) return serialized;\n    if (typeof body === \"object\") {\n      try {\n        return JSON.stringify(body);\n      } catch (_error) {\n        return \"\";\n      }\n    }\n    return String(body || \"\");\n  }\n\n  function extractUploadUrl(html) {\n    const source = String(html || \"\");\n    if (!source) return \"\";\n    const doc = new DOMParser().parseFromString(source, \"text/html\");\n    const candidates = [];\n\n    doc.querySelectorAll('input[id^=\"link_\"], input[name^=\"link\"], input[value*=\"opu.peklo.biz/p/\"]')\n      .forEach((input) => candidates.push(input.value));\n    doc.querySelectorAll('a[href*=\"opu.peklo.biz/p/\"], a[href^=\"/p/\"]')\n      .forEach((link) => candidates.push(link.getAttribute(\"href\")));\n    doc.querySelectorAll('img[src*=\"opu.peklo.biz/p/\"], img[src^=\"/p/\"]')\n      .forEach((image) => candidates.push(image.getAttribute(\"src\")));\n\n    for (const value of candidates) {\n      const direct = extractCandidateUrl(value);\n      if (direct) return direct;\n    }\n\n    const unescaped = source.replace(/\\\\\\//g, \"/\");\n    const rawMatches = unescaped.match(/(?:https?:)?\\/\\/opu\\.peklo\\.biz\\/p\\/[^\\s\"'<>\\\\]+|\\/p\\/[^\\s\"'<>\\\\]+/gi) || [];\n    for (const value of rawMatches) {\n      const direct = validateOpuUrl(value);\n      if (direct) return direct;\n    }\n    return \"\";\n  }\n\n  function looksLikeUploadForm(html) {\n    const source = String(html || \"\");\n    return /<form\\b[^>]*\\bid=[\"']xpc[\"']/i.test(source) && /name=[\"']obrazek\\[0\\][\"']/i.test(source);\n  }\n\n  function extractResponseCookies(responseHeaders) {\n    const cookies = [];\n    const seen = new Set();\n    String(responseHeaders || \"\").split(/\\r?\\n/).forEach((line) => {\n      const match = line.match(/^set-cookie:\\s*([A-Za-z0-9_]+)=([^;\\s\\x00-\\x1f\\x7f]+)(?:;|$)/i);\n      if (!match) return;\n      const name = match[1];\n      const value = match[2];\n      if (!/^opu[A-Za-z0-9_]*$/i.test(name) || seen.has(name.toLowerCase())) return;\n      seen.add(name.toLowerCase());\n      cookies.push(`${name}=${value}`);\n    });\n    return cookies.join(\"; \");\n  }\n\n  function cookieRelay(cookie) {\n    if (!cookie) return {};\n    return {\n      cookie,\n      headers: { Cookie: cookie },\n    };\n  }\n\n  function extractCandidateUrl(value) {\n    const text = String(value || \"\");\n    const match = text.match(/(?:href|src)=[\"']([^\"']+)[\"']/i);\n    return validateOpuUrl(match?.[1] || text);\n  }\n\n  function validateOpuUrl(value) {\n    try {\n      let candidate = String(value || \"\").trim().replace(/&amp;/gi, \"&\");\n      if (candidate.startsWith(\"//\")) candidate = `https:${candidate}`;\n      if (candidate.startsWith(\"/p/\")) candidate = `https://opu.peklo.biz${candidate}`;\n      const url = new URL(candidate);\n      if (url.protocol !== \"https:\" || url.hostname !== \"opu.peklo.biz\") return \"\";\n      if (!url.pathname.startsWith(\"/p/\")) return \"\";\n      return url.toString();\n    } catch (_error) {\n      return \"\";\n    }\n  }\n\n  function getThumbUrl(imageUrl) {\n    const validated = validateOpuUrl(imageUrl);\n    if (!validated) return \"\";\n\n    const url = new URL(validated);\n    const parts = url.pathname.split(\"/\");\n    const fileName = parts.pop();\n    if (!fileName || parts.includes(\"thumbs\")) return url.toString();\n\n    const pIndex = parts.indexOf(\"p\");\n    if (pIndex < 0) return url.toString();\n    parts.push(\"thumbs\", fileName);\n    url.pathname = parts.join(\"/\");\n    return url.toString();\n  }\n\n  function gmRequest(details) {\n    let handle = null;\n    let settled = false;\n    let rejectPromise = null;\n\n    const promise = new Promise((resolve, reject) => {\n      rejectPromise = reject;\n      const requestDetails = {\n        ...details,\n        responseType: details.responseType || \"text\",\n        anonymous: false,\n        withCredentials: true,\n        cookiePartition: details.cookiePartition || { topLevelSite: \"https://opu.peklo.biz\" },\n        onload(response) {\n          if (settled) return;\n          settled = true;\n          resolve(response);\n        },\n        onerror() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request failed.\"));\n        },\n        ontimeout() {\n          if (settled) return;\n          settled = true;\n          reject(new Error(\"OPU network request timed out.\"));\n        },\n        onabort() {\n          if (settled) return;\n          settled = true;\n          reject(abortError());\n        },\n        onprogress(event) {\n          if (typeof details.onprogress === \"function\") details.onprogress(event);\n        },\n        upload: {\n          onprogress(event) {\n            if (typeof details.onprogress === \"function\") details.onprogress(event);\n          },\n        },\n      };\n\n      try {\n        if (typeof GM_xmlhttpRequest === \"function\") {\n          handle = GM_xmlhttpRequest(requestDetails);\n          return;\n        }\n        if (typeof GM !== \"undefined\" && GM && typeof GM.xmlHttpRequest === \"function\") {\n          handle = GM.xmlHttpRequest(requestDetails);\n          return;\n        }\n        settled = true;\n        reject(new Error(\"The userscript network bridge is unavailable.\"));\n      } catch (_error) {\n        settled = true;\n        reject(new Error(\"The OPU request could not be started.\"));\n      }\n    });\n\n    return {\n      promise,\n      abort() {\n        if (settled) return;\n        if (handle && typeof handle.abort === \"function\") {\n          handle.abort();\n          return;\n        }\n        settled = true;\n        rejectPromise?.(abortError());\n      },\n    };\n  }\n\n  function abortError() {\n    const error = new Error(\"OPU upload cancelled.\");\n    error.name = \"AbortError\";\n    return error;\n  }\n\n  function safeResponseValue(response, name) {\n    try {\n      return response?.[name];\n    } catch (_error) {\n      return undefined;\n    }\n  }\n\n  function serializeDocument(value) {\n    if (!value || typeof value !== \"object\") return \"\";\n    if (value.nodeType !== 9 && !value.documentElement) return \"\";\n    try {\n      if (typeof XMLSerializer === \"function\") return new XMLSerializer().serializeToString(value);\n    } catch (_error) {\n      // Fall through to outerHTML.\n    }\n    return String(value.documentElement?.outerHTML || \"\");\n  }\n})();\n");
   embeddedScripts.set("modules/opuc/client.js", function () {
     // OPU transport and response helpers for the Cudloun OPUc module.
     (function () {
@@ -2587,6 +3077,8 @@
       }
 
       function upload(file, options = {}) {
+        if (runtime.popupBridge?.shouldUse?.()) return runtime.popupBridge.upload(file, options);
+
         let activeRequest = null;
         let cancelled = false;
 
@@ -3504,7 +3996,7 @@
 
   });
 
-  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.3\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
+  embeddedText.set("modules/opuc/index.js", "// Cudloun module registration for OPUc on Kapybara.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const runtime = root.opuc = root.opuc || {};\n\n  root.registerModule({\n    id: \"opuc\",\n    name: \"OPUc for Kapybara\",\n    description: \"Upload an image through OPU and insert it into Kapybara's native editor.\",\n    version: \"0.1.4\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return runtime.ui.start(ctx);\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const label = document.createElement(\"label\");\n      label.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"span\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Maximum image size (MB)\";\n\n      const input = document.createElement(\"input\");\n      input.className = \"cudloun-select\";\n      input.type = \"number\";\n      input.min = \"1\";\n      input.max = \"100\";\n      input.step = \"1\";\n      input.value = String(ctx.storage.get(\"maxUploadMb\", 25));\n      input.addEventListener(\"change\", () => {\n        const value = Math.max(1, Math.min(100, Number(input.value) || 25));\n        input.value = String(value);\n        ctx.storage.set(\"maxUploadMb\", value);\n      });\n\n      label.appendChild(text);\n      label.appendChild(input);\n      wrap.appendChild(label);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable the module to add an OPUc button below the native image control in new-post and reply composers.\",\n        \"The first version stages one image, uploads it to OPU, and inserts it through Kapybara's native URL image flow.\",\n        \"OPUc never submits the Kapybara post. Review the inserted image and send or cancel the post yourself.\",\n      ];\n    },\n  });\n})();\n");
   embeddedScripts.set("modules/opuc/index.js", function () {
     // Cudloun module registration for OPUc on Kapybara.
     (function () {
@@ -3517,7 +4009,7 @@
         id: "opuc",
         name: "OPUc for Kapybara",
         description: "Upload an image through OPU and insert it into Kapybara's native editor.",
-        version: "0.1.3",
+        version: "0.1.4",
         defaultEnabled: false,
         start(ctx) {
           if (!root.kapyguts?.isKapybara?.()) return null;
