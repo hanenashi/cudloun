@@ -96,6 +96,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.5 TL;DR
+
+- Firefox now submits OPU's own native upload form inside the first-party tab
+  and reads the rendered result page after its normal navigation.
+- Removed XHR from the Firefox popup path after one manager still lost OPU's
+  session across the XHR redirect.
+
 ## Version 0.6.4 TL;DR
 
 - Firefox uploads now use a first-party OPU popup handoff because some

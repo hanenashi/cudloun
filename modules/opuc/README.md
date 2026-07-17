@@ -59,6 +59,15 @@ OPU-side Cudloun bridge validates the returned `https://opu.peklo.biz/p/` URL,
 sends only that URL back to `https://kapybara.okoun.cz`, and closes. The bridge
 accepts results only from the exact OPU origin and matching popup.
 
+## Native OPU form in Cudloun 0.6.5
+
+Firefox 0.6.5 removes XHR from the popup path as well. The first-party OPU tab
+receives the selected File, places it into OPU's existing `#xpc` file input,
+and submits that native form to itself. OPU performs its ordinary navigation to
+`?page=done`; the bridge request identifier survives in `window.name`, allowing
+the reloaded OPU-side bridge to validate the rendered result URL and return it
+to the matching Kapybara opener.
+
 ## Decision
 
 Build this as a first-class Cudloun module under `modules/opuc/`, not as a new

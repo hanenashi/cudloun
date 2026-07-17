@@ -128,9 +128,20 @@
 
   function startPopupHost() {
     if (!window.opener || !window.name.startsWith(WINDOW_PREFIX)) return;
-    const id = new URLSearchParams(window.location.search).get("cudloun_bridge") || "";
-    if (window.name !== `${WINDOW_PREFIX}${id}` || !validRequestId(id)) return;
-    let request = null;
+    const windowId = window.name.slice(WINDOW_PREFIX.length);
+    if (!validRequestId(windowId)) return;
+    const queryId = new URLSearchParams(window.location.search).get("cudloun_bridge") || "";
+
+    // The query identifies the initial handoff page. OPU removes it while
+    // redirecting to ?page=done, but window.name survives that navigation.
+    if (!queryId) {
+      completeNativeFormResult(windowId);
+      return;
+    }
+    if (queryId !== windowId) return;
+
+    let submitted = false;
+    const id = windowId;
     const sendReady = () => window.opener?.postMessage({ type: MESSAGE_TYPE, action: "ready", id }, KAPYBARA_ORIGIN);
     const readyTimer = window.setInterval(sendReady, 350);
 
@@ -139,56 +150,67 @@
       if (event.data?.type !== MESSAGE_TYPE || event.data.id !== id) return;
       if (event.data.action === "cancel") {
         window.clearInterval(readyTimer);
-        request?.abort?.();
         window.close();
         return;
       }
-      if (event.data.action !== "upload" || request) return;
+      if (event.data.action !== "upload" || submitted) return;
       window.clearInterval(readyTimer);
       const file = event.data.file;
       if (!(file instanceof Blob) || !String(file.type || "").startsWith("image/")) {
         sendResult(id, "", "The OPU upload window did not receive a valid image file.");
         return;
       }
-      request = uploadOnOpu(id, file);
+      submitted = true;
+      submitNativeOpuForm(id, file);
     });
 
     sendReady();
   }
 
-  function uploadOnOpu(id, file) {
-    const formData = new FormData();
-    formData.append("obrazek[0]", file, String(file.name || "image"));
-    formData.append("sizep", "0");
-    formData.append("outputf", "auto");
-    formData.append("tl_odeslat", "Odeslat");
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${OPU_ORIGIN}/opupload.php`);
-    xhr.withCredentials = true;
-    xhr.timeout = 120000;
-    xhr.upload.addEventListener("progress", (event) => {
-      window.opener?.postMessage({
-        type: MESSAGE_TYPE,
-        action: "progress",
-        id,
-        lengthComputable: event.lengthComputable,
-        loaded: event.loaded,
-        total: event.total,
-      }, KAPYBARA_ORIGIN);
-    });
-    xhr.addEventListener("load", () => {
-      if (xhr.status !== 200) {
-        sendResult(id, "", `OPU upload failed with HTTP ${xhr.status}.`);
+  function submitNativeOpuForm(id, file) {
+    try {
+      const form = document.querySelector('form#xpc[action*="opupload.php"]');
+      const fileInput = form?.querySelector('input[type="file"][name="obrazek[0]"]');
+      if (!form || !fileInput) {
+        sendResult(id, "", "OPU's native upload form was not found.");
         return;
       }
-      const url = extractHtmlUrl(xhr.responseText);
-      sendResult(id, url, url ? "" : "OPU uploaded the file, but its result page did not contain an image URL.");
-    });
-    xhr.addEventListener("error", () => sendResult(id, "", "The first-party OPU upload request failed."));
-    xhr.addEventListener("timeout", () => sendResult(id, "", "The first-party OPU upload request timed out."));
-    xhr.send(formData);
-    return xhr;
+
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+      setFormValue(form, "sizep", "0");
+      setFormValue(form, "outputf", "auto");
+      form.target = "_self";
+      const submit = form.querySelector('[type="submit"][name="tl_odeslat"]');
+      if (submit && typeof form.requestSubmit === "function") {
+        form.requestSubmit(submit);
+      } else {
+        form.appendChild(hiddenInput("tl_odeslat", "Odeslat"));
+        form.submit();
+      }
+    } catch (_error) {
+      sendResult(id, "", "Firefox could not place the selected image into OPU's native upload form.");
+    }
+  }
+
+  function setFormValue(form, name, value) {
+    const field = form.querySelector(`[name="${name}"][value="${value}"]`);
+    if (field && "checked" in field) field.checked = true;
+    else if (field) field.value = value;
+  }
+
+  function hiddenInput(name, value) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    return input;
+  }
+
+  function completeNativeFormResult(id) {
+    const url = extractDocumentUrl(document);
+    sendResult(id, url, url ? "" : "OPU's native result page did not contain an image URL.");
   }
 
   function sendResult(id, url, error) {
@@ -196,8 +218,7 @@
     window.setTimeout(() => window.close(), 80);
   }
 
-  function extractHtmlUrl(html) {
-    const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+  function extractDocumentUrl(doc) {
     const candidates = [];
     doc.querySelectorAll('input[value*="opu.peklo.biz/p/"]')
       .forEach((input) => candidates.push(input.value));
