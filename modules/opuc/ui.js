@@ -157,7 +157,7 @@
       view.session.update({ status: "error", message: unsupported, progress: 0 });
       return;
     }
-    if (!bridge?.shouldUse?.()) {
+    if (!bridge?.shouldUse?.() && !bridge?.shouldUseBackground?.()) {
       view.input.value = "";
       return;
     }

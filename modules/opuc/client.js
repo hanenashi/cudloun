@@ -4,6 +4,8 @@
 
   const root = window.Cudloun;
   const runtime = root.opuc = root.opuc || {};
+  const OPU_URL = "https://opu.peklo.biz/";
+  const KAPYBARA_ORIGIN = "https://kapybara.okoun.cz";
   const GALLERY_URL = "https://opu.peklo.biz/?page=userpanel";
   const UPLOAD_URL = "https://opu.peklo.biz/opupload.php";
 
@@ -28,7 +30,13 @@
   function upload(file, options = {}) {
     const unsupported = runtime.popupBridge?.unsupportedReason?.();
     if (unsupported) return rejectedRequest(unsupported);
+    if (runtime.popupBridge?.shouldUseBackground?.()) return uploadInBackground(file, options);
     if (runtime.popupBridge?.shouldUse?.()) return runtime.popupBridge.upload(file, options);
+
+    return uploadDirect(file, options);
+  }
+
+  function uploadDirect(file, options = {}, requestOptions = {}) {
 
     const formData = new FormData();
     formData.append("obrazek[0]", file);
@@ -37,6 +45,7 @@
     formData.append("tl_odeslat", "Odeslat");
 
     const request = gmRequest({
+      ...requestOptions,
       method: "POST",
       url: UPLOAD_URL,
       data: formData,
@@ -56,11 +65,56 @@
     };
   }
 
+  function uploadInBackground(file, options = {}) {
+    let activeRequest = null;
+    let cancelled = false;
+
+    const promise = (async () => {
+      const bytes = await runtime.popupBridge.prepare(file);
+      if (cancelled) throw abortError();
+
+      const name = safeFileName(file?.name);
+      const mime = String(file?.type || "application/octet-stream");
+      const stagedFile = new File([bytes], name, { type: mime });
+      const cookiePartition = { topLevelSite: KAPYBARA_ORIGIN };
+
+      // Seed Tampermonkey's OPU cookie jar before the multipart POST. There is
+      // deliberately no automatic tab fallback: OPU may have accepted a POST
+      // even when a manager hides its result, and retrying would duplicate it.
+      activeRequest = gmRequest({ method: "GET", url: OPU_URL, cookiePartition, timeout: 20000 });
+      const sessionResponse = await activeRequest.promise;
+      if (sessionResponse.status && (sessionResponse.status < 200 || sessionResponse.status >= 400)) {
+        throw new Error(`OPU session request failed with HTTP ${sessionResponse.status}.`);
+      }
+      if (cancelled) throw abortError();
+
+      activeRequest = uploadDirect(stagedFile, options, { cookiePartition });
+      return await activeRequest.promise;
+    })();
+
+    return {
+      promise,
+      abort() {
+        if (cancelled) return;
+        cancelled = true;
+        activeRequest?.abort?.();
+      },
+    };
+  }
+
   function rejectedRequest(message) {
     return {
       promise: Promise.reject(new Error(message)),
       abort() {},
     };
+  }
+
+  function safeFileName(value) {
+    const name = String(value || "image")
+      .replace(/[\\/\x00-\x1f\x7f]+/g, "_")
+      .trim()
+      .slice(0, 180);
+    return name || "image";
   }
 
   async function responseBodyText(response) {
