@@ -43,6 +43,8 @@ It exposes:
 - `allPosts()`
 - `visiblePosts()`
 - `postParts(post)`
+- `pageHeader()`
+- `boardHeaderParts()`
 - `visibleMenus(kind)`
 - `visiblePostMenus()`
 - `inspect()`
@@ -143,6 +145,25 @@ article.post
 data-post-id
 data-thread-id
 ```
+
+## Persistent And Board Headers
+
+Observed on desktop and mobile on 2026-07-20 in `nepotrebny_pokus`:
+
+```text
+global page header:  header:not(.board-header):not(.post-header)
+home marker:         a[aria-label="Okoun home"], .logo
+board header:        header.board-header
+board title row:     .board-header .title-row
+board title link:    .board-header .title-link
+board actions:       .board-header .title-row .title-actions
+mobile bottom nav:   nav.mobile-bottom-nav[aria-label="Spodní navigace"]
+```
+
+On desktop, the global page header is sticky at `top: 0` while the board header
+scrolls away. At mobile width, the global page header scrolls away and the
+board title row becomes the sticky toolbar at `top: 0`. Use `pageHeader()` and
+`boardHeaderParts()` so modules do not have to repeat that responsive lookup.
 
 ## New Post and Reply Composers
 
