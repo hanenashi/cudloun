@@ -36,9 +36,36 @@ test("Post Fonts normalizes manual pixel sizes", () => {
   assert.equal(Cudloun.postFonts.normalizeSize("nope"), 17);
 });
 
-test("Post Fonts exposes only predefined safe font stacks", () => {
+test("Post Fonts exposes expanded predefined safe font stacks", () => {
   const { root: Cudloun } = loadModule();
   assert.equal(Cudloun.postFonts.fontStack("georgia"), "Georgia, serif");
+  assert.equal(Cudloun.postFonts.fontStack("system-mono"), "ui-monospace, \"SFMono-Regular\", Consolas, \"Liberation Mono\", monospace");
+  assert.equal(Cudloun.postFonts.fontStack("comic-sans"), "\"Comic Sans MS\", cursive");
   assert.equal(Cudloun.postFonts.fontStack("default"), "");
   assert.equal(Cudloun.postFonts.fontStack("url(evil)"), "");
+});
+
+test("Post Fonts normalizes safe custom font stacks", () => {
+  const { root: Cudloun } = loadModule();
+  assert.equal(
+    Cudloun.postFonts.normalizeCustomFamily('  "Atkinson   Hyperlegible", Arial,sans-serif  '),
+    '"Atkinson Hyperlegible", Arial, sans-serif',
+  );
+  assert.equal(
+    Cudloun.postFonts.fontStack("custom", "Noto Serif, serif"),
+    "Noto Serif, serif",
+  );
+  assert.equal(Cudloun.postFonts.normalizeCustomFamily("Comic Sans MS, cursive"), "Comic Sans MS, cursive");
+});
+
+test("Post Fonts rejects unsafe or malformed custom font stacks", () => {
+  const { root: Cudloun } = loadModule();
+  [
+    "url(https://example.com/font.woff)",
+    "var(--post-font)",
+    "Arial; color: red",
+    "Arial,",
+    "\"Unclosed font, serif",
+    "Arial\\, serif",
+  ].forEach((value) => assert.equal(Cudloun.postFonts.fontStack("custom", value), "", value));
 });

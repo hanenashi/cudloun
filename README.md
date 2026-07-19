@@ -99,6 +99,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.13 TL;DR
+
+- Expanded Post Fonts with system, sans-serif, serif, monospace, and playful
+  local-font presets.
+- Added a persistent Custom option for safe comma-separated CSS font-family
+  stacks, with invalid CSS rejected and Kapybara's default used as fallback.
+
 ## Version 0.6.12 TL;DR
 
 - Added a default-disabled Post Fonts module with a compact `f` menu for font

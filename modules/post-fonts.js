@@ -10,15 +10,28 @@
   const MAX_SIZE = 72;
   const SLIDER_MIN = 10;
   const SLIDER_MAX = 32;
+  const MAX_CUSTOM_FAMILY_LENGTH = 160;
   const FAMILIES = [
     { value: "default", label: "Kapybara default", stack: "" },
     { value: "system", label: "System sans", stack: "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" },
+    { value: "system-serif", label: "System serif", stack: "ui-serif, Georgia, Cambria, \"Times New Roman\", serif" },
+    { value: "system-mono", label: "System monospace", stack: "ui-monospace, \"SFMono-Regular\", Consolas, \"Liberation Mono\", monospace" },
+    { value: "roboto", label: "Roboto", stack: "Roboto, Arial, sans-serif" },
+    { value: "noto-sans", label: "Noto Sans", stack: "\"Noto Sans\", Arial, sans-serif" },
+    { value: "segoe", label: "Segoe UI", stack: "\"Segoe UI\", Arial, sans-serif" },
+    { value: "helvetica", label: "Helvetica", stack: "Helvetica, Arial, sans-serif" },
     { value: "arial", label: "Arial", stack: "Arial, sans-serif" },
     { value: "verdana", label: "Verdana", stack: "Verdana, Geneva, sans-serif" },
     { value: "tahoma", label: "Tahoma", stack: "Tahoma, sans-serif" },
     { value: "trebuchet", label: "Trebuchet MS", stack: "\"Trebuchet MS\", sans-serif" },
     { value: "georgia", label: "Georgia", stack: "Georgia, serif" },
+    { value: "times", label: "Times New Roman", stack: "\"Times New Roman\", Times, serif" },
+    { value: "garamond", label: "Garamond", stack: "Garamond, Georgia, serif" },
+    { value: "palatino", label: "Palatino", stack: "Palatino, \"Palatino Linotype\", serif" },
     { value: "courier", label: "Courier New", stack: "\"Courier New\", monospace" },
+    { value: "consolas", label: "Consolas", stack: "Consolas, \"Liberation Mono\", monospace" },
+    { value: "comic-sans", label: "Comic Sans MS", stack: "\"Comic Sans MS\", cursive" },
+    { value: "custom", label: "Custom…", stack: "" },
   ];
 
   let ctxRef = null;
@@ -32,6 +45,7 @@
   root.postFonts = {
     families: FAMILIES.map(({ value, label }) => ({ value, label })),
     normalizeSize,
+    normalizeCustomFamily,
     fontStack,
   };
 
@@ -39,7 +53,7 @@
     id: "post-fonts",
     name: "Post Fonts",
     description: "Quick font family and size controls for displayed Kapybara posts.",
-    version: "0.1.0",
+    version: "0.2.0",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
@@ -53,15 +67,16 @@
       row.className = "cudloun-setting-row";
       const text = document.createElement("div");
       text.className = "cudloun-setting-text";
-      text.textContent = "Use the f button on board pages. It sits in the sticky desktop header and floats at the bottom right on mobile.";
+      text.textContent = "Use the f button on board pages. It stays in the sticky page header on desktop and the sticky board toolbar on mobile.";
       row.appendChild(text);
       wrap.appendChild(row);
       return wrap;
     },
     renderHelp() {
       return [
-        "Open f to choose a post font and adjust its size with the slider or number field.",
+        "Open f to choose a preset or enter a comma-separated custom font stack, then adjust its size with the slider or number field.",
         "Changes apply immediately to displayed post bodies and are remembered across page loads.",
+        "Custom fonts must already be available in your browser or device; later names in the stack act as fallbacks.",
         "Reset restores Kapybara's font family and its current 17 px post size.",
       ];
     },
@@ -212,6 +227,28 @@
     familyLabel.appendChild(familyText);
     familyLabel.appendChild(family);
 
+    const customLabel = document.createElement("label");
+    customLabel.className = "cudloun-post-fonts-field cudloun-post-fonts-custom";
+    const customText = document.createElement("span");
+    customText.textContent = "Custom";
+    const customWrap = document.createElement("span");
+    customWrap.className = "cudloun-post-fonts-custom-wrap";
+    const custom = document.createElement("input");
+    custom.type = "text";
+    custom.maxLength = MAX_CUSTOM_FAMILY_LENGTH;
+    custom.autocomplete = "off";
+    custom.spellcheck = false;
+    custom.placeholder = "\"Atkinson Hyperlegible\", Arial, sans-serif";
+    custom.setAttribute("aria-label", "Custom post font family");
+    const customHint = document.createElement("small");
+    customHint.textContent = "Comma-separated local font names";
+    customWrap.appendChild(custom);
+    customWrap.appendChild(customHint);
+    customLabel.appendChild(customText);
+    customLabel.appendChild(customWrap);
+    custom.value = String(ctxRef?.storage.get("customFamily", "") || "").slice(0, MAX_CUSTOM_FAMILY_LENGTH);
+    syncCustomField(customLabel, custom, customHint, family.value);
+
     const sizeField = document.createElement("div");
     sizeField.className = "cudloun-post-fonts-field";
     const sizeText = document.createElement("span");
@@ -248,6 +285,7 @@
 
     panel.appendChild(head);
     panel.appendChild(familyLabel);
+    panel.appendChild(customLabel);
     panel.appendChild(sizeField);
     panel.appendChild(actions);
     control.appendChild(button);
@@ -258,6 +296,14 @@
     close.addEventListener("click", () => setOpen(control, false));
     family.addEventListener("change", () => {
       ctxRef?.storage.set("family", validFamily(family.value));
+      syncCustomField(customLabel, custom, customHint, family.value);
+      applySettings();
+      if (family.value === "custom") custom.focus();
+    });
+    custom.addEventListener("input", () => {
+      const value = custom.value.slice(0, MAX_CUSTOM_FAMILY_LENGTH);
+      ctxRef?.storage.set("customFamily", value);
+      syncCustomField(customLabel, custom, customHint, family.value);
       applySettings();
     });
     range.addEventListener("input", () => {
@@ -278,8 +324,11 @@
     });
     reset.addEventListener("click", () => {
       family.value = "default";
+      custom.value = "";
+      syncCustomField(customLabel, custom, customHint, family.value);
       syncSizeInputs(range, number, DEFAULT_SIZE);
       ctxRef?.storage.set("family", "default");
+      ctxRef?.storage.set("customFamily", "");
       ctxRef?.storage.set("size", DEFAULT_SIZE);
       applySettings();
     });
@@ -303,12 +352,14 @@
 
   function applySettings() {
     const family = validFamily(ctxRef?.storage.get("family", "default"));
+    const customFamily = ctxRef?.storage.get("customFamily", "");
     const size = currentSize();
+    const stack = fontStack(family, customFamily);
+    const effectiveFamily = stack ? family : "default";
     const rootElement = document.documentElement;
     rootElement.setAttribute("data-cudloun-post-fonts", "true");
-    rootElement.setAttribute("data-cudloun-post-font-family", family);
+    rootElement.setAttribute("data-cudloun-post-font-family", effectiveFamily);
     rootElement.style.setProperty("--cudloun-post-font-size", `${displaySize(size)}px`);
-    const stack = fontStack(family);
     if (stack) rootElement.style.setProperty("--cudloun-post-font-family", stack);
     else rootElement.style.removeProperty("--cudloun-post-font-family");
   }
@@ -342,8 +393,62 @@
     return FAMILIES.some((font) => font.value === candidate) ? candidate : "default";
   }
 
-  function fontStack(value) {
-    return FAMILIES.find((font) => font.value === validFamily(value))?.stack || "";
+  function fontStack(value, customFamily = "") {
+    const family = validFamily(value);
+    if (family === "custom") return normalizeCustomFamily(customFamily);
+    return FAMILIES.find((font) => font.value === family)?.stack || "";
+  }
+
+  function normalizeCustomFamily(value) {
+    const source = String(value || "").trim();
+    if (!source || source.length > MAX_CUSTOM_FAMILY_LENGTH) return "";
+    if (/[;{}()\\/:]/.test(source) || /[\u0000-\u001f\u007f]/.test(source)) return "";
+
+    const tokens = [];
+    let token = "";
+    let quote = "";
+    for (const character of source) {
+      if ((character === "\"" || character === "'") && !quote) quote = character;
+      else if (character === quote) quote = "";
+      if (character === "," && !quote) {
+        tokens.push(token.trim());
+        token = "";
+      } else {
+        token += character;
+      }
+    }
+    if (quote) return "";
+    tokens.push(token.trim());
+    if (tokens.some((item) => !item)) return "";
+
+    const safeName = /^[\p{L}\p{N} ._-]+$/u;
+    const normalized = [];
+    for (const item of tokens) {
+      const opening = item[0];
+      const quoted = opening === "\"" || opening === "'";
+      if (quoted) {
+        if (item.length < 3 || item[item.length - 1] !== opening) return "";
+        const name = item.slice(1, -1).trim().replace(/\s+/g, " ");
+        if (!name || !safeName.test(name)) return "";
+        normalized.push(`${opening}${name}${opening}`);
+      } else {
+        const name = item.replace(/\s+/g, " ");
+        if (!safeName.test(name)) return "";
+        normalized.push(name);
+      }
+    }
+    return normalized.join(", ");
+  }
+
+  function syncCustomField(field, input, hint, family) {
+    field.hidden = family !== "custom";
+    const value = input.value.trim();
+    const normalized = normalizeCustomFamily(value);
+    const invalid = Boolean(value && !normalized);
+    input.setAttribute("aria-invalid", invalid ? "true" : "false");
+    hint.textContent = invalid
+      ? "Use comma-separated font names only"
+      : "Comma-separated local font names";
   }
 
   function syncSizeInputs(range, number, value) {
@@ -379,8 +484,15 @@
       .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}
       .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}
       .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}
-      .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type="number"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}
+      .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type="number"],.cudloun-post-fonts-field input[type="text"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}
       .cudloun-post-fonts-field select{width:100%}
+      .cudloun-post-fonts-custom[hidden]{display:none!important}
+      .cudloun-post-fonts-custom{align-items:start}
+      .cudloun-post-fonts-custom>span:first-child{padding-top:9px}
+      .cudloun-post-fonts-custom-wrap{display:grid;gap:4px;min-width:0}
+      .cudloun-post-fonts-custom-wrap input{width:100%}
+      .cudloun-post-fonts-custom-wrap input[aria-invalid="true"]{border-color:#b42318;outline-color:#b42318}
+      .cudloun-post-fonts-custom-wrap small{color:#697586;font-size:11px;font-weight:500}
       .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}
       .cudloun-post-fonts-size input[type="range"]{width:100%;accent-color:#b06a00}
       .cudloun-post-fonts-size input[type="number"]{width:62px;text-align:right}
@@ -392,6 +504,7 @@
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-panel,
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field select,
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="number"],
+      html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="text"],
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
       @media(max-width:700px){
         .${CONTROL_CLASS}[data-placement="floating"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}
