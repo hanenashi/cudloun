@@ -3,8 +3,15 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.1";
+  const VERSION = "0.1.2";
   const SELECTORS = {
+    pageHeader: "header:not(.board-header):not(.post-header)",
+    pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
+    boardHeader: "header.board-header",
+    boardTitleRow: ".board-header .title-row",
+    boardTitleLink: ".board-header .title-link",
+    boardTitleActions: ".board-header .title-row .title-actions",
+    mobileBottomNav: "nav.mobile-bottom-nav[aria-label='Spodní navigace']",
     boardPost: "article.post",
     avatarColumn: ".avatar-col",
     avatar: ".avatar",
@@ -55,6 +62,8 @@
     allPosts,
     visiblePosts,
     postParts,
+    pageHeader,
+    boardHeaderParts,
     visibleMenus,
     visiblePostMenus,
     allComposers,
@@ -138,6 +147,27 @@
 
   function visiblePosts(scope = document) {
     return allPosts(scope).filter(isVisible);
+  }
+
+  function pageHeader(scope = document) {
+    return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (
+      !header.closest("article.post") && !!header.querySelector(SELECTORS.pageHeaderLogo)
+    )) || null;
+  }
+
+  function boardHeaderParts(scope = document) {
+    const header = scope.querySelector(SELECTORS.boardHeader);
+    const titleRow = scope.querySelector(SELECTORS.boardTitleRow);
+    const titleLink = scope.querySelector(SELECTORS.boardTitleLink);
+    const actions = scope.querySelector(SELECTORS.boardTitleActions);
+    return {
+      header,
+      titleRow,
+      titleLink,
+      actions,
+      mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
+      stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === "sticky",
+    };
   }
 
   function postParts(post) {
@@ -275,6 +305,7 @@
       counts: {
         boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,
         visibleBoardPosts: posts.length,
+        boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,
         avatars: document.querySelectorAll(SELECTORS.avatar).length,
         replies: document.querySelectorAll(SELECTORS.replyButton).length,
         postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,

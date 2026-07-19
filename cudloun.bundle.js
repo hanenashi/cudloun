@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.11";
+  const VERSION = "0.6.12";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -435,7 +435,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.11\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.12\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -471,15 +471,22 @@
 
   });
 
-  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.1\";\n  const SELECTORS = {\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n    newPostComposer: \"section.new-post-composer[aria-label='Nový příspěvek']\",\n    replyComposer: \"section.reply-composer[aria-label='Odpověď']\",\n    composer: \".composer\",\n    composerEditor: \".composer-editor\",\n    composerEditable: \".composer-content-editable[role='textbox'][contenteditable='true']\",\n    composerToolbarSlot: \".composer-toolbar-slot\",\n    composerToolbar: \"[role='toolbar'][aria-label='Formátování textu']\",\n    composerImageButton: \"button[aria-label='Vložit obrázek']\",\n    composerModeToggle: \"button.mode-toggle[aria-pressed]\",\n    composerMarkdownNode: \"code[data-language='markdown']\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    visibleMenus,\n    visiblePostMenus,\n    allComposers,\n    composerParts,\n    observeComposers,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function allComposers(scope = document) {\n    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));\n  }\n\n  function composerParts(section) {\n    if (!section) return null;\n\n    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);\n    const editor = section.querySelector(SELECTORS.composerEditor);\n    const editable = section.querySelector(SELECTORS.composerEditable);\n    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);\n    const toolbar = section.querySelector(SELECTORS.composerToolbar);\n    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||\n      section.querySelector(SELECTORS.composerImageButton);\n    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);\n    const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;\n\n    return {\n      section,\n      kind: section.matches?.(SELECTORS.newPostComposer) ? \"new-post\" : \"reply\",\n      composer,\n      editor,\n      editable,\n      toolbarSlot,\n      toolbar,\n      imageButton,\n      modeToggle,\n      markdownNode,\n      markdownMode: !!markdownNode || modeToggle?.getAttribute(\"aria-pressed\") === \"true\",\n      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),\n    };\n  }\n\n  function observeComposers(callback, scope = document.body, onRemoved = null) {\n    if (typeof callback !== \"function\") return () => {};\n\n    const active = new Map();\n    const scan = () => {\n      const current = new Set(allComposers(scope || document));\n\n      active.forEach((parts, section) => {\n        if (current.has(section) && section.isConnected) return;\n        active.delete(section);\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      });\n\n      current.forEach((section) => {\n        const parts = composerParts(section);\n        if (!parts?.ready || active.has(section)) return;\n        active.set(section, parts);\n        callback(parts);\n      });\n    };\n\n    scan();\n    const observer = new MutationObserver(scan);\n    observer.observe(scope || document.body, { childList: true, subtree: true });\n\n    return () => {\n      observer.disconnect();\n      active.clear();\n    };\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        composers: allComposers().length,\n        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,\n        visibleMenus: menus.length,\n      },\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text) {\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.2\";\n  const SELECTORS = {\n    pageHeader: \"header:not(.board-header):not(.post-header)\",\n    pageHeaderLogo: \"a[aria-label='Okoun home'], .logo\",\n    boardHeader: \"header.board-header\",\n    boardTitleRow: \".board-header .title-row\",\n    boardTitleLink: \".board-header .title-link\",\n    boardTitleActions: \".board-header .title-row .title-actions\",\n    mobileBottomNav: \"nav.mobile-bottom-nav[aria-label='Spodní navigace']\",\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n    newPostComposer: \"section.new-post-composer[aria-label='Nový příspěvek']\",\n    replyComposer: \"section.reply-composer[aria-label='Odpověď']\",\n    composer: \".composer\",\n    composerEditor: \".composer-editor\",\n    composerEditable: \".composer-content-editable[role='textbox'][contenteditable='true']\",\n    composerToolbarSlot: \".composer-toolbar-slot\",\n    composerToolbar: \"[role='toolbar'][aria-label='Formátování textu']\",\n    composerImageButton: \"button[aria-label='Vložit obrázek']\",\n    composerModeToggle: \"button.mode-toggle[aria-pressed]\",\n    composerMarkdownNode: \"code[data-language='markdown']\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    pageHeader,\n    boardHeaderParts,\n    visibleMenus,\n    visiblePostMenus,\n    allComposers,\n    composerParts,\n    observeComposers,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function pageHeader(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (\n      !header.closest(\"article.post\") && !!header.querySelector(SELECTORS.pageHeaderLogo)\n    )) || null;\n  }\n\n  function boardHeaderParts(scope = document) {\n    const header = scope.querySelector(SELECTORS.boardHeader);\n    const titleRow = scope.querySelector(SELECTORS.boardTitleRow);\n    const titleLink = scope.querySelector(SELECTORS.boardTitleLink);\n    const actions = scope.querySelector(SELECTORS.boardTitleActions);\n    return {\n      header,\n      titleRow,\n      titleLink,\n      actions,\n      mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),\n      stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === \"sticky\",\n    };\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function allComposers(scope = document) {\n    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));\n  }\n\n  function composerParts(section) {\n    if (!section) return null;\n\n    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);\n    const editor = section.querySelector(SELECTORS.composerEditor);\n    const editable = section.querySelector(SELECTORS.composerEditable);\n    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);\n    const toolbar = section.querySelector(SELECTORS.composerToolbar);\n    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||\n      section.querySelector(SELECTORS.composerImageButton);\n    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);\n    const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;\n\n    return {\n      section,\n      kind: section.matches?.(SELECTORS.newPostComposer) ? \"new-post\" : \"reply\",\n      composer,\n      editor,\n      editable,\n      toolbarSlot,\n      toolbar,\n      imageButton,\n      modeToggle,\n      markdownNode,\n      markdownMode: !!markdownNode || modeToggle?.getAttribute(\"aria-pressed\") === \"true\",\n      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),\n    };\n  }\n\n  function observeComposers(callback, scope = document.body, onRemoved = null) {\n    if (typeof callback !== \"function\") return () => {};\n\n    const active = new Map();\n    const scan = () => {\n      const current = new Set(allComposers(scope || document));\n\n      active.forEach((parts, section) => {\n        if (current.has(section) && section.isConnected) return;\n        active.delete(section);\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      });\n\n      current.forEach((section) => {\n        const parts = composerParts(section);\n        if (!parts?.ready || active.has(section)) return;\n        active.set(section, parts);\n        callback(parts);\n      });\n    };\n\n    scan();\n    const observer = new MutationObserver(scan);\n    observer.observe(scope || document.body, { childList: true, subtree: true });\n\n    return () => {\n      observer.disconnect();\n      active.clear();\n    };\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        composers: allComposers().length,\n        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,\n        visibleMenus: menus.length,\n      },\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text) {\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
   embeddedScripts.set("modules/sys-kapyguts.js", function () {
     // Cudloun Kapybara DOM dictionary helpers.
     (function () {
       "use strict";
 
       const root = window.Cudloun;
-      const VERSION = "0.1.1";
+      const VERSION = "0.1.2";
       const SELECTORS = {
+        pageHeader: "header:not(.board-header):not(.post-header)",
+        pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
+        boardHeader: "header.board-header",
+        boardTitleRow: ".board-header .title-row",
+        boardTitleLink: ".board-header .title-link",
+        boardTitleActions: ".board-header .title-row .title-actions",
+        mobileBottomNav: "nav.mobile-bottom-nav[aria-label='Spodní navigace']",
         boardPost: "article.post",
         avatarColumn: ".avatar-col",
         avatar: ".avatar",
@@ -530,6 +537,8 @@
         allPosts,
         visiblePosts,
         postParts,
+        pageHeader,
+        boardHeaderParts,
         visibleMenus,
         visiblePostMenus,
         allComposers,
@@ -613,6 +622,27 @@
 
       function visiblePosts(scope = document) {
         return allPosts(scope).filter(isVisible);
+      }
+
+      function pageHeader(scope = document) {
+        return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (
+          !header.closest("article.post") && !!header.querySelector(SELECTORS.pageHeaderLogo)
+        )) || null;
+      }
+
+      function boardHeaderParts(scope = document) {
+        const header = scope.querySelector(SELECTORS.boardHeader);
+        const titleRow = scope.querySelector(SELECTORS.boardTitleRow);
+        const titleLink = scope.querySelector(SELECTORS.boardTitleLink);
+        const actions = scope.querySelector(SELECTORS.boardTitleActions);
+        return {
+          header,
+          titleRow,
+          titleLink,
+          actions,
+          mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
+          stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === "sticky",
+        };
       }
 
       function postParts(post) {
@@ -750,6 +780,7 @@
           counts: {
             boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,
             visibleBoardPosts: posts.length,
+            boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,
             avatars: document.querySelectorAll(SELECTORS.avatar).length,
             replies: document.querySelectorAll(SELECTORS.replyButton).length,
             postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,
@@ -2983,6 +3014,418 @@
 
       function cleanText(value) {
         return String(value || "").replace(/\s+/g, " ").trim();
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/post-fonts.js", "// Compact post font controls for Kapybara board pages.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-post-fonts-style\";\n  const CONTROL_CLASS = \"cudloun-post-fonts-control\";\n  const DEFAULT_SIZE = 17;\n  const MIN_SIZE = 8;\n  const MAX_SIZE = 72;\n  const SLIDER_MIN = 10;\n  const SLIDER_MAX = 32;\n  const FAMILIES = [\n    { value: \"default\", label: \"Kapybara default\", stack: \"\" },\n    { value: \"system\", label: \"System sans\", stack: \"system-ui, -apple-system, BlinkMacSystemFont, \\\"Segoe UI\\\", sans-serif\" },\n    { value: \"arial\", label: \"Arial\", stack: \"Arial, sans-serif\" },\n    { value: \"verdana\", label: \"Verdana\", stack: \"Verdana, Geneva, sans-serif\" },\n    { value: \"tahoma\", label: \"Tahoma\", stack: \"Tahoma, sans-serif\" },\n    { value: \"trebuchet\", label: \"Trebuchet MS\", stack: \"\\\"Trebuchet MS\\\", sans-serif\" },\n    { value: \"georgia\", label: \"Georgia\", stack: \"Georgia, serif\" },\n    { value: \"courier\", label: \"Courier New\", stack: \"\\\"Courier New\\\", monospace\" },\n  ];\n\n  let ctxRef = null;\n  let observer = null;\n  let routeTimer = null;\n  let mountTimer = null;\n  let outsideHandler = null;\n  let keyHandler = null;\n  let resizeHandler = null;\n\n  root.postFonts = {\n    families: FAMILIES.map(({ value, label }) => ({ value, label })),\n    normalizeSize,\n    fontStack,\n  };\n\n  root.registerModule({\n    id: \"post-fonts\",\n    name: \"Post Fonts\",\n    description: \"Quick font family and size controls for displayed Kapybara posts.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return start(ctx);\n    },\n    renderSettings() {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const row = document.createElement(\"div\");\n      row.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"div\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Use the f button on board pages. It sits in the sticky desktop header and floats at the bottom right on mobile.\";\n      row.appendChild(text);\n      wrap.appendChild(row);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Open f to choose a post font and adjust its size with the slider or number field.\",\n        \"Changes apply immediately to displayed post bodies and are remembered across page loads.\",\n        \"Reset restores Kapybara's font family and its current 17 px post size.\",\n      ];\n    },\n  });\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    installStyles();\n    applySettings();\n    mountForRoute();\n\n    observer = new MutationObserver(scheduleMount);\n    observer.observe(document.body, { childList: true, subtree: true });\n\n    outsideHandler = (event) => {\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (!control || control.contains(event.target)) return;\n      setOpen(control, false);\n    };\n    keyHandler = (event) => {\n      if (event.key !== \"Escape\") return;\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (control) setOpen(control, false);\n    };\n    document.addEventListener(\"pointerdown\", outsideHandler, true);\n    document.addEventListener(\"keydown\", keyHandler, true);\n    resizeHandler = scheduleMount;\n    window.addEventListener(\"resize\", resizeHandler);\n    observeRoute();\n    ctx.log.info(\"post font controls ready\");\n    return stop;\n  }\n\n  function stop() {\n    observer?.disconnect();\n    observer = null;\n    window.clearTimeout(routeTimer);\n    window.clearTimeout(mountTimer);\n    routeTimer = null;\n    mountTimer = null;\n    if (outsideHandler) document.removeEventListener(\"pointerdown\", outsideHandler, true);\n    if (keyHandler) document.removeEventListener(\"keydown\", keyHandler, true);\n    if (resizeHandler) window.removeEventListener(\"resize\", resizeHandler);\n    outsideHandler = null;\n    keyHandler = null;\n    resizeHandler = null;\n    document.querySelectorAll(`.${CONTROL_CLASS}`).forEach((control) => control.remove());\n    document.getElementById(STYLE_ID)?.remove();\n    clearSettings();\n    ctxRef = null;\n  }\n\n  function observeRoute() {\n    let lastRoute = root.currentRoute();\n    const check = () => {\n      const route = root.currentRoute();\n      if (route !== lastRoute) {\n        lastRoute = route;\n        mountForRoute();\n      }\n      routeTimer = window.setTimeout(check, 500);\n    };\n    routeTimer = window.setTimeout(check, 500);\n  }\n\n  function scheduleMount() {\n    window.clearTimeout(mountTimer);\n    mountTimer = window.setTimeout(mountForRoute, 60);\n  }\n\n  function mountForRoute() {\n    const controls = Array.from(document.querySelectorAll(`.${CONTROL_CLASS}`));\n    if (!root.kapyguts?.isBoardPage?.()) {\n      controls.forEach((control) => control.remove());\n      return;\n    }\n\n    const target = controlTarget();\n    if (!target) return;\n    const connected = controls.find((control) => (\n      control.parentElement === target.host && control.dataset.placement === target.placement\n    ));\n    controls.filter((control) => control !== connected).forEach((control) => control.remove());\n    if (!connected) target.host.appendChild(makeControl(target.placement));\n  }\n\n  function controlTarget() {\n    if (window.matchMedia(\"(max-width: 700px)\").matches) {\n      const boardActions = root.kapyguts?.boardHeaderParts?.().actions;\n      if (boardActions) return { host: boardActions, placement: \"board-header\" };\n      const header = persistentHeader();\n      return header ? { host: header, placement: \"floating\" } : null;\n    }\n\n    const header = persistentHeader();\n    return header ? { host: header, placement: \"global-header\" } : null;\n  }\n\n  function persistentHeader() {\n    return root.kapyguts?.pageHeader?.() || null;\n  }\n\n  function makeControl(placement) {\n    const control = document.createElement(\"div\");\n    control.className = CONTROL_CLASS;\n    control.dataset.placement = placement;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-post-fonts-toggle\";\n    button.textContent = \"f\";\n    button.title = \"Post fonts\";\n    button.setAttribute(\"aria-label\", \"Post font controls\");\n    button.setAttribute(\"aria-expanded\", \"false\");\n\n    const panel = document.createElement(\"section\");\n    panel.className = \"cudloun-post-fonts-panel\";\n    panel.hidden = true;\n    panel.setAttribute(\"aria-label\", \"Post font controls\");\n\n    const head = document.createElement(\"div\");\n    head.className = \"cudloun-post-fonts-head\";\n    const title = document.createElement(\"strong\");\n    title.textContent = \"Post font\";\n    const close = document.createElement(\"button\");\n    close.type = \"button\";\n    close.className = \"cudloun-post-fonts-close\";\n    close.textContent = \"×\";\n    close.setAttribute(\"aria-label\", \"Close post font controls\");\n    head.appendChild(title);\n    head.appendChild(close);\n\n    const familyLabel = document.createElement(\"label\");\n    familyLabel.className = \"cudloun-post-fonts-field\";\n    const familyText = document.createElement(\"span\");\n    familyText.textContent = \"Font\";\n    const family = document.createElement(\"select\");\n    family.setAttribute(\"aria-label\", \"Post font family\");\n    FAMILIES.forEach(({ value, label, stack }) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = label;\n      if (stack) option.style.fontFamily = stack;\n      family.appendChild(option);\n    });\n    family.value = validFamily(ctxRef?.storage.get(\"family\", \"default\"));\n    familyLabel.appendChild(familyText);\n    familyLabel.appendChild(family);\n\n    const sizeField = document.createElement(\"div\");\n    sizeField.className = \"cudloun-post-fonts-field\";\n    const sizeText = document.createElement(\"span\");\n    sizeText.textContent = \"Size\";\n    const sizeControls = document.createElement(\"div\");\n    sizeControls.className = \"cudloun-post-fonts-size\";\n    const range = document.createElement(\"input\");\n    range.type = \"range\";\n    range.min = String(SLIDER_MIN);\n    range.max = String(SLIDER_MAX);\n    range.step = \"0.5\";\n    range.setAttribute(\"aria-label\", \"Post font size slider\");\n    const number = document.createElement(\"input\");\n    number.type = \"number\";\n    number.min = String(MIN_SIZE);\n    number.max = String(MAX_SIZE);\n    number.step = \"0.5\";\n    number.inputMode = \"decimal\";\n    number.setAttribute(\"aria-label\", \"Post font size in pixels\");\n    const unit = document.createElement(\"span\");\n    unit.textContent = \"px\";\n    sizeControls.appendChild(range);\n    sizeControls.appendChild(number);\n    sizeControls.appendChild(unit);\n    sizeField.appendChild(sizeText);\n    sizeField.appendChild(sizeControls);\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-post-fonts-actions\";\n    const reset = document.createElement(\"button\");\n    reset.type = \"button\";\n    reset.textContent = \"Reset\";\n    actions.appendChild(reset);\n\n    panel.appendChild(head);\n    panel.appendChild(familyLabel);\n    panel.appendChild(sizeField);\n    panel.appendChild(actions);\n    control.appendChild(button);\n    control.appendChild(panel);\n\n    syncSizeInputs(range, number, currentSize());\n    button.addEventListener(\"click\", () => setOpen(control, panel.hidden));\n    close.addEventListener(\"click\", () => setOpen(control, false));\n    family.addEventListener(\"change\", () => {\n      ctxRef?.storage.set(\"family\", validFamily(family.value));\n      applySettings();\n    });\n    range.addEventListener(\"input\", () => {\n      const size = normalizeSize(range.value);\n      number.value = displaySize(size);\n      saveSize(size);\n    });\n    number.addEventListener(\"input\", () => {\n      if (number.value === \"\") return;\n      const size = normalizeSize(number.value);\n      range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n      saveSize(size);\n    });\n    number.addEventListener(\"change\", () => {\n      const size = normalizeSize(number.value);\n      syncSizeInputs(range, number, size);\n      saveSize(size);\n    });\n    reset.addEventListener(\"click\", () => {\n      family.value = \"default\";\n      syncSizeInputs(range, number, DEFAULT_SIZE);\n      ctxRef?.storage.set(\"family\", \"default\");\n      ctxRef?.storage.set(\"size\", DEFAULT_SIZE);\n      applySettings();\n    });\n    return control;\n  }\n\n  function setOpen(control, open) {\n    const panel = control.querySelector(\".cudloun-post-fonts-panel\");\n    const button = control.querySelector(\".cudloun-post-fonts-toggle\");\n    if (!panel || !button) return;\n    panel.hidden = !open;\n    button.setAttribute(\"aria-expanded\", open ? \"true\" : \"false\");\n    if (open) panel.querySelector(\"select\")?.focus();\n  }\n\n  function saveSize(value) {\n    const size = normalizeSize(value);\n    ctxRef?.storage.set(\"size\", size);\n    applySettings();\n  }\n\n  function applySettings() {\n    const family = validFamily(ctxRef?.storage.get(\"family\", \"default\"));\n    const size = currentSize();\n    const rootElement = document.documentElement;\n    rootElement.setAttribute(\"data-cudloun-post-fonts\", \"true\");\n    rootElement.setAttribute(\"data-cudloun-post-font-family\", family);\n    rootElement.style.setProperty(\"--cudloun-post-font-size\", `${displaySize(size)}px`);\n    const stack = fontStack(family);\n    if (stack) rootElement.style.setProperty(\"--cudloun-post-font-family\", stack);\n    else rootElement.style.removeProperty(\"--cudloun-post-font-family\");\n  }\n\n  function clearSettings() {\n    const rootElement = document.documentElement;\n    rootElement.removeAttribute(\"data-cudloun-post-fonts\");\n    rootElement.removeAttribute(\"data-cudloun-post-font-family\");\n    rootElement.style.removeProperty(\"--cudloun-post-font-size\");\n    rootElement.style.removeProperty(\"--cudloun-post-font-family\");\n  }\n\n  function currentSize() {\n    return normalizeSize(ctxRef?.storage.get(\"size\", DEFAULT_SIZE));\n  }\n\n  function normalizeSize(value) {\n    const parsed = Number(value);\n    if (!Number.isFinite(parsed)) return DEFAULT_SIZE;\n    const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parsed));\n    return Math.round(clamped * 2) / 2;\n  }\n\n  function displaySize(value) {\n    const size = normalizeSize(value);\n    return Number.isInteger(size) ? String(size) : size.toFixed(1);\n  }\n\n  function validFamily(value) {\n    const candidate = String(value || \"default\");\n    return FAMILIES.some((font) => font.value === candidate) ? candidate : \"default\";\n  }\n\n  function fontStack(value) {\n    return FAMILIES.find((font) => font.value === validFamily(value))?.stack || \"\";\n  }\n\n  function syncSizeInputs(range, number, value) {\n    const size = normalizeSize(value);\n    range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n    number.value = displaySize(size);\n  }\n\n  function installStyles() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[data-cudloun-post-fonts=\"true\"] article.post .body,\n      html[data-cudloun-post-fonts=\"true\"] article.post .body .markdown {\n        font-size: var(--cudloun-post-font-size, 17px) !important;\n      }\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body,\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body .markdown {\n        font-family: var(--cudloun-post-font-family) !important;\n      }\n      .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#243041}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-panel{top:44px;right:0}\n      .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif}\n      .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded=\"true\"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}\n      .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}\n      .cudloun-post-fonts-panel{box-sizing:border-box;position:absolute;top:46px;right:0;width:286px;padding:12px;border:1px solid rgba(79,102,134,.3);border-radius:10px;background:#fff;color:#243041;box-shadow:0 12px 32px rgba(18,27,43,.24)}\n      .cudloun-post-fonts-panel[hidden]{display:none!important}\n      .cudloun-post-fonts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}\n      .cudloun-post-fonts-head strong{font-size:14px}\n      .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}\n      .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}\n      .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}\n      .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type=\"number\"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}\n      .cudloun-post-fonts-field select{width:100%}\n      .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}\n      .cudloun-post-fonts-size input[type=\"range\"]{width:100%;accent-color:#b06a00}\n      .cudloun-post-fonts-size input[type=\"number\"]{width:62px;text-align:right}\n      .cudloun-post-fonts-size>span{color:#697586;font-size:12px}\n      .cudloun-post-fonts-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid rgba(79,102,134,.16)}\n      .cudloun-post-fonts-actions button{appearance:none;border:1px solid rgba(79,102,134,.26);border-radius:7px;background:#f8fafc;color:#364152;cursor:pointer;font:700 12px/1.2 inherit;padding:7px 10px}\n      .cudloun-post-fonts-actions button:hover{background:#eef2f7}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-toggle,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-panel,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field select,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field input[type=\"number\"],\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      @media(max-width:700px){\n        .${CONTROL_CLASS}[data-placement=\"floating\"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle:hover,\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle[aria-expanded=\"true\"]{background:#8f5600;color:#fff}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-panel{top:auto;right:0;bottom:54px}\n        .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 28px));max-height:calc(100dvh - 72px);overflow:auto}\n      }\n    `;\n    document.head.appendChild(style);\n  }\n})();\n");
+  embeddedScripts.set("modules/post-fonts.js", function () {
+    // Compact post font controls for Kapybara board pages.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const STYLE_ID = "cudloun-post-fonts-style";
+      const CONTROL_CLASS = "cudloun-post-fonts-control";
+      const DEFAULT_SIZE = 17;
+      const MIN_SIZE = 8;
+      const MAX_SIZE = 72;
+      const SLIDER_MIN = 10;
+      const SLIDER_MAX = 32;
+      const FAMILIES = [
+        { value: "default", label: "Kapybara default", stack: "" },
+        { value: "system", label: "System sans", stack: "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" },
+        { value: "arial", label: "Arial", stack: "Arial, sans-serif" },
+        { value: "verdana", label: "Verdana", stack: "Verdana, Geneva, sans-serif" },
+        { value: "tahoma", label: "Tahoma", stack: "Tahoma, sans-serif" },
+        { value: "trebuchet", label: "Trebuchet MS", stack: "\"Trebuchet MS\", sans-serif" },
+        { value: "georgia", label: "Georgia", stack: "Georgia, serif" },
+        { value: "courier", label: "Courier New", stack: "\"Courier New\", monospace" },
+      ];
+
+      let ctxRef = null;
+      let observer = null;
+      let routeTimer = null;
+      let mountTimer = null;
+      let outsideHandler = null;
+      let keyHandler = null;
+      let resizeHandler = null;
+
+      root.postFonts = {
+        families: FAMILIES.map(({ value, label }) => ({ value, label })),
+        normalizeSize,
+        fontStack,
+      };
+
+      root.registerModule({
+        id: "post-fonts",
+        name: "Post Fonts",
+        description: "Quick font family and size controls for displayed Kapybara posts.",
+        version: "0.1.0",
+        defaultEnabled: false,
+        start(ctx) {
+          if (!root.kapyguts?.isKapybara?.()) return null;
+          return start(ctx);
+        },
+        renderSettings() {
+          const wrap = document.createElement("div");
+          wrap.className = "cudloun-settings-list";
+
+          const row = document.createElement("div");
+          row.className = "cudloun-setting-row";
+          const text = document.createElement("div");
+          text.className = "cudloun-setting-text";
+          text.textContent = "Use the f button on board pages. It sits in the sticky desktop header and floats at the bottom right on mobile.";
+          row.appendChild(text);
+          wrap.appendChild(row);
+          return wrap;
+        },
+        renderHelp() {
+          return [
+            "Open f to choose a post font and adjust its size with the slider or number field.",
+            "Changes apply immediately to displayed post bodies and are remembered across page loads.",
+            "Reset restores Kapybara's font family and its current 17 px post size.",
+          ];
+        },
+      });
+
+      function start(ctx) {
+        stop();
+        ctxRef = ctx;
+        installStyles();
+        applySettings();
+        mountForRoute();
+
+        observer = new MutationObserver(scheduleMount);
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        outsideHandler = (event) => {
+          const control = document.querySelector(`.${CONTROL_CLASS}`);
+          if (!control || control.contains(event.target)) return;
+          setOpen(control, false);
+        };
+        keyHandler = (event) => {
+          if (event.key !== "Escape") return;
+          const control = document.querySelector(`.${CONTROL_CLASS}`);
+          if (control) setOpen(control, false);
+        };
+        document.addEventListener("pointerdown", outsideHandler, true);
+        document.addEventListener("keydown", keyHandler, true);
+        resizeHandler = scheduleMount;
+        window.addEventListener("resize", resizeHandler);
+        observeRoute();
+        ctx.log.info("post font controls ready");
+        return stop;
+      }
+
+      function stop() {
+        observer?.disconnect();
+        observer = null;
+        window.clearTimeout(routeTimer);
+        window.clearTimeout(mountTimer);
+        routeTimer = null;
+        mountTimer = null;
+        if (outsideHandler) document.removeEventListener("pointerdown", outsideHandler, true);
+        if (keyHandler) document.removeEventListener("keydown", keyHandler, true);
+        if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+        outsideHandler = null;
+        keyHandler = null;
+        resizeHandler = null;
+        document.querySelectorAll(`.${CONTROL_CLASS}`).forEach((control) => control.remove());
+        document.getElementById(STYLE_ID)?.remove();
+        clearSettings();
+        ctxRef = null;
+      }
+
+      function observeRoute() {
+        let lastRoute = root.currentRoute();
+        const check = () => {
+          const route = root.currentRoute();
+          if (route !== lastRoute) {
+            lastRoute = route;
+            mountForRoute();
+          }
+          routeTimer = window.setTimeout(check, 500);
+        };
+        routeTimer = window.setTimeout(check, 500);
+      }
+
+      function scheduleMount() {
+        window.clearTimeout(mountTimer);
+        mountTimer = window.setTimeout(mountForRoute, 60);
+      }
+
+      function mountForRoute() {
+        const controls = Array.from(document.querySelectorAll(`.${CONTROL_CLASS}`));
+        if (!root.kapyguts?.isBoardPage?.()) {
+          controls.forEach((control) => control.remove());
+          return;
+        }
+
+        const target = controlTarget();
+        if (!target) return;
+        const connected = controls.find((control) => (
+          control.parentElement === target.host && control.dataset.placement === target.placement
+        ));
+        controls.filter((control) => control !== connected).forEach((control) => control.remove());
+        if (!connected) target.host.appendChild(makeControl(target.placement));
+      }
+
+      function controlTarget() {
+        if (window.matchMedia("(max-width: 700px)").matches) {
+          const boardActions = root.kapyguts?.boardHeaderParts?.().actions;
+          if (boardActions) return { host: boardActions, placement: "board-header" };
+          const header = persistentHeader();
+          return header ? { host: header, placement: "floating" } : null;
+        }
+
+        const header = persistentHeader();
+        return header ? { host: header, placement: "global-header" } : null;
+      }
+
+      function persistentHeader() {
+        return root.kapyguts?.pageHeader?.() || null;
+      }
+
+      function makeControl(placement) {
+        const control = document.createElement("div");
+        control.className = CONTROL_CLASS;
+        control.dataset.placement = placement;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cudloun-post-fonts-toggle";
+        button.textContent = "f";
+        button.title = "Post fonts";
+        button.setAttribute("aria-label", "Post font controls");
+        button.setAttribute("aria-expanded", "false");
+
+        const panel = document.createElement("section");
+        panel.className = "cudloun-post-fonts-panel";
+        panel.hidden = true;
+        panel.setAttribute("aria-label", "Post font controls");
+
+        const head = document.createElement("div");
+        head.className = "cudloun-post-fonts-head";
+        const title = document.createElement("strong");
+        title.textContent = "Post font";
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "cudloun-post-fonts-close";
+        close.textContent = "×";
+        close.setAttribute("aria-label", "Close post font controls");
+        head.appendChild(title);
+        head.appendChild(close);
+
+        const familyLabel = document.createElement("label");
+        familyLabel.className = "cudloun-post-fonts-field";
+        const familyText = document.createElement("span");
+        familyText.textContent = "Font";
+        const family = document.createElement("select");
+        family.setAttribute("aria-label", "Post font family");
+        FAMILIES.forEach(({ value, label, stack }) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+          if (stack) option.style.fontFamily = stack;
+          family.appendChild(option);
+        });
+        family.value = validFamily(ctxRef?.storage.get("family", "default"));
+        familyLabel.appendChild(familyText);
+        familyLabel.appendChild(family);
+
+        const sizeField = document.createElement("div");
+        sizeField.className = "cudloun-post-fonts-field";
+        const sizeText = document.createElement("span");
+        sizeText.textContent = "Size";
+        const sizeControls = document.createElement("div");
+        sizeControls.className = "cudloun-post-fonts-size";
+        const range = document.createElement("input");
+        range.type = "range";
+        range.min = String(SLIDER_MIN);
+        range.max = String(SLIDER_MAX);
+        range.step = "0.5";
+        range.setAttribute("aria-label", "Post font size slider");
+        const number = document.createElement("input");
+        number.type = "number";
+        number.min = String(MIN_SIZE);
+        number.max = String(MAX_SIZE);
+        number.step = "0.5";
+        number.inputMode = "decimal";
+        number.setAttribute("aria-label", "Post font size in pixels");
+        const unit = document.createElement("span");
+        unit.textContent = "px";
+        sizeControls.appendChild(range);
+        sizeControls.appendChild(number);
+        sizeControls.appendChild(unit);
+        sizeField.appendChild(sizeText);
+        sizeField.appendChild(sizeControls);
+
+        const actions = document.createElement("div");
+        actions.className = "cudloun-post-fonts-actions";
+        const reset = document.createElement("button");
+        reset.type = "button";
+        reset.textContent = "Reset";
+        actions.appendChild(reset);
+
+        panel.appendChild(head);
+        panel.appendChild(familyLabel);
+        panel.appendChild(sizeField);
+        panel.appendChild(actions);
+        control.appendChild(button);
+        control.appendChild(panel);
+
+        syncSizeInputs(range, number, currentSize());
+        button.addEventListener("click", () => setOpen(control, panel.hidden));
+        close.addEventListener("click", () => setOpen(control, false));
+        family.addEventListener("change", () => {
+          ctxRef?.storage.set("family", validFamily(family.value));
+          applySettings();
+        });
+        range.addEventListener("input", () => {
+          const size = normalizeSize(range.value);
+          number.value = displaySize(size);
+          saveSize(size);
+        });
+        number.addEventListener("input", () => {
+          if (number.value === "") return;
+          const size = normalizeSize(number.value);
+          range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));
+          saveSize(size);
+        });
+        number.addEventListener("change", () => {
+          const size = normalizeSize(number.value);
+          syncSizeInputs(range, number, size);
+          saveSize(size);
+        });
+        reset.addEventListener("click", () => {
+          family.value = "default";
+          syncSizeInputs(range, number, DEFAULT_SIZE);
+          ctxRef?.storage.set("family", "default");
+          ctxRef?.storage.set("size", DEFAULT_SIZE);
+          applySettings();
+        });
+        return control;
+      }
+
+      function setOpen(control, open) {
+        const panel = control.querySelector(".cudloun-post-fonts-panel");
+        const button = control.querySelector(".cudloun-post-fonts-toggle");
+        if (!panel || !button) return;
+        panel.hidden = !open;
+        button.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) panel.querySelector("select")?.focus();
+      }
+
+      function saveSize(value) {
+        const size = normalizeSize(value);
+        ctxRef?.storage.set("size", size);
+        applySettings();
+      }
+
+      function applySettings() {
+        const family = validFamily(ctxRef?.storage.get("family", "default"));
+        const size = currentSize();
+        const rootElement = document.documentElement;
+        rootElement.setAttribute("data-cudloun-post-fonts", "true");
+        rootElement.setAttribute("data-cudloun-post-font-family", family);
+        rootElement.style.setProperty("--cudloun-post-font-size", `${displaySize(size)}px`);
+        const stack = fontStack(family);
+        if (stack) rootElement.style.setProperty("--cudloun-post-font-family", stack);
+        else rootElement.style.removeProperty("--cudloun-post-font-family");
+      }
+
+      function clearSettings() {
+        const rootElement = document.documentElement;
+        rootElement.removeAttribute("data-cudloun-post-fonts");
+        rootElement.removeAttribute("data-cudloun-post-font-family");
+        rootElement.style.removeProperty("--cudloun-post-font-size");
+        rootElement.style.removeProperty("--cudloun-post-font-family");
+      }
+
+      function currentSize() {
+        return normalizeSize(ctxRef?.storage.get("size", DEFAULT_SIZE));
+      }
+
+      function normalizeSize(value) {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return DEFAULT_SIZE;
+        const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parsed));
+        return Math.round(clamped * 2) / 2;
+      }
+
+      function displaySize(value) {
+        const size = normalizeSize(value);
+        return Number.isInteger(size) ? String(size) : size.toFixed(1);
+      }
+
+      function validFamily(value) {
+        const candidate = String(value || "default");
+        return FAMILIES.some((font) => font.value === candidate) ? candidate : "default";
+      }
+
+      function fontStack(value) {
+        return FAMILIES.find((font) => font.value === validFamily(value))?.stack || "";
+      }
+
+      function syncSizeInputs(range, number, value) {
+        const size = normalizeSize(value);
+        range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));
+        number.value = displaySize(size);
+      }
+
+      function installStyles() {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          html[data-cudloun-post-fonts="true"] article.post .body,
+          html[data-cudloun-post-fonts="true"] article.post .body .markdown {
+            font-size: var(--cudloun-post-font-size, 17px) !important;
+          }
+          html[data-cudloun-post-fonts="true"]:not([data-cudloun-post-font-family="default"]) article.post .body,
+          html[data-cudloun-post-fonts="true"]:not([data-cudloun-post-font-family="default"]) article.post .body .markdown {
+            font-family: var(--cudloun-post-font-family) !important;
+          }
+          .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#243041}
+          .${CONTROL_CLASS}[data-placement="board-header"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}
+          .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}
+          .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-panel{top:44px;right:0}
+          .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif}
+          .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded="true"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}
+          .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}
+          .cudloun-post-fonts-panel{box-sizing:border-box;position:absolute;top:46px;right:0;width:286px;padding:12px;border:1px solid rgba(79,102,134,.3);border-radius:10px;background:#fff;color:#243041;box-shadow:0 12px 32px rgba(18,27,43,.24)}
+          .cudloun-post-fonts-panel[hidden]{display:none!important}
+          .cudloun-post-fonts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+          .cudloun-post-fonts-head strong{font-size:14px}
+          .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}
+          .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}
+          .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}
+          .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type="number"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}
+          .cudloun-post-fonts-field select{width:100%}
+          .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}
+          .cudloun-post-fonts-size input[type="range"]{width:100%;accent-color:#b06a00}
+          .cudloun-post-fonts-size input[type="number"]{width:62px;text-align:right}
+          .cudloun-post-fonts-size>span{color:#697586;font-size:12px}
+          .cudloun-post-fonts-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid rgba(79,102,134,.16)}
+          .cudloun-post-fonts-actions button{appearance:none;border:1px solid rgba(79,102,134,.26);border-radius:7px;background:#f8fafc;color:#364152;cursor:pointer;font:700 12px/1.2 inherit;padding:7px 10px}
+          .cudloun-post-fonts-actions button:hover{background:#eef2f7}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-toggle,
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-panel,
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field select,
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="number"],
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          @media(max-width:700px){
+            .${CONTROL_CLASS}[data-placement="floating"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}
+            .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}
+            .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle:hover,
+            .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle[aria-expanded="true"]{background:#8f5600;color:#fff}
+            .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-panel{top:auto;right:0;bottom:54px}
+            .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 28px));max-height:calc(100dvh - 72px);overflow:auto}
+          }
+        `;
+        document.head.appendChild(style);
       }
     })();
 
