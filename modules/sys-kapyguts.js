@@ -3,10 +3,11 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.2";
+  const VERSION = "0.1.3";
   const SELECTORS = {
     pageHeader: "header:not(.board-header):not(.post-header)",
     pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
+    pageHeaderDesktopActions: ".desktop-right",
     boardHeader: "header.board-header",
     boardTitleRow: ".board-header .title-row",
     boardTitleLink: ".board-header .title-link",
@@ -63,6 +64,7 @@
     visiblePosts,
     postParts,
     pageHeader,
+    pageHeaderParts,
     boardHeaderParts,
     visibleMenus,
     visiblePostMenus,
@@ -153,6 +155,15 @@
     return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (
       !header.closest("article.post") && !!header.querySelector(SELECTORS.pageHeaderLogo)
     )) || null;
+  }
+
+  function pageHeaderParts(scope = document) {
+    const header = pageHeader(scope);
+    return {
+      header,
+      logo: header?.querySelector(SELECTORS.pageHeaderLogo) || null,
+      desktopActions: header?.querySelector(SELECTORS.pageHeaderDesktopActions) || null,
+    };
   }
 
   function boardHeaderParts(scope = document) {

@@ -153,6 +153,7 @@ Observed on desktop and mobile on 2026-07-20 in `nepotrebny_pokus`:
 ```text
 global page header:  header:not(.board-header):not(.post-header)
 home marker:         a[aria-label="Okoun home"], .logo
+desktop actions:     .desktop-right
 board header:        header.board-header
 board title row:     .board-header .title-row
 board title link:    .board-header .title-link
@@ -162,8 +163,9 @@ mobile bottom nav:   nav.mobile-bottom-nav[aria-label="Spodní navigace"]
 
 On desktop, the global page header is sticky at `top: 0` while the board header
 scrolls away. At mobile width, the global page header scrolls away and the
-board title row becomes the sticky toolbar at `top: 0`. Use `pageHeader()` and
-`boardHeaderParts()` so modules do not have to repeat that responsive lookup.
+board title row becomes the sticky toolbar at `top: 0`. Use `pageHeaderParts()`
+for the desktop header and its native action group, and `boardHeaderParts()` for
+the mobile board toolbar, so modules do not repeat that responsive lookup.
 
 ## New Post and Reply Composers
 

@@ -53,7 +53,7 @@
     id: "post-fonts",
     name: "Post Fonts",
     description: "Quick font family and size controls for displayed Kapybara posts.",
-    version: "0.3.2",
+    version: "0.4.0",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
@@ -172,6 +172,8 @@
       return header ? { host: header, placement: "floating" } : null;
     }
 
+    const desktopActions = root.kapyguts?.pageHeaderParts?.().desktopActions;
+    if (desktopActions) return { host: desktopActions, placement: "global-actions" };
     const header = persistentHeader();
     return header ? { host: header, placement: "global-header" } : null;
   }
@@ -471,9 +473,11 @@
         font-family: var(--cudloun-post-font-family) !important;
       }
       .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#243041}
-      .${CONTROL_CLASS}[data-placement="board-header"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}
-      .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}
+      .${CONTROL_CLASS}[data-placement="board-header"],.${CONTROL_CLASS}[data-placement="global-actions"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}
+      .${CONTROL_CLASS}[data-placement="global-actions"]{order:-1}
+      .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle,.${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}
       .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-panel{top:44px;right:0}
+      .${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-panel{top:45px;right:0}
       .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif}
       .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded="true"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}
       .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}
@@ -506,6 +510,8 @@
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="number"],
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="text"],
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+      html[data-cudloun-kapybara-theme="dark"] .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle,
+      html[data-cudloun-kapybara-theme="dark"] .${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-toggle{background:transparent;border-color:transparent}
       @media(max-width:700px){
         .${CONTROL_CLASS}[data-placement="floating"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}
         .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}
