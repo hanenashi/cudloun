@@ -13,6 +13,7 @@
   const MAX_CUSTOM_FAMILY_LENGTH = 160;
   const FAMILIES = [
     { value: "default", label: "Kapybara default", stack: "" },
+    { value: "classic-okoun", label: "Classic Okoun", stack: "Verdana, \"Bitstream Vera Sans\", Arial, sans-serif" },
     { value: "system", label: "System sans", stack: "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" },
     { value: "system-serif", label: "System serif", stack: "ui-serif, Georgia, Cambria, \"Times New Roman\", serif" },
     { value: "system-mono", label: "System monospace", stack: "ui-monospace, \"SFMono-Regular\", Consolas, \"Liberation Mono\", monospace" },
@@ -53,7 +54,7 @@
     id: "post-fonts",
     name: "Post Fonts",
     description: "Quick font family and size controls for displayed Kapybara posts.",
-    version: "0.2.0",
+    version: "0.2.1",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;

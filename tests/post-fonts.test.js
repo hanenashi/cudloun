@@ -38,6 +38,10 @@ test("Post Fonts normalizes manual pixel sizes", () => {
 
 test("Post Fonts exposes expanded predefined safe font stacks", () => {
   const { root: Cudloun } = loadModule();
+  assert.equal(
+    Cudloun.postFonts.fontStack("classic-okoun"),
+    "Verdana, \"Bitstream Vera Sans\", Arial, sans-serif",
+  );
   assert.equal(Cudloun.postFonts.fontStack("georgia"), "Georgia, serif");
   assert.equal(Cudloun.postFonts.fontStack("system-mono"), "ui-monospace, \"SFMono-Regular\", Consolas, \"Liberation Mono\", monospace");
   assert.equal(Cudloun.postFonts.fontStack("comic-sans"), "\"Comic Sans MS\", cursive");
