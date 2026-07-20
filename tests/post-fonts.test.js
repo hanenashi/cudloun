@@ -6,14 +6,14 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 
-function loadModule() {
+function loadModule(globals = {}) {
   let registered = null;
   const Cudloun = {
     registerModule(module) {
       registered = module;
     },
   };
-  const context = { window: { Cudloun }, console };
+  const context = { window: { Cudloun }, console, ...globals };
   vm.createContext(context);
   const source = fs.readFileSync(path.join(root, "modules/post-fonts.js"), "utf8");
   vm.runInContext(source, context, { filename: "modules/post-fonts.js" });
@@ -58,6 +58,27 @@ test("Post Fonts identifies the first non-generic font for availability checks",
   assert.equal(Cudloun.postFonts.primaryFont("Verdana, Arial, sans-serif"), "Verdana");
   assert.equal(Cudloun.postFonts.primaryFont("system-ui, sans-serif"), "");
   assert.equal(Cudloun.postFonts.primaryFont(""), "");
+});
+
+test("Post Fonts asks the browser resolver and stays conservative when unsupported", async () => {
+  class FakeFontFace {
+    constructor(_family, source) {
+      this.source = source;
+    }
+
+    load() {
+      return this.source.includes("Installed Font")
+        ? Promise.resolve(this)
+        : Promise.reject(new Error("missing"));
+    }
+  }
+
+  const supported = loadModule({ FontFace: FakeFontFace }).root;
+  assert.equal(await supported.postFonts.fontAvailable("Installed Font"), true);
+  assert.equal(await supported.postFonts.fontAvailable("Missing Font"), false);
+
+  const unsupported = loadModule().root;
+  assert.equal(await unsupported.postFonts.fontAvailable("Unknown Font"), true);
 });
 
 test("Post Fonts normalizes safe custom font stacks", () => {

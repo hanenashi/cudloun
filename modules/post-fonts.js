@@ -34,6 +34,7 @@
     { value: "comic-sans", label: "Comic Sans MS", stack: "\"Comic Sans MS\", cursive" },
     { value: "custom", label: "Custom…", stack: "" },
   ];
+  const availabilityCache = new Map();
 
   let ctxRef = null;
   let observer = null;
@@ -49,13 +50,14 @@
     normalizeCustomFamily,
     fontStack,
     primaryFont,
+    fontAvailable,
   };
 
   root.registerModule({
     id: "post-fonts",
     name: "Post Fonts",
     description: "Quick font family and size controls for displayed Kapybara posts.",
-    version: "0.3.0",
+    version: "0.3.1",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
@@ -303,11 +305,7 @@
 
     syncSizeInputs(range, number, currentSize());
     syncFontAvailability(availability, family.value, custom.value);
-    button.addEventListener("click", () => {
-      const opening = panel.hidden;
-      setOpen(control, opening);
-      if (opening) syncFontAvailability(availability, family.value, custom.value);
-    });
+    button.addEventListener("click", () => setOpen(control, panel.hidden));
     close.addEventListener("click", () => setOpen(control, false));
     family.addEventListener("change", () => {
       ctxRef?.storage.set("family", validFamily(family.value));
@@ -349,9 +347,6 @@
       ctxRef?.storage.set("size", DEFAULT_SIZE);
       applySettings();
       syncFontAvailability(availability, family.value, custom.value);
-    });
-    document.fonts?.ready?.then(() => {
-      if (control.isConnected) syncFontAvailability(availability, family.value, custom.value);
     });
     return control;
   }
@@ -435,23 +430,26 @@
   }
 
   function fontAvailable(name) {
-    if (!name) return true;
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    if (!context) return true;
-    const sample = "mmmmmmmmmmlliWW@@0123456789";
-    const escapedName = name.replace(/["\\]/g, "\\$&");
-    return ["monospace", "serif", "sans-serif"].some((baselineFamily) => {
-      context.font = `72px ${baselineFamily}`;
-      const baselineWidth = context.measureText(sample).width;
-      context.font = `72px "${escapedName}", ${baselineFamily}`;
-      return Math.abs(context.measureText(sample).width - baselineWidth) > 0.01;
-    });
+    if (!name || typeof FontFace !== "function") return Promise.resolve(true);
+    if (availabilityCache.has(name)) return availabilityCache.get(name);
+    const escapedName = name.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+    const result = new FontFace("cudloun-font-probe", `local("${escapedName}")`)
+      .load()
+      .then(() => true)
+      .catch(() => false);
+    availabilityCache.set(name, result);
+    return result;
   }
 
-  function syncFontAvailability(status, family, customFamily) {
+  async function syncFontAvailability(status, family, customFamily) {
     const name = primaryFont(fontStack(family, customFamily));
-    const unavailable = Boolean(name && !fontAvailable(name));
+    const probeId = String((Number(status.dataset.probeId) || 0) + 1);
+    status.dataset.probeId = probeId;
+    status.hidden = true;
+    status.textContent = "";
+    if (!name) return;
+    const unavailable = !(await fontAvailable(name));
+    if (status.dataset.probeId !== probeId) return;
     status.hidden = !unavailable;
     status.textContent = unavailable
       ? `Font unavailable: “${name}”. Using a fallback.`

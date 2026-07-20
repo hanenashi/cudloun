@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Cudloun
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.6.15
+// @version      0.6.16
 // @description  Modular userscript hub for Kapybara.
 // @author       hanenashi
 // @match        https://kapybara.okoun.cz/*
 // @match        https://opu.peklo.biz/*
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.6.15
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.bundle.js?v=0.6.16
 // @icon         https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.ico
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js
