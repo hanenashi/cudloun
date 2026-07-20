@@ -48,13 +48,14 @@
     normalizeSize,
     normalizeCustomFamily,
     fontStack,
+    primaryFont,
   };
 
   root.registerModule({
     id: "post-fonts",
     name: "Post Fonts",
     description: "Quick font family and size controls for displayed Kapybara posts.",
-    version: "0.2.1",
+    version: "0.3.0",
     defaultEnabled: false,
     start(ctx) {
       if (!root.kapyguts?.isKapybara?.()) return null;
@@ -78,6 +79,7 @@
         "Open f to choose a preset or enter a comma-separated custom font stack, then adjust its size with the slider or number field.",
         "Changes apply immediately to displayed post bodies and are remembered across page loads.",
         "Custom fonts must already be available in your browser or device; later names in the stack act as fallbacks.",
+        "If the first-choice font is unavailable on this device, the menu shows a warning while continuing with the fallback stack.",
         "Reset restores Kapybara's font family and its current 17 px post size.",
       ];
     },
@@ -250,6 +252,12 @@
     custom.value = String(ctxRef?.storage.get("customFamily", "") || "").slice(0, MAX_CUSTOM_FAMILY_LENGTH);
     syncCustomField(customLabel, custom, customHint, family.value);
 
+    const availability = document.createElement("div");
+    availability.className = "cudloun-post-fonts-availability";
+    availability.hidden = true;
+    availability.setAttribute("role", "status");
+    availability.setAttribute("aria-live", "polite");
+
     const sizeField = document.createElement("div");
     sizeField.className = "cudloun-post-fonts-field";
     const sizeText = document.createElement("span");
@@ -287,18 +295,25 @@
     panel.appendChild(head);
     panel.appendChild(familyLabel);
     panel.appendChild(customLabel);
+    panel.appendChild(availability);
     panel.appendChild(sizeField);
     panel.appendChild(actions);
     control.appendChild(button);
     control.appendChild(panel);
 
     syncSizeInputs(range, number, currentSize());
-    button.addEventListener("click", () => setOpen(control, panel.hidden));
+    syncFontAvailability(availability, family.value, custom.value);
+    button.addEventListener("click", () => {
+      const opening = panel.hidden;
+      setOpen(control, opening);
+      if (opening) syncFontAvailability(availability, family.value, custom.value);
+    });
     close.addEventListener("click", () => setOpen(control, false));
     family.addEventListener("change", () => {
       ctxRef?.storage.set("family", validFamily(family.value));
       syncCustomField(customLabel, custom, customHint, family.value);
       applySettings();
+      syncFontAvailability(availability, family.value, custom.value);
       if (family.value === "custom") custom.focus();
     });
     custom.addEventListener("input", () => {
@@ -306,6 +321,7 @@
       ctxRef?.storage.set("customFamily", value);
       syncCustomField(customLabel, custom, customHint, family.value);
       applySettings();
+      syncFontAvailability(availability, family.value, custom.value);
     });
     range.addEventListener("input", () => {
       const size = normalizeSize(range.value);
@@ -332,6 +348,10 @@
       ctxRef?.storage.set("customFamily", "");
       ctxRef?.storage.set("size", DEFAULT_SIZE);
       applySettings();
+      syncFontAvailability(availability, family.value, custom.value);
+    });
+    document.fonts?.ready?.then(() => {
+      if (control.isConnected) syncFontAvailability(availability, family.value, custom.value);
     });
     return control;
   }
@@ -398,6 +418,44 @@
     const family = validFamily(value);
     if (family === "custom") return normalizeCustomFamily(customFamily);
     return FAMILIES.find((font) => font.value === family)?.stack || "";
+  }
+
+  function primaryFont(stack) {
+    const first = String(stack || "").split(",", 1)[0].trim();
+    if (!first) return "";
+    const unquoted = ((first[0] === "\"" && first[first.length - 1] === "\"")
+      || (first[0] === "'" && first[first.length - 1] === "'"))
+      ? first.slice(1, -1).trim()
+      : first;
+    const genericFamilies = new Set([
+      "serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui",
+      "ui-serif", "ui-sans-serif", "ui-monospace", "ui-rounded", "emoji", "math", "fangsong",
+    ]);
+    return genericFamilies.has(unquoted.toLowerCase()) ? "" : unquoted;
+  }
+
+  function fontAvailable(name) {
+    if (!name) return true;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) return true;
+    const sample = "mmmmmmmmmmlliWW@@0123456789";
+    const escapedName = name.replace(/["\\]/g, "\\$&");
+    return ["monospace", "serif", "sans-serif"].some((baselineFamily) => {
+      context.font = `72px ${baselineFamily}`;
+      const baselineWidth = context.measureText(sample).width;
+      context.font = `72px "${escapedName}", ${baselineFamily}`;
+      return Math.abs(context.measureText(sample).width - baselineWidth) > 0.01;
+    });
+  }
+
+  function syncFontAvailability(status, family, customFamily) {
+    const name = primaryFont(fontStack(family, customFamily));
+    const unavailable = Boolean(name && !fontAvailable(name));
+    status.hidden = !unavailable;
+    status.textContent = unavailable
+      ? `Font unavailable: “${name}”. Using a fallback.`
+      : "";
   }
 
   function normalizeCustomFamily(value) {
@@ -494,6 +552,8 @@
       .cudloun-post-fonts-custom-wrap input{width:100%}
       .cudloun-post-fonts-custom-wrap input[aria-invalid="true"]{border-color:#b42318;outline-color:#b42318}
       .cudloun-post-fonts-custom-wrap small{color:#697586;font-size:11px;font-weight:500}
+      .cudloun-post-fonts-availability{box-sizing:border-box;margin:7px 0 9px 61px;padding:7px 8px;border:1px solid rgba(180,35,24,.28);border-radius:7px;background:#fef3f2;color:#b42318;font-size:11px;font-weight:650;line-height:1.35}
+      .cudloun-post-fonts-availability[hidden]{display:none!important}
       .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}
       .cudloun-post-fonts-size input[type="range"]{width:100%;accent-color:#b06a00}
       .cudloun-post-fonts-size input[type="number"]{width:62px;text-align:right}
@@ -507,6 +567,7 @@
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="number"],
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="text"],
       html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+      html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-availability{background:#381c1a;color:#fda29b;border-color:#7a271a}
       @media(max-width:700px){
         .${CONTROL_CLASS}[data-placement="floating"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}
         .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}

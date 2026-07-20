@@ -49,6 +49,17 @@ test("Post Fonts exposes expanded predefined safe font stacks", () => {
   assert.equal(Cudloun.postFonts.fontStack("url(evil)"), "");
 });
 
+test("Post Fonts identifies the first non-generic font for availability checks", () => {
+  const { root: Cudloun } = loadModule();
+  assert.equal(
+    Cudloun.postFonts.primaryFont('"Atkinson Hyperlegible", Arial, sans-serif'),
+    "Atkinson Hyperlegible",
+  );
+  assert.equal(Cudloun.postFonts.primaryFont("Verdana, Arial, sans-serif"), "Verdana");
+  assert.equal(Cudloun.postFonts.primaryFont("system-ui, sans-serif"), "");
+  assert.equal(Cudloun.postFonts.primaryFont(""), "");
+});
+
 test("Post Fonts normalizes safe custom font stacks", () => {
   const { root: Cudloun } = loadModule();
   assert.equal(
