@@ -99,6 +99,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.20 TL;DR
+
+- Tap or click `f` still opens the original quick post-font picker. Long-press
+  it on touch screens or right-click it to open compact per-area controls for
+  Posts, UI, titles, code, and the Okoun logo, plus a link to the full native
+  experiment.
+
 ## Version 0.6.19 TL;DR
 
 - Kapyguts now normalizes Kapybara's temporary native font-settings entry on

@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.19";
+  const VERSION = "0.6.20";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -435,7 +435,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.19\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.20\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -3155,9 +3155,9 @@
 
   });
 
-  embeddedText.set("modules/post-fonts.js", "// Compact post font controls for Kapybara board pages.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-post-fonts-style\";\n  const CONTROL_CLASS = \"cudloun-post-fonts-control\";\n  const DEFAULT_SIZE = 17;\n  const MIN_SIZE = 8;\n  const MAX_SIZE = 72;\n  const SLIDER_MIN = 10;\n  const SLIDER_MAX = 32;\n  const MAX_CUSTOM_FAMILY_LENGTH = 160;\n  const FAMILIES = [\n    { value: \"default\", label: \"Kapybara default\", stack: \"\" },\n    { value: \"classic-okoun\", label: \"Classic Okoun\", stack: \"Verdana, \\\"Bitstream Vera Sans\\\", Arial, sans-serif\" },\n    { value: \"system\", label: \"System sans\", stack: \"system-ui, -apple-system, BlinkMacSystemFont, \\\"Segoe UI\\\", sans-serif\" },\n    { value: \"system-serif\", label: \"System serif\", stack: \"ui-serif, Georgia, Cambria, \\\"Times New Roman\\\", serif\" },\n    { value: \"system-mono\", label: \"System monospace\", stack: \"ui-monospace, \\\"SFMono-Regular\\\", Consolas, \\\"Liberation Mono\\\", monospace\" },\n    { value: \"roboto\", label: \"Roboto\", stack: \"Roboto, Arial, sans-serif\" },\n    { value: \"noto-sans\", label: \"Noto Sans\", stack: \"\\\"Noto Sans\\\", Arial, sans-serif\" },\n    { value: \"segoe\", label: \"Segoe UI\", stack: \"\\\"Segoe UI\\\", Arial, sans-serif\" },\n    { value: \"helvetica\", label: \"Helvetica\", stack: \"Helvetica, Arial, sans-serif\" },\n    { value: \"arial\", label: \"Arial\", stack: \"Arial, sans-serif\" },\n    { value: \"verdana\", label: \"Verdana\", stack: \"Verdana, Geneva, sans-serif\" },\n    { value: \"tahoma\", label: \"Tahoma\", stack: \"Tahoma, sans-serif\" },\n    { value: \"trebuchet\", label: \"Trebuchet MS\", stack: \"\\\"Trebuchet MS\\\", sans-serif\" },\n    { value: \"georgia\", label: \"Georgia\", stack: \"Georgia, serif\" },\n    { value: \"times\", label: \"Times New Roman\", stack: \"\\\"Times New Roman\\\", Times, serif\" },\n    { value: \"garamond\", label: \"Garamond\", stack: \"Garamond, Georgia, serif\" },\n    { value: \"palatino\", label: \"Palatino\", stack: \"Palatino, \\\"Palatino Linotype\\\", serif\" },\n    { value: \"courier\", label: \"Courier New\", stack: \"\\\"Courier New\\\", monospace\" },\n    { value: \"consolas\", label: \"Consolas\", stack: \"Consolas, \\\"Liberation Mono\\\", monospace\" },\n    { value: \"comic-sans\", label: \"Comic Sans MS\", stack: \"\\\"Comic Sans MS\\\", cursive\" },\n    { value: \"custom\", label: \"Custom…\", stack: \"\" },\n  ];\n  let ctxRef = null;\n  let observer = null;\n  let routeTimer = null;\n  let mountTimer = null;\n  let outsideHandler = null;\n  let keyHandler = null;\n  let resizeHandler = null;\n\n  root.postFonts = {\n    families: FAMILIES.map(({ value, label }) => ({ value, label })),\n    normalizeSize,\n    normalizeCustomFamily,\n    fontStack,\n  };\n\n  root.registerModule({\n    id: \"post-fonts\",\n    name: \"Post Fonts\",\n    description: \"Quick font family and size controls for displayed Kapybara posts.\",\n    version: \"0.4.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return start(ctx);\n    },\n    renderSettings() {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const row = document.createElement(\"div\");\n      row.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"div\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Use the f button on board pages. It stays in the sticky page header on desktop and the sticky board toolbar on mobile.\";\n      row.appendChild(text);\n      wrap.appendChild(row);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Open f to choose a preset or enter a comma-separated custom font stack, then adjust its size with the slider or number field.\",\n        \"Changes apply immediately to displayed post bodies and are remembered across page loads.\",\n        \"Custom fonts must already be available in your browser or device; later names in the stack act as fallbacks.\",\n        \"Reset restores Kapybara's font family and its current 17 px post size.\",\n      ];\n    },\n  });\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    installStyles();\n    applySettings();\n    mountForRoute();\n\n    observer = new MutationObserver(scheduleMount);\n    observer.observe(document.body, { childList: true, subtree: true });\n\n    outsideHandler = (event) => {\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (!control || control.contains(event.target)) return;\n      setOpen(control, false);\n    };\n    keyHandler = (event) => {\n      if (event.key !== \"Escape\") return;\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (control) setOpen(control, false);\n    };\n    document.addEventListener(\"pointerdown\", outsideHandler, true);\n    document.addEventListener(\"keydown\", keyHandler, true);\n    resizeHandler = scheduleMount;\n    window.addEventListener(\"resize\", resizeHandler);\n    observeRoute();\n    ctx.log.info(\"post font controls ready\");\n    return stop;\n  }\n\n  function stop() {\n    observer?.disconnect();\n    observer = null;\n    window.clearTimeout(routeTimer);\n    window.clearTimeout(mountTimer);\n    routeTimer = null;\n    mountTimer = null;\n    if (outsideHandler) document.removeEventListener(\"pointerdown\", outsideHandler, true);\n    if (keyHandler) document.removeEventListener(\"keydown\", keyHandler, true);\n    if (resizeHandler) window.removeEventListener(\"resize\", resizeHandler);\n    outsideHandler = null;\n    keyHandler = null;\n    resizeHandler = null;\n    document.querySelectorAll(`.${CONTROL_CLASS}`).forEach((control) => control.remove());\n    document.getElementById(STYLE_ID)?.remove();\n    clearSettings();\n    ctxRef = null;\n  }\n\n  function observeRoute() {\n    let lastRoute = root.currentRoute();\n    const check = () => {\n      const route = root.currentRoute();\n      if (route !== lastRoute) {\n        lastRoute = route;\n        mountForRoute();\n      }\n      routeTimer = window.setTimeout(check, 500);\n    };\n    routeTimer = window.setTimeout(check, 500);\n  }\n\n  function scheduleMount() {\n    window.clearTimeout(mountTimer);\n    mountTimer = window.setTimeout(mountForRoute, 60);\n  }\n\n  function mountForRoute() {\n    const controls = Array.from(document.querySelectorAll(`.${CONTROL_CLASS}`));\n    if (!root.kapyguts?.isBoardPage?.()) {\n      controls.forEach((control) => control.remove());\n      return;\n    }\n\n    const target = controlTarget();\n    if (!target) return;\n    const connected = controls.find((control) => (\n      control.parentElement === target.host && control.dataset.placement === target.placement\n    ));\n    controls.filter((control) => control !== connected).forEach((control) => control.remove());\n    if (!connected) target.host.appendChild(makeControl(target.placement));\n  }\n\n  function controlTarget() {\n    if (window.matchMedia(\"(max-width: 700px)\").matches) {\n      const boardActions = root.kapyguts?.boardHeaderParts?.().actions;\n      if (boardActions) return { host: boardActions, placement: \"board-header\" };\n      const header = persistentHeader();\n      return header ? { host: header, placement: \"floating\" } : null;\n    }\n\n    const desktopActions = root.kapyguts?.pageHeaderParts?.().desktopActions;\n    if (desktopActions) return { host: desktopActions, placement: \"global-actions\" };\n    const header = persistentHeader();\n    return header ? { host: header, placement: \"global-header\" } : null;\n  }\n\n  function persistentHeader() {\n    return root.kapyguts?.pageHeader?.() || null;\n  }\n\n  function makeControl(placement) {\n    const control = document.createElement(\"div\");\n    control.className = CONTROL_CLASS;\n    control.dataset.placement = placement;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-post-fonts-toggle\";\n    button.textContent = \"f\";\n    button.title = \"Post fonts\";\n    button.setAttribute(\"aria-label\", \"Post font controls\");\n    button.setAttribute(\"aria-expanded\", \"false\");\n\n    const panel = document.createElement(\"section\");\n    panel.className = \"cudloun-post-fonts-panel\";\n    panel.hidden = true;\n    panel.setAttribute(\"aria-label\", \"Post font controls\");\n\n    const head = document.createElement(\"div\");\n    head.className = \"cudloun-post-fonts-head\";\n    const title = document.createElement(\"strong\");\n    title.textContent = \"Post font\";\n    const close = document.createElement(\"button\");\n    close.type = \"button\";\n    close.className = \"cudloun-post-fonts-close\";\n    close.textContent = \"×\";\n    close.setAttribute(\"aria-label\", \"Close post font controls\");\n    head.appendChild(title);\n    head.appendChild(close);\n\n    const familyLabel = document.createElement(\"label\");\n    familyLabel.className = \"cudloun-post-fonts-field\";\n    const familyText = document.createElement(\"span\");\n    familyText.textContent = \"Font\";\n    const family = document.createElement(\"select\");\n    family.setAttribute(\"aria-label\", \"Post font family\");\n    FAMILIES.forEach(({ value, label, stack }) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = label;\n      if (stack) option.style.fontFamily = stack;\n      family.appendChild(option);\n    });\n    family.value = validFamily(ctxRef?.storage.get(\"family\", \"default\"));\n    familyLabel.appendChild(familyText);\n    familyLabel.appendChild(family);\n\n    const customLabel = document.createElement(\"label\");\n    customLabel.className = \"cudloun-post-fonts-field cudloun-post-fonts-custom\";\n    const customText = document.createElement(\"span\");\n    customText.textContent = \"Custom\";\n    const customWrap = document.createElement(\"span\");\n    customWrap.className = \"cudloun-post-fonts-custom-wrap\";\n    const custom = document.createElement(\"input\");\n    custom.type = \"text\";\n    custom.maxLength = MAX_CUSTOM_FAMILY_LENGTH;\n    custom.autocomplete = \"off\";\n    custom.spellcheck = false;\n    custom.placeholder = \"\\\"Atkinson Hyperlegible\\\", Arial, sans-serif\";\n    custom.setAttribute(\"aria-label\", \"Custom post font family\");\n    const customHint = document.createElement(\"small\");\n    customHint.textContent = \"Comma-separated local font names\";\n    customWrap.appendChild(custom);\n    customWrap.appendChild(customHint);\n    customLabel.appendChild(customText);\n    customLabel.appendChild(customWrap);\n    custom.value = String(ctxRef?.storage.get(\"customFamily\", \"\") || \"\").slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n    syncCustomField(customLabel, custom, customHint, family.value);\n\n    const sizeField = document.createElement(\"div\");\n    sizeField.className = \"cudloun-post-fonts-field\";\n    const sizeText = document.createElement(\"span\");\n    sizeText.textContent = \"Size\";\n    const sizeControls = document.createElement(\"div\");\n    sizeControls.className = \"cudloun-post-fonts-size\";\n    const range = document.createElement(\"input\");\n    range.type = \"range\";\n    range.min = String(SLIDER_MIN);\n    range.max = String(SLIDER_MAX);\n    range.step = \"0.5\";\n    range.setAttribute(\"aria-label\", \"Post font size slider\");\n    const number = document.createElement(\"input\");\n    number.type = \"number\";\n    number.min = String(MIN_SIZE);\n    number.max = String(MAX_SIZE);\n    number.step = \"0.5\";\n    number.inputMode = \"decimal\";\n    number.setAttribute(\"aria-label\", \"Post font size in pixels\");\n    const unit = document.createElement(\"span\");\n    unit.textContent = \"px\";\n    sizeControls.appendChild(range);\n    sizeControls.appendChild(number);\n    sizeControls.appendChild(unit);\n    sizeField.appendChild(sizeText);\n    sizeField.appendChild(sizeControls);\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-post-fonts-actions\";\n    const reset = document.createElement(\"button\");\n    reset.type = \"button\";\n    reset.textContent = \"Reset\";\n    actions.appendChild(reset);\n\n    panel.appendChild(head);\n    panel.appendChild(familyLabel);\n    panel.appendChild(customLabel);\n    panel.appendChild(sizeField);\n    panel.appendChild(actions);\n    control.appendChild(button);\n    control.appendChild(panel);\n\n    syncSizeInputs(range, number, currentSize());\n    button.addEventListener(\"click\", () => setOpen(control, panel.hidden));\n    close.addEventListener(\"click\", () => setOpen(control, false));\n    family.addEventListener(\"change\", () => {\n      ctxRef?.storage.set(\"family\", validFamily(family.value));\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n      if (family.value === \"custom\") custom.focus();\n    });\n    custom.addEventListener(\"input\", () => {\n      const value = custom.value.slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n      ctxRef?.storage.set(\"customFamily\", value);\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n    });\n    range.addEventListener(\"input\", () => {\n      const size = normalizeSize(range.value);\n      number.value = displaySize(size);\n      saveSize(size);\n    });\n    number.addEventListener(\"input\", () => {\n      if (number.value === \"\") return;\n      const size = normalizeSize(number.value);\n      range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n      saveSize(size);\n    });\n    number.addEventListener(\"change\", () => {\n      const size = normalizeSize(number.value);\n      syncSizeInputs(range, number, size);\n      saveSize(size);\n    });\n    reset.addEventListener(\"click\", () => {\n      family.value = \"default\";\n      custom.value = \"\";\n      syncCustomField(customLabel, custom, customHint, family.value);\n      syncSizeInputs(range, number, DEFAULT_SIZE);\n      ctxRef?.storage.set(\"family\", \"default\");\n      ctxRef?.storage.set(\"customFamily\", \"\");\n      ctxRef?.storage.set(\"size\", DEFAULT_SIZE);\n      applySettings();\n    });\n    return control;\n  }\n\n  function setOpen(control, open) {\n    const panel = control.querySelector(\".cudloun-post-fonts-panel\");\n    const button = control.querySelector(\".cudloun-post-fonts-toggle\");\n    if (!panel || !button) return;\n    panel.hidden = !open;\n    button.setAttribute(\"aria-expanded\", open ? \"true\" : \"false\");\n    if (open) panel.querySelector(\"select\")?.focus();\n  }\n\n  function saveSize(value) {\n    const size = normalizeSize(value);\n    ctxRef?.storage.set(\"size\", size);\n    applySettings();\n  }\n\n  function applySettings() {\n    const family = validFamily(ctxRef?.storage.get(\"family\", \"default\"));\n    const customFamily = ctxRef?.storage.get(\"customFamily\", \"\");\n    const size = currentSize();\n    const stack = fontStack(family, customFamily);\n    const effectiveFamily = stack ? family : \"default\";\n    const rootElement = document.documentElement;\n    rootElement.setAttribute(\"data-cudloun-post-fonts\", \"true\");\n    rootElement.setAttribute(\"data-cudloun-post-font-family\", effectiveFamily);\n    rootElement.style.setProperty(\"--cudloun-post-font-size\", `${displaySize(size)}px`);\n    if (stack) rootElement.style.setProperty(\"--cudloun-post-font-family\", stack);\n    else rootElement.style.removeProperty(\"--cudloun-post-font-family\");\n  }\n\n  function clearSettings() {\n    const rootElement = document.documentElement;\n    rootElement.removeAttribute(\"data-cudloun-post-fonts\");\n    rootElement.removeAttribute(\"data-cudloun-post-font-family\");\n    rootElement.style.removeProperty(\"--cudloun-post-font-size\");\n    rootElement.style.removeProperty(\"--cudloun-post-font-family\");\n  }\n\n  function currentSize() {\n    return normalizeSize(ctxRef?.storage.get(\"size\", DEFAULT_SIZE));\n  }\n\n  function normalizeSize(value) {\n    const parsed = Number(value);\n    if (!Number.isFinite(parsed)) return DEFAULT_SIZE;\n    const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parsed));\n    return Math.round(clamped * 2) / 2;\n  }\n\n  function displaySize(value) {\n    const size = normalizeSize(value);\n    return Number.isInteger(size) ? String(size) : size.toFixed(1);\n  }\n\n  function validFamily(value) {\n    const candidate = String(value || \"default\");\n    return FAMILIES.some((font) => font.value === candidate) ? candidate : \"default\";\n  }\n\n  function fontStack(value, customFamily = \"\") {\n    const family = validFamily(value);\n    if (family === \"custom\") return normalizeCustomFamily(customFamily);\n    return FAMILIES.find((font) => font.value === family)?.stack || \"\";\n  }\n\n  function normalizeCustomFamily(value) {\n    const source = String(value || \"\").trim();\n    if (!source || source.length > MAX_CUSTOM_FAMILY_LENGTH) return \"\";\n    if (/[;{}()\\\\/:]/.test(source) || /[\\u0000-\\u001f\\u007f]/.test(source)) return \"\";\n\n    const tokens = [];\n    let token = \"\";\n    let quote = \"\";\n    for (const character of source) {\n      if ((character === \"\\\"\" || character === \"'\") && !quote) quote = character;\n      else if (character === quote) quote = \"\";\n      if (character === \",\" && !quote) {\n        tokens.push(token.trim());\n        token = \"\";\n      } else {\n        token += character;\n      }\n    }\n    if (quote) return \"\";\n    tokens.push(token.trim());\n    if (tokens.some((item) => !item)) return \"\";\n\n    const safeName = /^[\\p{L}\\p{N} ._-]+$/u;\n    const normalized = [];\n    for (const item of tokens) {\n      const opening = item[0];\n      const quoted = opening === \"\\\"\" || opening === \"'\";\n      if (quoted) {\n        if (item.length < 3 || item[item.length - 1] !== opening) return \"\";\n        const name = item.slice(1, -1).trim().replace(/\\s+/g, \" \");\n        if (!name || !safeName.test(name)) return \"\";\n        normalized.push(`${opening}${name}${opening}`);\n      } else {\n        const name = item.replace(/\\s+/g, \" \");\n        if (!safeName.test(name)) return \"\";\n        normalized.push(name);\n      }\n    }\n    return normalized.join(\", \");\n  }\n\n  function syncCustomField(field, input, hint, family) {\n    field.hidden = family !== \"custom\";\n    const value = input.value.trim();\n    const normalized = normalizeCustomFamily(value);\n    const invalid = Boolean(value && !normalized);\n    input.setAttribute(\"aria-invalid\", invalid ? \"true\" : \"false\");\n    hint.textContent = invalid\n      ? \"Use comma-separated font names only\"\n      : \"Comma-separated local font names\";\n  }\n\n  function syncSizeInputs(range, number, value) {\n    const size = normalizeSize(value);\n    range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n    number.value = displaySize(size);\n  }\n\n  function installStyles() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[data-cudloun-post-fonts=\"true\"] article.post .body,\n      html[data-cudloun-post-fonts=\"true\"] article.post .body .markdown {\n        font-size: var(--cudloun-post-font-size, 17px) !important;\n      }\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body,\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body .markdown {\n        font-family: var(--cudloun-post-font-family) !important;\n      }\n      .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#243041}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"],.${CONTROL_CLASS}[data-placement=\"global-actions\"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}\n      .${CONTROL_CLASS}[data-placement=\"global-actions\"]{order:-1}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-toggle,.${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-panel{top:44px;right:0}\n      .${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-panel{top:45px;right:0}\n      .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif}\n      .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded=\"true\"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}\n      .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}\n      .cudloun-post-fonts-panel{box-sizing:border-box;position:absolute;top:46px;right:0;width:286px;padding:12px;border:1px solid rgba(79,102,134,.3);border-radius:10px;background:#fff;color:#243041;box-shadow:0 12px 32px rgba(18,27,43,.24)}\n      .cudloun-post-fonts-panel[hidden]{display:none!important}\n      .cudloun-post-fonts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}\n      .cudloun-post-fonts-head strong{font-size:14px}\n      .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}\n      .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}\n      .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}\n      .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type=\"number\"],.cudloun-post-fonts-field input[type=\"text\"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}\n      .cudloun-post-fonts-field select{width:100%}\n      .cudloun-post-fonts-custom[hidden]{display:none!important}\n      .cudloun-post-fonts-custom{align-items:start}\n      .cudloun-post-fonts-custom>span:first-child{padding-top:9px}\n      .cudloun-post-fonts-custom-wrap{display:grid;gap:4px;min-width:0}\n      .cudloun-post-fonts-custom-wrap input{width:100%}\n      .cudloun-post-fonts-custom-wrap input[aria-invalid=\"true\"]{border-color:#b42318;outline-color:#b42318}\n      .cudloun-post-fonts-custom-wrap small{color:#697586;font-size:11px;font-weight:500}\n      .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}\n      .cudloun-post-fonts-size input[type=\"range\"]{width:100%;accent-color:#b06a00}\n      .cudloun-post-fonts-size input[type=\"number\"]{width:62px;text-align:right}\n      .cudloun-post-fonts-size>span{color:#697586;font-size:12px}\n      .cudloun-post-fonts-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid rgba(79,102,134,.16)}\n      .cudloun-post-fonts-actions button{appearance:none;border:1px solid rgba(79,102,134,.26);border-radius:7px;background:#f8fafc;color:#364152;cursor:pointer;font:700 12px/1.2 inherit;padding:7px 10px}\n      .cudloun-post-fonts-actions button:hover{background:#eef2f7}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-toggle,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-panel,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field select,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field input[type=\"number\"],\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field input[type=\"text\"],\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-toggle,\n      html[data-cudloun-kapybara-theme=\"dark\"] .${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-toggle{background:transparent;border-color:transparent}\n      @media(max-width:700px){\n        .${CONTROL_CLASS}[data-placement=\"floating\"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle:hover,\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle[aria-expanded=\"true\"]{background:#8f5600;color:#fff}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-panel{top:auto;right:0;bottom:54px}\n        .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 28px));max-height:calc(100dvh - 72px);overflow:auto}\n      }\n    `;\n    document.head.appendChild(style);\n  }\n})();\n");
+  embeddedText.set("modules/post-fonts.js", "// Compact quick and per-area font controls for Kapybara board pages.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-post-fonts-style\";\n  const CONTROL_CLASS = \"cudloun-post-fonts-control\";\n  const DEFAULT_SIZE = 17;\n  const MIN_SIZE = 8;\n  const MAX_SIZE = 72;\n  const SLIDER_MIN = 10;\n  const SLIDER_MAX = 32;\n  const LONG_PRESS_MS = 520;\n  const LONG_PRESS_MOVE_PX = 10;\n  const MAX_CUSTOM_FAMILY_LENGTH = 160;\n  const FONT_ROLES = [\n    { id: \"posts\", label: \"Posts\", title: \"Post content\", unit: \"px\", defaultSize: DEFAULT_SIZE, min: MIN_SIZE, max: MAX_SIZE, sliderMin: SLIDER_MIN, sliderMax: SLIDER_MAX, step: 0.5 },\n    { id: \"interface\", label: \"UI\", title: \"Interface\", unit: \"px\", defaultSize: 16, min: 12, max: 20, sliderMin: 12, sliderMax: 20, step: 1 },\n    { id: \"headings\", label: \"Titles\", title: \"Headings and authors\", unit: \"%\", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },\n    { id: \"code\", label: \"Code\", title: \"Code and monospace text\", unit: \"%\", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },\n    { id: \"logo\", label: \"Logo\", title: \"Okoun logo\", unit: \"%\", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },\n  ];\n  const FAMILIES = [\n    { value: \"default\", label: \"Kapybara default\", stack: \"\" },\n    { value: \"classic-okoun\", label: \"Classic Okoun\", stack: \"Verdana, \\\"Bitstream Vera Sans\\\", Arial, sans-serif\" },\n    { value: \"system\", label: \"System sans\", stack: \"system-ui, -apple-system, BlinkMacSystemFont, \\\"Segoe UI\\\", sans-serif\" },\n    { value: \"system-serif\", label: \"System serif\", stack: \"ui-serif, Georgia, Cambria, \\\"Times New Roman\\\", serif\" },\n    { value: \"system-mono\", label: \"System monospace\", stack: \"ui-monospace, \\\"SFMono-Regular\\\", Consolas, \\\"Liberation Mono\\\", monospace\" },\n    { value: \"roboto\", label: \"Roboto\", stack: \"Roboto, Arial, sans-serif\" },\n    { value: \"noto-sans\", label: \"Noto Sans\", stack: \"\\\"Noto Sans\\\", Arial, sans-serif\" },\n    { value: \"segoe\", label: \"Segoe UI\", stack: \"\\\"Segoe UI\\\", Arial, sans-serif\" },\n    { value: \"helvetica\", label: \"Helvetica\", stack: \"Helvetica, Arial, sans-serif\" },\n    { value: \"arial\", label: \"Arial\", stack: \"Arial, sans-serif\" },\n    { value: \"verdana\", label: \"Verdana\", stack: \"Verdana, Geneva, sans-serif\" },\n    { value: \"tahoma\", label: \"Tahoma\", stack: \"Tahoma, sans-serif\" },\n    { value: \"trebuchet\", label: \"Trebuchet MS\", stack: \"\\\"Trebuchet MS\\\", sans-serif\" },\n    { value: \"georgia\", label: \"Georgia\", stack: \"Georgia, serif\" },\n    { value: \"times\", label: \"Times New Roman\", stack: \"\\\"Times New Roman\\\", Times, serif\" },\n    { value: \"garamond\", label: \"Garamond\", stack: \"Garamond, Georgia, serif\" },\n    { value: \"palatino\", label: \"Palatino\", stack: \"Palatino, \\\"Palatino Linotype\\\", serif\" },\n    { value: \"courier\", label: \"Courier New\", stack: \"\\\"Courier New\\\", monospace\" },\n    { value: \"consolas\", label: \"Consolas\", stack: \"Consolas, \\\"Liberation Mono\\\", monospace\" },\n    { value: \"comic-sans\", label: \"Comic Sans MS\", stack: \"\\\"Comic Sans MS\\\", cursive\" },\n    { value: \"custom\", label: \"Custom…\", stack: \"\" },\n  ];\n  let ctxRef = null;\n  let observer = null;\n  let routeTimer = null;\n  let mountTimer = null;\n  let outsideHandler = null;\n  let keyHandler = null;\n  let resizeHandler = null;\n\n  root.postFonts = {\n    families: FAMILIES.map(({ value, label }) => ({ value, label })),\n    roles: FONT_ROLES.map(({ id, label, title, unit, defaultSize, min, max, step }) => ({ id, label, title, unit, defaultSize, min, max, step })),\n    longPressMs: LONG_PRESS_MS,\n    normalizeSize,\n    normalizeRoleSize,\n    normalizeCustomFamily,\n    fontStack,\n  };\n\n  root.registerModule({\n    id: \"post-fonts\",\n    name: \"Post Fonts\",\n    description: \"Quick post fonts with optional per-area controls for Kapybara.\",\n    version: \"0.5.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      return start(ctx);\n    },\n    renderSettings() {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      const row = document.createElement(\"div\");\n      row.className = \"cudloun-setting-row\";\n      const text = document.createElement(\"div\");\n      text.className = \"cudloun-setting-text\";\n      text.textContent = \"Tap f for quick post fonts. Hold it on touch screens or right-click it for separate interface, heading, code, and logo controls.\";\n      row.appendChild(text);\n      wrap.appendChild(row);\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Open f to choose a preset or enter a comma-separated custom font stack, then adjust its size with the slider or number field.\",\n        \"Hold f on a touch screen, or right-click it with a mouse, to open advanced controls for Posts, UI, Titles, Code, and Logo.\",\n        \"Changes apply immediately to the selected area and are remembered across page loads.\",\n        \"Custom fonts must already be available in your browser or device; later names in the stack act as fallbacks.\",\n        \"Reset restores the currently selected area; untouched advanced areas keep Kapybara's native styling.\",\n      ];\n    },\n  });\n\n  function start(ctx) {\n    stop();\n    ctxRef = ctx;\n    installStyles();\n    applySettings();\n    mountForRoute();\n\n    observer = new MutationObserver(scheduleMount);\n    observer.observe(document.body, { childList: true, subtree: true });\n\n    outsideHandler = (event) => {\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (!control || control.contains(event.target)) return;\n      setOpen(control, false);\n    };\n    keyHandler = (event) => {\n      if (event.key !== \"Escape\") return;\n      const control = document.querySelector(`.${CONTROL_CLASS}`);\n      if (control) setOpen(control, false);\n    };\n    document.addEventListener(\"pointerdown\", outsideHandler, true);\n    document.addEventListener(\"keydown\", keyHandler, true);\n    resizeHandler = scheduleMount;\n    window.addEventListener(\"resize\", resizeHandler);\n    observeRoute();\n    ctx.log.info(\"post font controls ready\");\n    return stop;\n  }\n\n  function stop() {\n    observer?.disconnect();\n    observer = null;\n    window.clearTimeout(routeTimer);\n    window.clearTimeout(mountTimer);\n    routeTimer = null;\n    mountTimer = null;\n    if (outsideHandler) document.removeEventListener(\"pointerdown\", outsideHandler, true);\n    if (keyHandler) document.removeEventListener(\"keydown\", keyHandler, true);\n    if (resizeHandler) window.removeEventListener(\"resize\", resizeHandler);\n    outsideHandler = null;\n    keyHandler = null;\n    resizeHandler = null;\n    document.querySelectorAll(`.${CONTROL_CLASS}`).forEach((control) => control.remove());\n    document.getElementById(STYLE_ID)?.remove();\n    clearSettings();\n    ctxRef = null;\n  }\n\n  function observeRoute() {\n    let lastRoute = root.currentRoute();\n    const check = () => {\n      const route = root.currentRoute();\n      if (route !== lastRoute) {\n        lastRoute = route;\n        mountForRoute();\n      }\n      routeTimer = window.setTimeout(check, 500);\n    };\n    routeTimer = window.setTimeout(check, 500);\n  }\n\n  function scheduleMount() {\n    window.clearTimeout(mountTimer);\n    mountTimer = window.setTimeout(mountForRoute, 60);\n  }\n\n  function mountForRoute() {\n    const controls = Array.from(document.querySelectorAll(`.${CONTROL_CLASS}`));\n    if (!root.kapyguts?.isBoardPage?.()) {\n      controls.forEach((control) => control.remove());\n      return;\n    }\n\n    const target = controlTarget();\n    if (!target) return;\n    const connected = controls.find((control) => (\n      control.parentElement === target.host && control.dataset.placement === target.placement\n    ));\n    controls.filter((control) => control !== connected).forEach((control) => control.remove());\n    if (!connected) target.host.appendChild(makeControl(target.placement));\n  }\n\n  function controlTarget() {\n    if (window.matchMedia(\"(max-width: 700px)\").matches) {\n      const boardActions = root.kapyguts?.boardHeaderParts?.().actions;\n      if (boardActions) return { host: boardActions, placement: \"board-header\" };\n      const header = persistentHeader();\n      return header ? { host: header, placement: \"floating\" } : null;\n    }\n\n    const desktopActions = root.kapyguts?.pageHeaderParts?.().desktopActions;\n    if (desktopActions) return { host: desktopActions, placement: \"global-actions\" };\n    const header = persistentHeader();\n    return header ? { host: header, placement: \"global-header\" } : null;\n  }\n\n  function persistentHeader() {\n    return root.kapyguts?.pageHeader?.() || null;\n  }\n\n  function makeControl(placement) {\n    const control = document.createElement(\"div\");\n    control.className = CONTROL_CLASS;\n    control.dataset.placement = placement;\n\n    const button = document.createElement(\"button\");\n    button.type = \"button\";\n    button.className = \"cudloun-post-fonts-toggle\";\n    button.textContent = \"f\";\n    button.title = \"Post fonts — hold or right-click for more\";\n    button.setAttribute(\"aria-label\", \"Post font controls\");\n    button.setAttribute(\"aria-expanded\", \"false\");\n\n    const panel = document.createElement(\"section\");\n    panel.className = \"cudloun-post-fonts-panel cudloun-post-fonts-panel--simple\";\n    panel.hidden = true;\n    panel.setAttribute(\"aria-label\", \"Post font controls\");\n\n    const head = document.createElement(\"div\");\n    head.className = \"cudloun-post-fonts-head\";\n    const title = document.createElement(\"strong\");\n    title.textContent = \"Post font\";\n    const close = document.createElement(\"button\");\n    close.type = \"button\";\n    close.className = \"cudloun-post-fonts-close\";\n    close.textContent = \"×\";\n    close.setAttribute(\"aria-label\", \"Close post font controls\");\n    head.appendChild(title);\n    head.appendChild(close);\n\n    const familyLabel = document.createElement(\"label\");\n    familyLabel.className = \"cudloun-post-fonts-field\";\n    const familyText = document.createElement(\"span\");\n    familyText.textContent = \"Font\";\n    const family = document.createElement(\"select\");\n    family.setAttribute(\"aria-label\", \"Post font family\");\n    FAMILIES.forEach(({ value, label, stack }) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = label;\n      if (stack) option.style.fontFamily = stack;\n      family.appendChild(option);\n    });\n    family.value = validFamily(ctxRef?.storage.get(\"family\", \"default\"));\n    familyLabel.appendChild(familyText);\n    familyLabel.appendChild(family);\n\n    const customLabel = document.createElement(\"label\");\n    customLabel.className = \"cudloun-post-fonts-field cudloun-post-fonts-custom\";\n    const customText = document.createElement(\"span\");\n    customText.textContent = \"Custom\";\n    const customWrap = document.createElement(\"span\");\n    customWrap.className = \"cudloun-post-fonts-custom-wrap\";\n    const custom = document.createElement(\"input\");\n    custom.type = \"text\";\n    custom.maxLength = MAX_CUSTOM_FAMILY_LENGTH;\n    custom.autocomplete = \"off\";\n    custom.spellcheck = false;\n    custom.placeholder = \"\\\"Atkinson Hyperlegible\\\", Arial, sans-serif\";\n    custom.setAttribute(\"aria-label\", \"Custom post font family\");\n    const customHint = document.createElement(\"small\");\n    customHint.textContent = \"Comma-separated local font names\";\n    customWrap.appendChild(custom);\n    customWrap.appendChild(customHint);\n    customLabel.appendChild(customText);\n    customLabel.appendChild(customWrap);\n    custom.value = String(ctxRef?.storage.get(\"customFamily\", \"\") || \"\").slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n    syncCustomField(customLabel, custom, customHint, family.value);\n\n    const sizeField = document.createElement(\"div\");\n    sizeField.className = \"cudloun-post-fonts-field\";\n    const sizeText = document.createElement(\"span\");\n    sizeText.textContent = \"Size\";\n    const sizeControls = document.createElement(\"div\");\n    sizeControls.className = \"cudloun-post-fonts-size\";\n    const range = document.createElement(\"input\");\n    range.type = \"range\";\n    range.min = String(SLIDER_MIN);\n    range.max = String(SLIDER_MAX);\n    range.step = \"0.5\";\n    range.setAttribute(\"aria-label\", \"Post font size slider\");\n    const number = document.createElement(\"input\");\n    number.type = \"number\";\n    number.min = String(MIN_SIZE);\n    number.max = String(MAX_SIZE);\n    number.step = \"0.5\";\n    number.inputMode = \"decimal\";\n    number.setAttribute(\"aria-label\", \"Post font size in pixels\");\n    const unit = document.createElement(\"span\");\n    unit.textContent = \"px\";\n    sizeControls.appendChild(range);\n    sizeControls.appendChild(number);\n    sizeControls.appendChild(unit);\n    sizeField.appendChild(sizeText);\n    sizeField.appendChild(sizeControls);\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-post-fonts-actions\";\n    const reset = document.createElement(\"button\");\n    reset.type = \"button\";\n    reset.textContent = \"Reset\";\n    actions.appendChild(reset);\n\n    const advancedHint = document.createElement(\"small\");\n    advancedHint.className = \"cudloun-post-fonts-advanced-hint\";\n    advancedHint.textContent = \"Hold or right-click f for more\";\n\n    panel.appendChild(head);\n    panel.appendChild(familyLabel);\n    panel.appendChild(customLabel);\n    panel.appendChild(sizeField);\n    panel.appendChild(actions);\n    panel.appendChild(advancedHint);\n    control.appendChild(button);\n    control.appendChild(panel);\n    control.appendChild(makeAdvancedPanel(control));\n\n    syncSizeInputs(range, number, currentSize());\n    installToggleGestures(button, control);\n    close.addEventListener(\"click\", () => setOpen(control, false));\n    family.addEventListener(\"change\", () => {\n      ctxRef?.storage.set(\"family\", validFamily(family.value));\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n      if (family.value === \"custom\") custom.focus();\n    });\n    custom.addEventListener(\"input\", () => {\n      const value = custom.value.slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n      ctxRef?.storage.set(\"customFamily\", value);\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n    });\n    range.addEventListener(\"input\", () => {\n      const size = normalizeSize(range.value);\n      number.value = displaySize(size);\n      saveSize(size);\n    });\n    number.addEventListener(\"input\", () => {\n      if (number.value === \"\") return;\n      const size = normalizeSize(number.value);\n      range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n      saveSize(size);\n    });\n    number.addEventListener(\"change\", () => {\n      const size = normalizeSize(number.value);\n      syncSizeInputs(range, number, size);\n      saveSize(size);\n    });\n    reset.addEventListener(\"click\", () => {\n      family.value = \"default\";\n      custom.value = \"\";\n      syncCustomField(customLabel, custom, customHint, family.value);\n      syncSizeInputs(range, number, DEFAULT_SIZE);\n      ctxRef?.storage.set(\"family\", \"default\");\n      ctxRef?.storage.set(\"customFamily\", \"\");\n      ctxRef?.storage.set(\"size\", DEFAULT_SIZE);\n      applySettings();\n    });\n    return control;\n  }\n\n  function makeAdvancedPanel(control) {\n    const panel = document.createElement(\"section\");\n    panel.className = \"cudloun-post-fonts-panel cudloun-post-fonts-panel--advanced\";\n    panel.hidden = true;\n    panel.setAttribute(\"aria-label\", \"Advanced font controls\");\n\n    const head = document.createElement(\"div\");\n    head.className = \"cudloun-post-fonts-head\";\n    const heading = document.createElement(\"div\");\n    heading.className = \"cudloun-post-fonts-advanced-title\";\n    const title = document.createElement(\"strong\");\n    title.textContent = \"More fonts\";\n    const intro = document.createElement(\"small\");\n    intro.textContent = \"Pick an area, then tune it\";\n    heading.appendChild(title);\n    heading.appendChild(intro);\n    const close = document.createElement(\"button\");\n    close.type = \"button\";\n    close.className = \"cudloun-post-fonts-close\";\n    close.textContent = \"×\";\n    close.setAttribute(\"aria-label\", \"Close advanced font controls\");\n    head.appendChild(heading);\n    head.appendChild(close);\n\n    const roles = document.createElement(\"div\");\n    roles.className = \"cudloun-post-fonts-roles\";\n    roles.setAttribute(\"role\", \"tablist\");\n    roles.setAttribute(\"aria-label\", \"Font area\");\n    const roleButtons = new Map();\n    FONT_ROLES.forEach((config) => {\n      const roleButton = document.createElement(\"button\");\n      roleButton.type = \"button\";\n      roleButton.textContent = config.label;\n      roleButton.title = config.title;\n      roleButton.dataset.fontRole = config.id;\n      roleButton.setAttribute(\"role\", \"tab\");\n      roleButton.setAttribute(\"aria-selected\", \"false\");\n      roles.appendChild(roleButton);\n      roleButtons.set(config.id, roleButton);\n    });\n\n    const areaName = document.createElement(\"strong\");\n    areaName.className = \"cudloun-post-fonts-area-name\";\n\n    const familyLabel = document.createElement(\"label\");\n    familyLabel.className = \"cudloun-post-fonts-field\";\n    const familyText = document.createElement(\"span\");\n    familyText.textContent = \"Font\";\n    const family = document.createElement(\"select\");\n    family.setAttribute(\"aria-label\", \"Selected area font family\");\n    FAMILIES.forEach(({ value, label, stack }) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = label;\n      if (stack) option.style.fontFamily = stack;\n      family.appendChild(option);\n    });\n    familyLabel.appendChild(familyText);\n    familyLabel.appendChild(family);\n\n    const customLabel = document.createElement(\"label\");\n    customLabel.className = \"cudloun-post-fonts-field cudloun-post-fonts-custom\";\n    const customText = document.createElement(\"span\");\n    customText.textContent = \"Custom\";\n    const customWrap = document.createElement(\"span\");\n    customWrap.className = \"cudloun-post-fonts-custom-wrap\";\n    const custom = document.createElement(\"input\");\n    custom.type = \"text\";\n    custom.maxLength = MAX_CUSTOM_FAMILY_LENGTH;\n    custom.autocomplete = \"off\";\n    custom.spellcheck = false;\n    custom.placeholder = \"Georgia, serif\";\n    custom.setAttribute(\"aria-label\", \"Selected area custom font family\");\n    const customHint = document.createElement(\"small\");\n    customWrap.appendChild(custom);\n    customWrap.appendChild(customHint);\n    customLabel.appendChild(customText);\n    customLabel.appendChild(customWrap);\n\n    const sizeField = document.createElement(\"div\");\n    sizeField.className = \"cudloun-post-fonts-field\";\n    const sizeText = document.createElement(\"span\");\n    sizeText.textContent = \"Size\";\n    const sizeControls = document.createElement(\"div\");\n    sizeControls.className = \"cudloun-post-fonts-size\";\n    const range = document.createElement(\"input\");\n    range.type = \"range\";\n    range.setAttribute(\"aria-label\", \"Selected area font size slider\");\n    const number = document.createElement(\"input\");\n    number.type = \"number\";\n    number.inputMode = \"decimal\";\n    number.setAttribute(\"aria-label\", \"Selected area font size\");\n    const unit = document.createElement(\"span\");\n    sizeControls.appendChild(range);\n    sizeControls.appendChild(number);\n    sizeControls.appendChild(unit);\n    sizeField.appendChild(sizeText);\n    sizeField.appendChild(sizeControls);\n\n    const actions = document.createElement(\"div\");\n    actions.className = \"cudloun-post-fonts-actions cudloun-post-fonts-advanced-actions\";\n    const nativeLink = document.createElement(\"a\");\n    nativeLink.href = \"/test/fonts\";\n    nativeLink.textContent = \"Native settings\";\n    nativeLink.title = \"Open Kapybara's full experimental font settings\";\n    const reset = document.createElement(\"button\");\n    reset.type = \"button\";\n    reset.textContent = \"Reset area\";\n    actions.appendChild(nativeLink);\n    actions.appendChild(reset);\n\n    panel.appendChild(head);\n    panel.appendChild(roles);\n    panel.appendChild(areaName);\n    panel.appendChild(familyLabel);\n    panel.appendChild(customLabel);\n    panel.appendChild(sizeField);\n    panel.appendChild(actions);\n\n    let activeRole = \"posts\";\n    const sync = (role = activeRole) => {\n      const config = roleConfig(role);\n      activeRole = config.id;\n      roleButtons.forEach((button, id) => button.setAttribute(\"aria-selected\", id === activeRole ? \"true\" : \"false\"));\n      areaName.textContent = config.title;\n      family.value = currentRoleFamily(activeRole);\n      custom.value = currentRoleCustomFamily(activeRole);\n      syncCustomField(customLabel, custom, customHint, family.value);\n      range.min = String(config.sliderMin);\n      range.max = String(config.sliderMax);\n      range.step = String(config.step);\n      number.min = String(config.min);\n      number.max = String(config.max);\n      number.step = String(config.step);\n      unit.textContent = config.unit;\n      syncRoleSizeInputs(activeRole, range, number, currentRoleSize(activeRole));\n    };\n\n    roleButtons.forEach((roleButton, role) => roleButton.addEventListener(\"click\", () => sync(role)));\n    close.addEventListener(\"click\", () => setOpen(control, false));\n    family.addEventListener(\"change\", () => {\n      ctxRef?.storage.set(roleStorageKey(activeRole, \"family\"), validFamily(family.value));\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n      if (family.value === \"custom\") custom.focus();\n    });\n    custom.addEventListener(\"input\", () => {\n      const value = custom.value.slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n      ctxRef?.storage.set(roleStorageKey(activeRole, \"customFamily\"), value);\n      syncCustomField(customLabel, custom, customHint, family.value);\n      applySettings();\n    });\n    range.addEventListener(\"input\", () => {\n      const size = normalizeRoleSize(activeRole, range.value);\n      number.value = displayRoleSize(activeRole, size);\n      saveRoleSize(activeRole, size);\n    });\n    number.addEventListener(\"input\", () => {\n      if (number.value === \"\") return;\n      const config = roleConfig(activeRole);\n      const size = normalizeRoleSize(activeRole, number.value);\n      range.value = String(Math.min(config.sliderMax, Math.max(config.sliderMin, size)));\n      saveRoleSize(activeRole, size);\n    });\n    number.addEventListener(\"change\", () => {\n      const size = normalizeRoleSize(activeRole, number.value);\n      syncRoleSizeInputs(activeRole, range, number, size);\n      saveRoleSize(activeRole, size);\n    });\n    reset.addEventListener(\"click\", () => {\n      const config = roleConfig(activeRole);\n      ctxRef?.storage.set(roleStorageKey(activeRole, \"family\"), \"default\");\n      ctxRef?.storage.set(roleStorageKey(activeRole, \"customFamily\"), \"\");\n      ctxRef?.storage.set(roleStorageKey(activeRole, \"size\"), config.defaultSize);\n      applySettings();\n      sync(activeRole);\n    });\n    panel.addEventListener(\"cudloun-fonts-sync\", () => sync(activeRole));\n    sync();\n    return panel;\n  }\n\n  function installToggleGestures(button, control) {\n    let timer = null;\n    let start = null;\n    let suppressClick = false;\n    const cancel = () => {\n      window.clearTimeout(timer);\n      timer = null;\n      start = null;\n    };\n\n    button.addEventListener(\"click\", (event) => {\n      if (suppressClick) {\n        suppressClick = false;\n        event.preventDefault();\n        return;\n      }\n      const panel = control.querySelector(\".cudloun-post-fonts-panel--simple\");\n      setOpen(control, panel?.hidden !== false, \"simple\");\n    });\n    button.addEventListener(\"contextmenu\", (event) => {\n      event.preventDefault();\n      cancel();\n      suppressClick = event.button !== 2;\n      setOpen(control, true, \"advanced\");\n    });\n    button.addEventListener(\"pointerdown\", (event) => {\n      if (event.button !== 0 || event.pointerType === \"mouse\") return;\n      cancel();\n      start = { x: event.clientX, y: event.clientY };\n      timer = window.setTimeout(() => {\n        timer = null;\n        suppressClick = true;\n        setOpen(control, true, \"advanced\");\n      }, LONG_PRESS_MS);\n    });\n    button.addEventListener(\"pointermove\", (event) => {\n      if (!start) return;\n      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > LONG_PRESS_MOVE_PX) cancel();\n    });\n    button.addEventListener(\"pointerup\", cancel);\n    button.addEventListener(\"pointercancel\", cancel);\n    button.addEventListener(\"lostpointercapture\", cancel);\n  }\n\n  function setOpen(control, open, mode = \"simple\") {\n    const panels = Array.from(control.querySelectorAll(\".cudloun-post-fonts-panel\"));\n    const button = control.querySelector(\".cudloun-post-fonts-toggle\");\n    if (!panels.length || !button) return;\n    panels.forEach((panel) => {\n      const selected = panel.classList.contains(`cudloun-post-fonts-panel--${mode}`);\n      panel.hidden = !open || !selected;\n      if (open && selected && mode === \"advanced\") panel.dispatchEvent(new Event(\"cudloun-fonts-sync\"));\n    });\n    button.setAttribute(\"aria-expanded\", open ? \"true\" : \"false\");\n    control.dataset.openPanel = open ? mode : \"\";\n    if (open) {\n      const panel = control.querySelector(`.cudloun-post-fonts-panel--${mode}`);\n      (mode === \"advanced\" ? panel?.querySelector(\"[role='tab'][aria-selected='true']\") : panel?.querySelector(\"select\"))?.focus();\n    }\n  }\n\n  function saveSize(value) {\n    const size = normalizeSize(value);\n    ctxRef?.storage.set(\"size\", size);\n    applySettings();\n  }\n\n  function roleConfig(role) {\n    return FONT_ROLES.find((config) => config.id === role) || FONT_ROLES[0];\n  }\n\n  function roleStorageKey(role, field) {\n    if (role === \"posts\") {\n      if (field === \"family\") return \"family\";\n      if (field === \"customFamily\") return \"customFamily\";\n      if (field === \"size\") return \"size\";\n    }\n    return `${role}${field[0].toUpperCase()}${field.slice(1)}`;\n  }\n\n  function currentRoleFamily(role) {\n    return validFamily(ctxRef?.storage.get(roleStorageKey(role, \"family\"), \"default\"));\n  }\n\n  function currentRoleCustomFamily(role) {\n    return String(ctxRef?.storage.get(roleStorageKey(role, \"customFamily\"), \"\") || \"\").slice(0, MAX_CUSTOM_FAMILY_LENGTH);\n  }\n\n  function currentRoleSize(role) {\n    const config = roleConfig(role);\n    return normalizeRoleSize(role, ctxRef?.storage.get(roleStorageKey(role, \"size\"), config.defaultSize));\n  }\n\n  function saveRoleSize(role, value) {\n    ctxRef?.storage.set(roleStorageKey(role, \"size\"), normalizeRoleSize(role, value));\n    applySettings();\n  }\n\n  function applySettings() {\n    const rootElement = document.documentElement;\n    rootElement.setAttribute(\"data-cudloun-post-fonts\", \"true\");\n    FONT_ROLES.forEach((config) => applyRoleSettings(rootElement, config));\n  }\n\n  function applyRoleSettings(rootElement, config) {\n    const family = currentRoleFamily(config.id);\n    const stack = fontStack(family, currentRoleCustomFamily(config.id));\n    const cssId = config.id === \"posts\" ? \"post\" : config.id;\n    const familyAttribute = `data-cudloun-${cssId}-font-family`;\n    const sizeAttribute = `data-cudloun-${cssId}-font-size`;\n    const familyProperty = `--cudloun-${cssId}-font-family`;\n    const sizeProperty = `--cudloun-${cssId}-font-size`;\n    const size = currentRoleSize(config.id);\n\n    rootElement.setAttribute(familyAttribute, stack ? family : \"default\");\n    if (stack) rootElement.style.setProperty(familyProperty, stack);\n    else rootElement.style.removeProperty(familyProperty);\n\n    const applySize = config.id === \"posts\" || size !== config.defaultSize;\n    if (applySize) {\n      rootElement.setAttribute(sizeAttribute, \"true\");\n      rootElement.style.setProperty(sizeProperty, `${displayRoleSize(config.id, size)}${config.unit}`);\n    } else {\n      rootElement.removeAttribute(sizeAttribute);\n      rootElement.style.removeProperty(sizeProperty);\n    }\n  }\n\n  function clearSettings() {\n    const rootElement = document.documentElement;\n    rootElement.removeAttribute(\"data-cudloun-post-fonts\");\n    FONT_ROLES.forEach((config) => {\n      const cssId = config.id === \"posts\" ? \"post\" : config.id;\n      rootElement.removeAttribute(`data-cudloun-${cssId}-font-family`);\n      rootElement.removeAttribute(`data-cudloun-${cssId}-font-size`);\n      rootElement.style.removeProperty(`--cudloun-${cssId}-font-family`);\n      rootElement.style.removeProperty(`--cudloun-${cssId}-font-size`);\n    });\n  }\n\n  function currentSize() {\n    return normalizeSize(ctxRef?.storage.get(\"size\", DEFAULT_SIZE));\n  }\n\n  function normalizeSize(value) {\n    const parsed = Number(value);\n    if (!Number.isFinite(parsed)) return DEFAULT_SIZE;\n    const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parsed));\n    return Math.round(clamped * 2) / 2;\n  }\n\n  function normalizeRoleSize(role, value) {\n    if (role === \"posts\") return normalizeSize(value);\n    const config = roleConfig(role);\n    const parsed = Number(value);\n    if (!Number.isFinite(parsed)) return config.defaultSize;\n    const clamped = Math.min(config.max, Math.max(config.min, parsed));\n    return Math.round(clamped / config.step) * config.step;\n  }\n\n  function displaySize(value) {\n    const size = normalizeSize(value);\n    return Number.isInteger(size) ? String(size) : size.toFixed(1);\n  }\n\n  function displayRoleSize(role, value) {\n    return role === \"posts\" ? displaySize(value) : String(normalizeRoleSize(role, value));\n  }\n\n  function validFamily(value) {\n    const candidate = String(value || \"default\");\n    return FAMILIES.some((font) => font.value === candidate) ? candidate : \"default\";\n  }\n\n  function fontStack(value, customFamily = \"\") {\n    const family = validFamily(value);\n    if (family === \"custom\") return normalizeCustomFamily(customFamily);\n    return FAMILIES.find((font) => font.value === family)?.stack || \"\";\n  }\n\n  function normalizeCustomFamily(value) {\n    const source = String(value || \"\").trim();\n    if (!source || source.length > MAX_CUSTOM_FAMILY_LENGTH) return \"\";\n    if (/[;{}()\\\\/:]/.test(source) || /[\\u0000-\\u001f\\u007f]/.test(source)) return \"\";\n\n    const tokens = [];\n    let token = \"\";\n    let quote = \"\";\n    for (const character of source) {\n      if ((character === \"\\\"\" || character === \"'\") && !quote) quote = character;\n      else if (character === quote) quote = \"\";\n      if (character === \",\" && !quote) {\n        tokens.push(token.trim());\n        token = \"\";\n      } else {\n        token += character;\n      }\n    }\n    if (quote) return \"\";\n    tokens.push(token.trim());\n    if (tokens.some((item) => !item)) return \"\";\n\n    const safeName = /^[\\p{L}\\p{N} ._-]+$/u;\n    const normalized = [];\n    for (const item of tokens) {\n      const opening = item[0];\n      const quoted = opening === \"\\\"\" || opening === \"'\";\n      if (quoted) {\n        if (item.length < 3 || item[item.length - 1] !== opening) return \"\";\n        const name = item.slice(1, -1).trim().replace(/\\s+/g, \" \");\n        if (!name || !safeName.test(name)) return \"\";\n        normalized.push(`${opening}${name}${opening}`);\n      } else {\n        const name = item.replace(/\\s+/g, \" \");\n        if (!safeName.test(name)) return \"\";\n        normalized.push(name);\n      }\n    }\n    return normalized.join(\", \");\n  }\n\n  function syncCustomField(field, input, hint, family) {\n    field.hidden = family !== \"custom\";\n    const value = input.value.trim();\n    const normalized = normalizeCustomFamily(value);\n    const invalid = Boolean(value && !normalized);\n    input.setAttribute(\"aria-invalid\", invalid ? \"true\" : \"false\");\n    hint.textContent = invalid\n      ? \"Use comma-separated font names only\"\n      : \"Comma-separated local font names\";\n  }\n\n  function syncSizeInputs(range, number, value) {\n    const size = normalizeSize(value);\n    range.value = String(Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, size)));\n    number.value = displaySize(size);\n  }\n\n  function syncRoleSizeInputs(role, range, number, value) {\n    const config = roleConfig(role);\n    const size = normalizeRoleSize(role, value);\n    range.value = String(Math.min(config.sliderMax, Math.max(config.sliderMin, size)));\n    number.value = displayRoleSize(role, size);\n  }\n\n  function installStyles() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[data-cudloun-post-fonts=\"true\"] article.post .body,\n      html[data-cudloun-post-fonts=\"true\"] article.post .body .markdown {\n        font-size: var(--cudloun-post-font-size, 17px) !important;\n      }\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body,\n      html[data-cudloun-post-fonts=\"true\"]:not([data-cudloun-post-font-family=\"default\"]) article.post .body .markdown {\n        font-family: var(--cudloun-post-font-family) !important;\n      }\n      html[data-cudloun-interface-font-family]:not([data-cudloun-interface-font-family=\"default\"]) :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer),\n      html[data-cudloun-interface-font-family]:not([data-cudloun-interface-font-family=\"default\"]) :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){font-family:var(--cudloun-interface-font-family)!important}\n      html[data-cudloun-interface-font-size=\"true\"] :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer){font-size:var(--cudloun-interface-font-size)!important}\n      html[data-cudloun-interface-font-size=\"true\"] :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){font-size:var(--cudloun-interface-font-size)!important}\n      html[data-cudloun-headings-font-family]:not([data-cudloun-headings-font-family=\"default\"]) :where(h1,h2,h3,h4,h5,h6,.title-link,article.post .author){font-family:var(--cudloun-headings-font-family)!important}\n      html[data-cudloun-headings-font-size=\"true\"] :where(h1,h2,h3,h4,h5,h6,.title-link,article.post .author){font-size:var(--cudloun-headings-font-size)!important}\n      html[data-cudloun-code-font-family]:not([data-cudloun-code-font-family=\"default\"]) :where(pre,code,kbd,samp){font-family:var(--cudloun-code-font-family)!important}\n      html[data-cudloun-code-font-size=\"true\"] :where(pre,:not(pre)>code,kbd,samp){font-size:var(--cudloun-code-font-size)!important}\n      html[data-cudloun-logo-font-family]:not([data-cudloun-logo-font-family=\"default\"]) :where(a[aria-label=\"Okoun home\"],.logo) :where(.text,.orange-o){font-family:var(--cudloun-logo-font-family)!important}\n      html[data-cudloun-logo-font-size=\"true\"] :where(a[aria-label=\"Okoun home\"],.logo){zoom:var(--cudloun-logo-font-size)}\n      .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#243041}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"],.${CONTROL_CLASS}[data-placement=\"global-actions\"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}\n      .${CONTROL_CLASS}[data-placement=\"global-actions\"]{order:-1}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-toggle,.${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}\n      .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-panel{top:44px;right:0}\n      .${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-panel{top:45px;right:0}\n      .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif;-webkit-touch-callout:none;user-select:none}\n      .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded=\"true\"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}\n      .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}\n      .cudloun-post-fonts-panel{box-sizing:border-box;position:absolute;top:46px;right:0;width:286px;padding:12px;border:1px solid rgba(79,102,134,.3);border-radius:10px;background:#fff;color:#243041;box-shadow:0 12px 32px rgba(18,27,43,.24)}\n      .cudloun-post-fonts-panel--advanced{width:330px}\n      .cudloun-post-fonts-panel[hidden]{display:none!important}\n      .cudloun-post-fonts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}\n      .cudloun-post-fonts-head strong{font-size:14px}\n      .cudloun-post-fonts-advanced-title{display:grid;gap:2px}\n      .cudloun-post-fonts-advanced-title small,.cudloun-post-fonts-advanced-hint{color:#697586;font-size:11px;font-weight:500}\n      .cudloun-post-fonts-advanced-hint{display:block;margin-top:7px;text-align:right}\n      .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}\n      .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}\n      .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}\n      .cudloun-post-fonts-field select,.cudloun-post-fonts-field input[type=\"number\"],.cudloun-post-fonts-field input[type=\"text\"]{box-sizing:border-box;min-height:36px;border:1px solid rgba(79,102,134,.32);border-radius:7px;background:#fff;color:#182230;padding:0 8px;font:inherit}\n      .cudloun-post-fonts-field select{width:100%}\n      .cudloun-post-fonts-custom[hidden]{display:none!important}\n      .cudloun-post-fonts-custom{align-items:start}\n      .cudloun-post-fonts-custom>span:first-child{padding-top:9px}\n      .cudloun-post-fonts-custom-wrap{display:grid;gap:4px;min-width:0}\n      .cudloun-post-fonts-custom-wrap input{width:100%}\n      .cudloun-post-fonts-custom-wrap input[aria-invalid=\"true\"]{border-color:#b42318;outline-color:#b42318}\n      .cudloun-post-fonts-custom-wrap small{color:#697586;font-size:11px;font-weight:500}\n      .cudloun-post-fonts-size{display:grid;grid-template-columns:minmax(0,1fr) 62px auto;align-items:center;gap:7px}\n      .cudloun-post-fonts-size input[type=\"range\"]{width:100%;accent-color:#b06a00}\n      .cudloun-post-fonts-size input[type=\"number\"]{width:62px;text-align:right}\n      .cudloun-post-fonts-size>span{color:#697586;font-size:12px}\n      .cudloun-post-fonts-roles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:2px 0 10px}\n      .cudloun-post-fonts-roles button{appearance:none;min-width:0;border:1px solid rgba(79,102,134,.25);border-radius:999px;background:#f8fafc;color:#4a5667;cursor:pointer;font:700 11px/1.2 inherit;padding:7px 3px}\n      .cudloun-post-fonts-roles button[aria-selected=\"true\"]{border-color:#b06a00;background:#fff3dc;color:#7a4700}\n      .cudloun-post-fonts-area-name{display:block;margin:0 0 4px;color:#697586;font-size:11px}\n      .cudloun-post-fonts-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid rgba(79,102,134,.16)}\n      .cudloun-post-fonts-actions button{appearance:none;border:1px solid rgba(79,102,134,.26);border-radius:7px;background:#f8fafc;color:#364152;cursor:pointer;font:700 12px/1.2 inherit;padding:7px 10px}\n      .cudloun-post-fonts-actions button:hover{background:#eef2f7}\n      .cudloun-post-fonts-advanced-actions{align-items:center;justify-content:space-between}\n      .cudloun-post-fonts-advanced-actions a{color:#8a5300;font-size:11px;font-weight:700;text-decoration:none}\n      .cudloun-post-fonts-advanced-actions a:hover{text-decoration:underline}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-toggle,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-panel,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field select,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field input[type=\"number\"],\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-field input[type=\"text\"],\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-actions button,\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-roles button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-roles button[aria-selected=\"true\"]{background:var(--cudloun-kapybara-accent-soft,#3a2b16);color:var(--cudloun-kapybara-accent,#d68a1f);border-color:var(--cudloun-kapybara-accent,#d68a1f)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .cudloun-post-fonts-advanced-actions a{color:var(--cudloun-kapybara-accent,#d68a1f)}\n      html[data-cudloun-kapybara-theme=\"dark\"] .${CONTROL_CLASS}[data-placement=\"board-header\"] .cudloun-post-fonts-toggle,\n      html[data-cudloun-kapybara-theme=\"dark\"] .${CONTROL_CLASS}[data-placement=\"global-actions\"] .cudloun-post-fonts-toggle{background:transparent;border-color:transparent}\n      @media(max-width:700px){\n        .${CONTROL_CLASS}[data-placement=\"floating\"]{position:fixed;top:auto;right:14px;bottom:62px;z-index:2020}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle{width:46px;height:46px;border-radius:50%;background:#b06a00;color:#fff;box-shadow:0 6px 20px rgba(18,27,43,.3);font-size:23px}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle:hover,\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-toggle[aria-expanded=\"true\"]{background:#8f5600;color:#fff}\n        .${CONTROL_CLASS}[data-placement=\"floating\"] .cudloun-post-fonts-panel{top:auto;right:0;bottom:54px}\n        .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 20px));max-height:calc(100dvh - 72px);overflow:auto}\n        .cudloun-post-fonts-panel--advanced{width:min(330px,calc(100vw - 20px))}\n      }\n    `;\n    document.head.appendChild(style);\n  }\n})();\n");
   embeddedScripts.set("modules/post-fonts.js", function () {
-    // Compact post font controls for Kapybara board pages.
+    // Compact quick and per-area font controls for Kapybara board pages.
     (function () {
       "use strict";
 
@@ -3169,7 +3169,16 @@
       const MAX_SIZE = 72;
       const SLIDER_MIN = 10;
       const SLIDER_MAX = 32;
+      const LONG_PRESS_MS = 520;
+      const LONG_PRESS_MOVE_PX = 10;
       const MAX_CUSTOM_FAMILY_LENGTH = 160;
+      const FONT_ROLES = [
+        { id: "posts", label: "Posts", title: "Post content", unit: "px", defaultSize: DEFAULT_SIZE, min: MIN_SIZE, max: MAX_SIZE, sliderMin: SLIDER_MIN, sliderMax: SLIDER_MAX, step: 0.5 },
+        { id: "interface", label: "UI", title: "Interface", unit: "px", defaultSize: 16, min: 12, max: 20, sliderMin: 12, sliderMax: 20, step: 1 },
+        { id: "headings", label: "Titles", title: "Headings and authors", unit: "%", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },
+        { id: "code", label: "Code", title: "Code and monospace text", unit: "%", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },
+        { id: "logo", label: "Logo", title: "Okoun logo", unit: "%", defaultSize: 100, min: 70, max: 130, sliderMin: 70, sliderMax: 130, step: 5 },
+      ];
       const FAMILIES = [
         { value: "default", label: "Kapybara default", stack: "" },
         { value: "classic-okoun", label: "Classic Okoun", stack: "Verdana, \"Bitstream Vera Sans\", Arial, sans-serif" },
@@ -3203,7 +3212,10 @@
 
       root.postFonts = {
         families: FAMILIES.map(({ value, label }) => ({ value, label })),
+        roles: FONT_ROLES.map(({ id, label, title, unit, defaultSize, min, max, step }) => ({ id, label, title, unit, defaultSize, min, max, step })),
+        longPressMs: LONG_PRESS_MS,
         normalizeSize,
+        normalizeRoleSize,
         normalizeCustomFamily,
         fontStack,
       };
@@ -3211,8 +3223,8 @@
       root.registerModule({
         id: "post-fonts",
         name: "Post Fonts",
-        description: "Quick font family and size controls for displayed Kapybara posts.",
-        version: "0.4.0",
+        description: "Quick post fonts with optional per-area controls for Kapybara.",
+        version: "0.5.0",
         defaultEnabled: false,
         start(ctx) {
           if (!root.kapyguts?.isKapybara?.()) return null;
@@ -3226,7 +3238,7 @@
           row.className = "cudloun-setting-row";
           const text = document.createElement("div");
           text.className = "cudloun-setting-text";
-          text.textContent = "Use the f button on board pages. It stays in the sticky page header on desktop and the sticky board toolbar on mobile.";
+          text.textContent = "Tap f for quick post fonts. Hold it on touch screens or right-click it for separate interface, heading, code, and logo controls.";
           row.appendChild(text);
           wrap.appendChild(row);
           return wrap;
@@ -3234,9 +3246,10 @@
         renderHelp() {
           return [
             "Open f to choose a preset or enter a comma-separated custom font stack, then adjust its size with the slider or number field.",
-            "Changes apply immediately to displayed post bodies and are remembered across page loads.",
+            "Hold f on a touch screen, or right-click it with a mouse, to open advanced controls for Posts, UI, Titles, Code, and Logo.",
+            "Changes apply immediately to the selected area and are remembered across page loads.",
             "Custom fonts must already be available in your browser or device; later names in the stack act as fallbacks.",
-            "Reset restores Kapybara's font family and its current 17 px post size.",
+            "Reset restores the currently selected area; untouched advanced areas keep Kapybara's native styling.",
           ];
         },
       });
@@ -3350,12 +3363,12 @@
         button.type = "button";
         button.className = "cudloun-post-fonts-toggle";
         button.textContent = "f";
-        button.title = "Post fonts";
+        button.title = "Post fonts — hold or right-click for more";
         button.setAttribute("aria-label", "Post font controls");
         button.setAttribute("aria-expanded", "false");
 
         const panel = document.createElement("section");
-        panel.className = "cudloun-post-fonts-panel";
+        panel.className = "cudloun-post-fonts-panel cudloun-post-fonts-panel--simple";
         panel.hidden = true;
         panel.setAttribute("aria-label", "Post font controls");
 
@@ -3444,16 +3457,22 @@
         reset.textContent = "Reset";
         actions.appendChild(reset);
 
+        const advancedHint = document.createElement("small");
+        advancedHint.className = "cudloun-post-fonts-advanced-hint";
+        advancedHint.textContent = "Hold or right-click f for more";
+
         panel.appendChild(head);
         panel.appendChild(familyLabel);
         panel.appendChild(customLabel);
         panel.appendChild(sizeField);
         panel.appendChild(actions);
+        panel.appendChild(advancedHint);
         control.appendChild(button);
         control.appendChild(panel);
+        control.appendChild(makeAdvancedPanel(control));
 
         syncSizeInputs(range, number, currentSize());
-        button.addEventListener("click", () => setOpen(control, panel.hidden));
+        installToggleGestures(button, control);
         close.addEventListener("click", () => setOpen(control, false));
         family.addEventListener("change", () => {
           ctxRef?.storage.set("family", validFamily(family.value));
@@ -3496,13 +3515,247 @@
         return control;
       }
 
-      function setOpen(control, open) {
-        const panel = control.querySelector(".cudloun-post-fonts-panel");
+      function makeAdvancedPanel(control) {
+        const panel = document.createElement("section");
+        panel.className = "cudloun-post-fonts-panel cudloun-post-fonts-panel--advanced";
+        panel.hidden = true;
+        panel.setAttribute("aria-label", "Advanced font controls");
+
+        const head = document.createElement("div");
+        head.className = "cudloun-post-fonts-head";
+        const heading = document.createElement("div");
+        heading.className = "cudloun-post-fonts-advanced-title";
+        const title = document.createElement("strong");
+        title.textContent = "More fonts";
+        const intro = document.createElement("small");
+        intro.textContent = "Pick an area, then tune it";
+        heading.appendChild(title);
+        heading.appendChild(intro);
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "cudloun-post-fonts-close";
+        close.textContent = "×";
+        close.setAttribute("aria-label", "Close advanced font controls");
+        head.appendChild(heading);
+        head.appendChild(close);
+
+        const roles = document.createElement("div");
+        roles.className = "cudloun-post-fonts-roles";
+        roles.setAttribute("role", "tablist");
+        roles.setAttribute("aria-label", "Font area");
+        const roleButtons = new Map();
+        FONT_ROLES.forEach((config) => {
+          const roleButton = document.createElement("button");
+          roleButton.type = "button";
+          roleButton.textContent = config.label;
+          roleButton.title = config.title;
+          roleButton.dataset.fontRole = config.id;
+          roleButton.setAttribute("role", "tab");
+          roleButton.setAttribute("aria-selected", "false");
+          roles.appendChild(roleButton);
+          roleButtons.set(config.id, roleButton);
+        });
+
+        const areaName = document.createElement("strong");
+        areaName.className = "cudloun-post-fonts-area-name";
+
+        const familyLabel = document.createElement("label");
+        familyLabel.className = "cudloun-post-fonts-field";
+        const familyText = document.createElement("span");
+        familyText.textContent = "Font";
+        const family = document.createElement("select");
+        family.setAttribute("aria-label", "Selected area font family");
+        FAMILIES.forEach(({ value, label, stack }) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+          if (stack) option.style.fontFamily = stack;
+          family.appendChild(option);
+        });
+        familyLabel.appendChild(familyText);
+        familyLabel.appendChild(family);
+
+        const customLabel = document.createElement("label");
+        customLabel.className = "cudloun-post-fonts-field cudloun-post-fonts-custom";
+        const customText = document.createElement("span");
+        customText.textContent = "Custom";
+        const customWrap = document.createElement("span");
+        customWrap.className = "cudloun-post-fonts-custom-wrap";
+        const custom = document.createElement("input");
+        custom.type = "text";
+        custom.maxLength = MAX_CUSTOM_FAMILY_LENGTH;
+        custom.autocomplete = "off";
+        custom.spellcheck = false;
+        custom.placeholder = "Georgia, serif";
+        custom.setAttribute("aria-label", "Selected area custom font family");
+        const customHint = document.createElement("small");
+        customWrap.appendChild(custom);
+        customWrap.appendChild(customHint);
+        customLabel.appendChild(customText);
+        customLabel.appendChild(customWrap);
+
+        const sizeField = document.createElement("div");
+        sizeField.className = "cudloun-post-fonts-field";
+        const sizeText = document.createElement("span");
+        sizeText.textContent = "Size";
+        const sizeControls = document.createElement("div");
+        sizeControls.className = "cudloun-post-fonts-size";
+        const range = document.createElement("input");
+        range.type = "range";
+        range.setAttribute("aria-label", "Selected area font size slider");
+        const number = document.createElement("input");
+        number.type = "number";
+        number.inputMode = "decimal";
+        number.setAttribute("aria-label", "Selected area font size");
+        const unit = document.createElement("span");
+        sizeControls.appendChild(range);
+        sizeControls.appendChild(number);
+        sizeControls.appendChild(unit);
+        sizeField.appendChild(sizeText);
+        sizeField.appendChild(sizeControls);
+
+        const actions = document.createElement("div");
+        actions.className = "cudloun-post-fonts-actions cudloun-post-fonts-advanced-actions";
+        const nativeLink = document.createElement("a");
+        nativeLink.href = "/test/fonts";
+        nativeLink.textContent = "Native settings";
+        nativeLink.title = "Open Kapybara's full experimental font settings";
+        const reset = document.createElement("button");
+        reset.type = "button";
+        reset.textContent = "Reset area";
+        actions.appendChild(nativeLink);
+        actions.appendChild(reset);
+
+        panel.appendChild(head);
+        panel.appendChild(roles);
+        panel.appendChild(areaName);
+        panel.appendChild(familyLabel);
+        panel.appendChild(customLabel);
+        panel.appendChild(sizeField);
+        panel.appendChild(actions);
+
+        let activeRole = "posts";
+        const sync = (role = activeRole) => {
+          const config = roleConfig(role);
+          activeRole = config.id;
+          roleButtons.forEach((button, id) => button.setAttribute("aria-selected", id === activeRole ? "true" : "false"));
+          areaName.textContent = config.title;
+          family.value = currentRoleFamily(activeRole);
+          custom.value = currentRoleCustomFamily(activeRole);
+          syncCustomField(customLabel, custom, customHint, family.value);
+          range.min = String(config.sliderMin);
+          range.max = String(config.sliderMax);
+          range.step = String(config.step);
+          number.min = String(config.min);
+          number.max = String(config.max);
+          number.step = String(config.step);
+          unit.textContent = config.unit;
+          syncRoleSizeInputs(activeRole, range, number, currentRoleSize(activeRole));
+        };
+
+        roleButtons.forEach((roleButton, role) => roleButton.addEventListener("click", () => sync(role)));
+        close.addEventListener("click", () => setOpen(control, false));
+        family.addEventListener("change", () => {
+          ctxRef?.storage.set(roleStorageKey(activeRole, "family"), validFamily(family.value));
+          syncCustomField(customLabel, custom, customHint, family.value);
+          applySettings();
+          if (family.value === "custom") custom.focus();
+        });
+        custom.addEventListener("input", () => {
+          const value = custom.value.slice(0, MAX_CUSTOM_FAMILY_LENGTH);
+          ctxRef?.storage.set(roleStorageKey(activeRole, "customFamily"), value);
+          syncCustomField(customLabel, custom, customHint, family.value);
+          applySettings();
+        });
+        range.addEventListener("input", () => {
+          const size = normalizeRoleSize(activeRole, range.value);
+          number.value = displayRoleSize(activeRole, size);
+          saveRoleSize(activeRole, size);
+        });
+        number.addEventListener("input", () => {
+          if (number.value === "") return;
+          const config = roleConfig(activeRole);
+          const size = normalizeRoleSize(activeRole, number.value);
+          range.value = String(Math.min(config.sliderMax, Math.max(config.sliderMin, size)));
+          saveRoleSize(activeRole, size);
+        });
+        number.addEventListener("change", () => {
+          const size = normalizeRoleSize(activeRole, number.value);
+          syncRoleSizeInputs(activeRole, range, number, size);
+          saveRoleSize(activeRole, size);
+        });
+        reset.addEventListener("click", () => {
+          const config = roleConfig(activeRole);
+          ctxRef?.storage.set(roleStorageKey(activeRole, "family"), "default");
+          ctxRef?.storage.set(roleStorageKey(activeRole, "customFamily"), "");
+          ctxRef?.storage.set(roleStorageKey(activeRole, "size"), config.defaultSize);
+          applySettings();
+          sync(activeRole);
+        });
+        panel.addEventListener("cudloun-fonts-sync", () => sync(activeRole));
+        sync();
+        return panel;
+      }
+
+      function installToggleGestures(button, control) {
+        let timer = null;
+        let start = null;
+        let suppressClick = false;
+        const cancel = () => {
+          window.clearTimeout(timer);
+          timer = null;
+          start = null;
+        };
+
+        button.addEventListener("click", (event) => {
+          if (suppressClick) {
+            suppressClick = false;
+            event.preventDefault();
+            return;
+          }
+          const panel = control.querySelector(".cudloun-post-fonts-panel--simple");
+          setOpen(control, panel?.hidden !== false, "simple");
+        });
+        button.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          cancel();
+          suppressClick = event.button !== 2;
+          setOpen(control, true, "advanced");
+        });
+        button.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0 || event.pointerType === "mouse") return;
+          cancel();
+          start = { x: event.clientX, y: event.clientY };
+          timer = window.setTimeout(() => {
+            timer = null;
+            suppressClick = true;
+            setOpen(control, true, "advanced");
+          }, LONG_PRESS_MS);
+        });
+        button.addEventListener("pointermove", (event) => {
+          if (!start) return;
+          if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > LONG_PRESS_MOVE_PX) cancel();
+        });
+        button.addEventListener("pointerup", cancel);
+        button.addEventListener("pointercancel", cancel);
+        button.addEventListener("lostpointercapture", cancel);
+      }
+
+      function setOpen(control, open, mode = "simple") {
+        const panels = Array.from(control.querySelectorAll(".cudloun-post-fonts-panel"));
         const button = control.querySelector(".cudloun-post-fonts-toggle");
-        if (!panel || !button) return;
-        panel.hidden = !open;
+        if (!panels.length || !button) return;
+        panels.forEach((panel) => {
+          const selected = panel.classList.contains(`cudloun-post-fonts-panel--${mode}`);
+          panel.hidden = !open || !selected;
+          if (open && selected && mode === "advanced") panel.dispatchEvent(new Event("cudloun-fonts-sync"));
+        });
         button.setAttribute("aria-expanded", open ? "true" : "false");
-        if (open) panel.querySelector("select")?.focus();
+        control.dataset.openPanel = open ? mode : "";
+        if (open) {
+          const panel = control.querySelector(`.cudloun-post-fonts-panel--${mode}`);
+          (mode === "advanced" ? panel?.querySelector("[role='tab'][aria-selected='true']") : panel?.querySelector("select"))?.focus();
+        }
       }
 
       function saveSize(value) {
@@ -3511,26 +3764,77 @@
         applySettings();
       }
 
+      function roleConfig(role) {
+        return FONT_ROLES.find((config) => config.id === role) || FONT_ROLES[0];
+      }
+
+      function roleStorageKey(role, field) {
+        if (role === "posts") {
+          if (field === "family") return "family";
+          if (field === "customFamily") return "customFamily";
+          if (field === "size") return "size";
+        }
+        return `${role}${field[0].toUpperCase()}${field.slice(1)}`;
+      }
+
+      function currentRoleFamily(role) {
+        return validFamily(ctxRef?.storage.get(roleStorageKey(role, "family"), "default"));
+      }
+
+      function currentRoleCustomFamily(role) {
+        return String(ctxRef?.storage.get(roleStorageKey(role, "customFamily"), "") || "").slice(0, MAX_CUSTOM_FAMILY_LENGTH);
+      }
+
+      function currentRoleSize(role) {
+        const config = roleConfig(role);
+        return normalizeRoleSize(role, ctxRef?.storage.get(roleStorageKey(role, "size"), config.defaultSize));
+      }
+
+      function saveRoleSize(role, value) {
+        ctxRef?.storage.set(roleStorageKey(role, "size"), normalizeRoleSize(role, value));
+        applySettings();
+      }
+
       function applySettings() {
-        const family = validFamily(ctxRef?.storage.get("family", "default"));
-        const customFamily = ctxRef?.storage.get("customFamily", "");
-        const size = currentSize();
-        const stack = fontStack(family, customFamily);
-        const effectiveFamily = stack ? family : "default";
         const rootElement = document.documentElement;
         rootElement.setAttribute("data-cudloun-post-fonts", "true");
-        rootElement.setAttribute("data-cudloun-post-font-family", effectiveFamily);
-        rootElement.style.setProperty("--cudloun-post-font-size", `${displaySize(size)}px`);
-        if (stack) rootElement.style.setProperty("--cudloun-post-font-family", stack);
-        else rootElement.style.removeProperty("--cudloun-post-font-family");
+        FONT_ROLES.forEach((config) => applyRoleSettings(rootElement, config));
+      }
+
+      function applyRoleSettings(rootElement, config) {
+        const family = currentRoleFamily(config.id);
+        const stack = fontStack(family, currentRoleCustomFamily(config.id));
+        const cssId = config.id === "posts" ? "post" : config.id;
+        const familyAttribute = `data-cudloun-${cssId}-font-family`;
+        const sizeAttribute = `data-cudloun-${cssId}-font-size`;
+        const familyProperty = `--cudloun-${cssId}-font-family`;
+        const sizeProperty = `--cudloun-${cssId}-font-size`;
+        const size = currentRoleSize(config.id);
+
+        rootElement.setAttribute(familyAttribute, stack ? family : "default");
+        if (stack) rootElement.style.setProperty(familyProperty, stack);
+        else rootElement.style.removeProperty(familyProperty);
+
+        const applySize = config.id === "posts" || size !== config.defaultSize;
+        if (applySize) {
+          rootElement.setAttribute(sizeAttribute, "true");
+          rootElement.style.setProperty(sizeProperty, `${displayRoleSize(config.id, size)}${config.unit}`);
+        } else {
+          rootElement.removeAttribute(sizeAttribute);
+          rootElement.style.removeProperty(sizeProperty);
+        }
       }
 
       function clearSettings() {
         const rootElement = document.documentElement;
         rootElement.removeAttribute("data-cudloun-post-fonts");
-        rootElement.removeAttribute("data-cudloun-post-font-family");
-        rootElement.style.removeProperty("--cudloun-post-font-size");
-        rootElement.style.removeProperty("--cudloun-post-font-family");
+        FONT_ROLES.forEach((config) => {
+          const cssId = config.id === "posts" ? "post" : config.id;
+          rootElement.removeAttribute(`data-cudloun-${cssId}-font-family`);
+          rootElement.removeAttribute(`data-cudloun-${cssId}-font-size`);
+          rootElement.style.removeProperty(`--cudloun-${cssId}-font-family`);
+          rootElement.style.removeProperty(`--cudloun-${cssId}-font-size`);
+        });
       }
 
       function currentSize() {
@@ -3544,9 +3848,22 @@
         return Math.round(clamped * 2) / 2;
       }
 
+      function normalizeRoleSize(role, value) {
+        if (role === "posts") return normalizeSize(value);
+        const config = roleConfig(role);
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return config.defaultSize;
+        const clamped = Math.min(config.max, Math.max(config.min, parsed));
+        return Math.round(clamped / config.step) * config.step;
+      }
+
       function displaySize(value) {
         const size = normalizeSize(value);
         return Number.isInteger(size) ? String(size) : size.toFixed(1);
+      }
+
+      function displayRoleSize(role, value) {
+        return role === "posts" ? displaySize(value) : String(normalizeRoleSize(role, value));
       }
 
       function validFamily(value) {
@@ -3618,6 +3935,13 @@
         number.value = displaySize(size);
       }
 
+      function syncRoleSizeInputs(role, range, number, value) {
+        const config = roleConfig(role);
+        const size = normalizeRoleSize(role, value);
+        range.value = String(Math.min(config.sliderMax, Math.max(config.sliderMin, size)));
+        number.value = displayRoleSize(role, size);
+      }
+
       function installStyles() {
         if (document.getElementById(STYLE_ID)) return;
         const style = document.createElement("style");
@@ -3631,19 +3955,33 @@
           html[data-cudloun-post-fonts="true"]:not([data-cudloun-post-font-family="default"]) article.post .body .markdown {
             font-family: var(--cudloun-post-font-family) !important;
           }
+          html[data-cudloun-interface-font-family]:not([data-cudloun-interface-font-family="default"]) :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer),
+          html[data-cudloun-interface-font-family]:not([data-cudloun-interface-font-family="default"]) :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){font-family:var(--cudloun-interface-font-family)!important}
+          html[data-cudloun-interface-font-size="true"] :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer){font-size:var(--cudloun-interface-font-size)!important}
+          html[data-cudloun-interface-font-size="true"] :where(header:not(.post-header),nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){font-size:var(--cudloun-interface-font-size)!important}
+          html[data-cudloun-headings-font-family]:not([data-cudloun-headings-font-family="default"]) :where(h1,h2,h3,h4,h5,h6,.title-link,article.post .author){font-family:var(--cudloun-headings-font-family)!important}
+          html[data-cudloun-headings-font-size="true"] :where(h1,h2,h3,h4,h5,h6,.title-link,article.post .author){font-size:var(--cudloun-headings-font-size)!important}
+          html[data-cudloun-code-font-family]:not([data-cudloun-code-font-family="default"]) :where(pre,code,kbd,samp){font-family:var(--cudloun-code-font-family)!important}
+          html[data-cudloun-code-font-size="true"] :where(pre,:not(pre)>code,kbd,samp){font-size:var(--cudloun-code-font-size)!important}
+          html[data-cudloun-logo-font-family]:not([data-cudloun-logo-font-family="default"]) :where(a[aria-label="Okoun home"],.logo) :where(.text,.orange-o){font-family:var(--cudloun-logo-font-family)!important}
+          html[data-cudloun-logo-font-size="true"] :where(a[aria-label="Okoun home"],.logo){zoom:var(--cudloun-logo-font-size)}
           .${CONTROL_CLASS}{position:absolute;top:8px;right:60px;z-index:4;font:14px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#243041}
           .${CONTROL_CLASS}[data-placement="board-header"],.${CONTROL_CLASS}[data-placement="global-actions"]{position:relative;top:auto;right:auto;bottom:auto;z-index:4;flex:0 0 auto}
           .${CONTROL_CLASS}[data-placement="global-actions"]{order:-1}
           .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle,.${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-toggle{width:36px;height:36px;border:0;border-radius:50%;box-shadow:none;background:transparent}
           .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-panel{top:44px;right:0}
           .${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-panel{top:45px;right:0}
-          .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif}
+          .cudloun-post-fonts-toggle{appearance:none;width:38px;height:38px;display:grid;place-items:center;margin:0;border:1px solid rgba(79,102,134,.3);border-radius:8px;background:#fff;color:#8a5300;box-shadow:0 2px 7px rgba(18,27,43,.14);cursor:pointer;font:italic 800 20px/1 Georgia,serif;-webkit-touch-callout:none;user-select:none}
           .cudloun-post-fonts-toggle:hover,.cudloun-post-fonts-toggle[aria-expanded="true"]{border-color:#b06a00;background:#fff8eb;color:#7a4700}
           .cudloun-post-fonts-toggle:focus-visible{outline:2px solid #b06a00;outline-offset:2px}
           .cudloun-post-fonts-panel{box-sizing:border-box;position:absolute;top:46px;right:0;width:286px;padding:12px;border:1px solid rgba(79,102,134,.3);border-radius:10px;background:#fff;color:#243041;box-shadow:0 12px 32px rgba(18,27,43,.24)}
+          .cudloun-post-fonts-panel--advanced{width:330px}
           .cudloun-post-fonts-panel[hidden]{display:none!important}
           .cudloun-post-fonts-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
           .cudloun-post-fonts-head strong{font-size:14px}
+          .cudloun-post-fonts-advanced-title{display:grid;gap:2px}
+          .cudloun-post-fonts-advanced-title small,.cudloun-post-fonts-advanced-hint{color:#697586;font-size:11px;font-weight:500}
+          .cudloun-post-fonts-advanced-hint{display:block;margin-top:7px;text-align:right}
           .cudloun-post-fonts-close{appearance:none;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#697586;cursor:pointer;font:700 20px/1 inherit}
           .cudloun-post-fonts-close:hover{background:#eef2f7;color:#243041}
           .cudloun-post-fonts-field{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:9px;margin:8px 0;font-weight:650}
@@ -3660,15 +3998,25 @@
           .cudloun-post-fonts-size input[type="range"]{width:100%;accent-color:#b06a00}
           .cudloun-post-fonts-size input[type="number"]{width:62px;text-align:right}
           .cudloun-post-fonts-size>span{color:#697586;font-size:12px}
+          .cudloun-post-fonts-roles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:2px 0 10px}
+          .cudloun-post-fonts-roles button{appearance:none;min-width:0;border:1px solid rgba(79,102,134,.25);border-radius:999px;background:#f8fafc;color:#4a5667;cursor:pointer;font:700 11px/1.2 inherit;padding:7px 3px}
+          .cudloun-post-fonts-roles button[aria-selected="true"]{border-color:#b06a00;background:#fff3dc;color:#7a4700}
+          .cudloun-post-fonts-area-name{display:block;margin:0 0 4px;color:#697586;font-size:11px}
           .cudloun-post-fonts-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid rgba(79,102,134,.16)}
           .cudloun-post-fonts-actions button{appearance:none;border:1px solid rgba(79,102,134,.26);border-radius:7px;background:#f8fafc;color:#364152;cursor:pointer;font:700 12px/1.2 inherit;padding:7px 10px}
           .cudloun-post-fonts-actions button:hover{background:#eef2f7}
+          .cudloun-post-fonts-advanced-actions{align-items:center;justify-content:space-between}
+          .cudloun-post-fonts-advanced-actions a{color:#8a5300;font-size:11px;font-weight:700;text-decoration:none}
+          .cudloun-post-fonts-advanced-actions a:hover{text-decoration:underline}
           html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-toggle,
           html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-panel,
           html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field select,
           html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="number"],
           html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-field input[type="text"],
-          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-actions button,
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-roles button{background:var(--cudloun-kapybara-surface,#141414);color:var(--cudloun-kapybara-text,#f4f4f4);border-color:var(--cudloun-kapybara-line,#303030)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-roles button[aria-selected="true"]{background:var(--cudloun-kapybara-accent-soft,#3a2b16);color:var(--cudloun-kapybara-accent,#d68a1f);border-color:var(--cudloun-kapybara-accent,#d68a1f)}
+          html[data-cudloun-kapybara-theme="dark"] .cudloun-post-fonts-advanced-actions a{color:var(--cudloun-kapybara-accent,#d68a1f)}
           html[data-cudloun-kapybara-theme="dark"] .${CONTROL_CLASS}[data-placement="board-header"] .cudloun-post-fonts-toggle,
           html[data-cudloun-kapybara-theme="dark"] .${CONTROL_CLASS}[data-placement="global-actions"] .cudloun-post-fonts-toggle{background:transparent;border-color:transparent}
           @media(max-width:700px){
@@ -3677,7 +4025,8 @@
             .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle:hover,
             .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-toggle[aria-expanded="true"]{background:#8f5600;color:#fff}
             .${CONTROL_CLASS}[data-placement="floating"] .cudloun-post-fonts-panel{top:auto;right:0;bottom:54px}
-            .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 28px));max-height:calc(100dvh - 72px);overflow:auto}
+            .cudloun-post-fonts-panel{width:min(286px,calc(100vw - 20px));max-height:calc(100dvh - 72px);overflow:auto}
+            .cudloun-post-fonts-panel--advanced{width:min(330px,calc(100vw - 20px))}
           }
         `;
         document.head.appendChild(style);

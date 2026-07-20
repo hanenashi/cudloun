@@ -24,6 +24,7 @@ test("Post Fonts registers as an opt-in module", () => {
   const { registered } = loadModule();
   assert.equal(registered.id, "post-fonts");
   assert.equal(registered.defaultEnabled, false);
+  assert.equal(registered.version, "0.5.0");
   assert.equal(typeof registered.start, "function");
 });
 
@@ -34,6 +35,18 @@ test("Post Fonts normalizes manual pixel sizes", () => {
   assert.equal(Cudloun.postFonts.normalizeSize(4), 8);
   assert.equal(Cudloun.postFonts.normalizeSize(100), 72);
   assert.equal(Cudloun.postFonts.normalizeSize("nope"), 17);
+});
+
+test("Post Fonts exposes compact advanced roles with native-style size ranges", () => {
+  const { root: Cudloun } = loadModule();
+  assert.deepEqual(
+    Array.from(Cudloun.postFonts.roles, ({ id, unit }) => [id, unit]),
+    [["posts", "px"], ["interface", "px"], ["headings", "%"], ["code", "%"], ["logo", "%"]],
+  );
+  assert.equal(Cudloun.postFonts.longPressMs, 520);
+  assert.equal(Cudloun.postFonts.normalizeRoleSize("interface", 99), 20);
+  assert.equal(Cudloun.postFonts.normalizeRoleSize("headings", 112), 110);
+  assert.equal(Cudloun.postFonts.normalizeRoleSize("code", "nope"), 100);
 });
 
 test("Post Fonts exposes expanded predefined safe font stacks", () => {
