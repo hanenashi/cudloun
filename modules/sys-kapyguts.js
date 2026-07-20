@@ -3,11 +3,16 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.1.3";
+  const VERSION = "0.2.0";
   const SELECTORS = {
     pageHeader: "header:not(.board-header):not(.post-header)",
     pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
     pageHeaderDesktopActions: ".desktop-right",
+    desktopAvatarMenuTrigger: "button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']",
+    mobileAvatarMenuTrigger: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]",
+    dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
+    dropdownMenuItem: "[role='menuitem'][data-dropdown-menu-item]",
+    nativeFontSettingsLink: "a[role='menuitem'][href='/test/fonts']",
     boardHeader: "header.board-header",
     boardTitleRow: ".board-header .title-row",
     boardTitleLink: ".board-header .title-link",
@@ -41,10 +46,35 @@
     composerImageButton: "button[aria-label='Vložit obrázek']",
     composerModeToggle: "button.mode-toggle[aria-pressed]",
     composerMarkdownNode: "code[data-language='markdown']",
+    fontSettingsPanel: ".fs-panel[role='dialog'][aria-labelledby='fs-title']",
+    fontSettingsCopyButton: "button.fs-copy",
+    fontSettingsCloseButton: "button.fs-close[aria-label='Zavřít']",
+    fontSettingsChromeSelect: "#fs-chrome",
+    fontSettingsHeadersSelect: "#fs-chrome-headers",
+    fontSettingsContentSelect: "#fs-content",
+    fontSettingsCodeSelect: "#fs-code",
+    fontSettingsBrandSelect: "#fs-brand",
+    fontSettingsSizeRow: "label.fs-size-row",
   };
   const TEXT = {
     postMenu: ["Smazat", "Upravit", "Označit"],
     avatarMenu: ["Nastavení", "Odhlásit", "Barevné schéma"],
+    fontSettings: {
+      menuItem: "[test] Nastavení fontů",
+      lowDpr: "Náhrada písma při nízkém DPR",
+      sizeRows: {
+        chrome: "Ovládání",
+        headers: "Nadpisy a záhlaví",
+        content: "Obsah",
+        code: "Kód (neproporcionální)",
+        brand: "Logo a značka",
+      },
+      actions: {
+        reset: "Obnovit výchozí",
+        cancel: "Zrušit",
+        save: "Uložit změny",
+      },
+    },
   };
 
   const kapyguts = {
@@ -65,7 +95,10 @@
     postParts,
     pageHeader,
     pageHeaderParts,
+    avatarMenuParts,
     boardHeaderParts,
+    fontSettingsParts,
+    fontSettingsState,
     visibleMenus,
     visiblePostMenus,
     allComposers,
@@ -101,6 +134,7 @@
     if (path.startsWith("/messages")) return "messages";
     if (path.startsWith("/topics")) return "topics";
     if (path.startsWith("/active-users")) return "active-users";
+    if (path === "/test/fonts") return "font-settings";
     return "unknown";
   }
 
@@ -166,6 +200,30 @@
     };
   }
 
+  function avatarMenuParts(scope = document) {
+    const desktopTrigger = scope.querySelector(SELECTORS.desktopAvatarMenuTrigger);
+    const mobileTrigger = scope.querySelector(SELECTORS.mobileAvatarMenuTrigger);
+    const trigger = [desktopTrigger, mobileTrigger].find(isVisible) || desktopTrigger || mobileTrigger || null;
+    const menu = Array.from(scope.querySelectorAll("[role='menu']")).find((candidate) => (
+      isVisible(candidate) && (
+        !!candidate.querySelector(SELECTORS.nativeFontSettingsLink) ||
+        TEXT.avatarMenu.some((needle) => normalizeText(candidate.textContent).includes(needle))
+      )
+    )) || null;
+    const items = menu ? Array.from(menu.querySelectorAll("[role='menuitem']")) : [];
+    const fontSettingsLink = menu?.querySelector(SELECTORS.nativeFontSettingsLink) || null;
+
+    return {
+      trigger,
+      desktopTrigger,
+      mobileTrigger,
+      menu,
+      items,
+      fontSettingsLink,
+      open: !!menu || trigger?.getAttribute("aria-expanded") === "true",
+    };
+  }
+
   function boardHeaderParts(scope = document) {
     const header = scope.querySelector(SELECTORS.boardHeader);
     const titleRow = scope.querySelector(SELECTORS.boardTitleRow);
@@ -178,6 +236,53 @@
       actions,
       mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
       stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === "sticky",
+    };
+  }
+
+  // Kapybara labels this route as a temporary test. Keep its DOM contract
+  // isolated here so modules do not couple themselves to the experiment.
+  function fontSettingsParts(scope = document) {
+    const panel = scope.querySelector(SELECTORS.fontSettingsPanel);
+    const selects = {
+      chrome: panel?.querySelector(SELECTORS.fontSettingsChromeSelect) || null,
+      headers: panel?.querySelector(SELECTORS.fontSettingsHeadersSelect) || null,
+      content: panel?.querySelector(SELECTORS.fontSettingsContentSelect) || null,
+      code: panel?.querySelector(SELECTORS.fontSettingsCodeSelect) || null,
+      brand: panel?.querySelector(SELECTORS.fontSettingsBrandSelect) || null,
+    };
+    const sizes = Object.fromEntries(Object.entries(TEXT.fontSettings.sizeRows).map(([key, label]) => (
+      [key, labeledNumberInput(panel, label)]
+    )));
+    const lowDprSwitch = panel ? Array.from(panel.querySelectorAll("button[role='switch']")).find((button) => (
+      normalizeText(button.textContent).startsWith(TEXT.fontSettings.lowDpr)
+    )) || null : null;
+    const actions = Object.fromEntries(Object.entries(TEXT.fontSettings.actions).map(([key, label]) => (
+      [key, buttonByText(panel, label)]
+    )));
+
+    return {
+      panel,
+      copyButton: panel?.querySelector(SELECTORS.fontSettingsCopyButton) || null,
+      closeButton: panel?.querySelector(SELECTORS.fontSettingsCloseButton) || null,
+      selects,
+      sizes,
+      lowDprSwitch,
+      actions,
+      ready: !!panel && Object.values(selects).every(Boolean) && Object.values(sizes).every(Boolean),
+    };
+  }
+
+  function fontSettingsState(scope = document) {
+    const parts = fontSettingsParts(scope);
+    if (!parts.panel) return null;
+
+    return {
+      ready: parts.ready,
+      serifExperiment: new URLSearchParams(window.location.search).get("k") === "chatk_colit",
+      fonts: Object.fromEntries(Object.entries(parts.selects).map(([key, select]) => [key, select?.value || ""])),
+      sizes: Object.fromEntries(Object.entries(parts.sizes).map(([key, input]) => [key, input?.value || ""])),
+      lowDprFallback: parts.lowDprSwitch?.getAttribute("aria-checked") === "true",
+      dirty: !!parts.actions.save && !parts.actions.save.disabled,
     };
   }
 
@@ -301,6 +406,7 @@
   function inspect() {
     const posts = visiblePosts();
     const menus = visibleMenus();
+    const fontSettings = fontSettingsState();
     return {
       version: VERSION,
       isKapybara: isKapybara(),
@@ -326,7 +432,9 @@
         composers: allComposers().length,
         readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
         visibleMenus: menus.length,
+        nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,
       },
+      fontSettings,
       posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),
       menus: menus.map((info) => ({
         kind: info.kind,
@@ -377,16 +485,33 @@
     const text = normalizeText(node.textContent || "");
     return {
       node,
-      kind: menuKind(text),
+      kind: menuKind(text, node),
       text,
       rect: rectInfo(node),
     };
   }
 
-  function menuKind(text) {
+  function menuKind(text, node = null) {
+    if (node?.matches?.(SELECTORS.fontSettingsPanel)) return "font-settings";
     if (TEXT.postMenu.some((needle) => text.includes(needle))) return "post";
     if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return "avatar";
     return "unknown";
+  }
+
+  function labeledNumberInput(panel, label) {
+    if (!panel) return null;
+    const row = Array.from(panel.querySelectorAll(SELECTORS.fontSettingsSizeRow)).find((candidate) => (
+      normalizeText(candidate.textContent).startsWith(label)
+    ));
+    return row?.querySelector("input[type='number']") || null;
+  }
+
+  function buttonByText(panel, label) {
+    if (!panel) return null;
+    const normalizedLabel = normalizeText(label).toLocaleLowerCase("cs");
+    return Array.from(panel.querySelectorAll("button")).find((button) => (
+      normalizeText(button.textContent).toLocaleLowerCase("cs").startsWith(normalizedLabel)
+    )) || null;
   }
 
   function summarizePost(post, index) {

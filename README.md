@@ -99,6 +99,12 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.19 TL;DR
+
+- Kapyguts now normalizes Kapybara's temporary native font-settings entry on
+  desktop and mobile, plus exposes read-only helpers for its font roles, sizes,
+  low-DPR fallback, actions, and serif experiment.
+
 ## Version 0.6.18 TL;DR
 
 - Post Fonts now joins Kapybara's native desktop action group beside the avatar

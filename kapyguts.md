@@ -44,7 +44,11 @@ It exposes:
 - `visiblePosts()`
 - `postParts(post)`
 - `pageHeader()`
+- `pageHeaderParts()`
+- `avatarMenuParts()`
 - `boardHeaderParts()`
+- `fontSettingsParts()`
+- `fontSettingsState()`
 - `visibleMenus(kind)`
 - `visiblePostMenus()`
 - `inspect()`
@@ -166,6 +170,57 @@ scrolls away. At mobile width, the global page header scrolls away and the
 board title row becomes the sticky toolbar at `top: 0`. Use `pageHeaderParts()`
 for the desktop header and its native action group, and `boardHeaderParts()` for
 the mobile board toolbar, so modules do not repeat that responsive lookup.
+
+## Native Font Settings (Temporary Experiment)
+
+Observed on desktop and mobile on 2026-07-20 after Koles announced the test in
+the `kapybara` board. Kapybara itself labels this menu item `[test]` and Koles
+described its location as very temporary, so keep all dependencies behind the
+Kapyguts helpers below.
+
+Responsive account-menu entry points:
+
+```text
+desktop: button.avatar-button[aria-label="Uživatelské menu"][aria-haspopup="menu"]
+mobile:  nav.mobile-bottom-nav[aria-label="Spodní navigace"] button.user-item[aria-haspopup]
+link:    a[role="menuitem"][href="/test/fonts"]
+```
+
+Desktop opens a menu with `data-dropdown-menu-content`; mobile opens
+`[role="dialog"][aria-label="uživatelské menu"]` containing a role menu.
+`avatarMenuParts()` normalizes both into `trigger`, `menu`, `items`,
+`fontSettingsLink`, and `open`.
+
+Native routes:
+
+```text
+/test/fonts
+/test/fonts?k=chatk_colit  (serif experiment shared by Koles)
+```
+
+The settings panel and durable controls observed on both layouts:
+
+```text
+.fs-panel[role="dialog"][aria-labelledby="fs-title"]
+#fs-chrome
+#fs-chrome-headers
+#fs-content
+#fs-code
+#fs-brand
+label.fs-size-row input[type="number"]
+button.fs-copy
+button.fs-close[aria-label="Zavřít"]
+```
+
+`fontSettingsParts()` maps the five select roles, their five size inputs, the
+low-DPR fallback switch, and reset/cancel/save actions. Since the number inputs
+and action buttons lack unique IDs, Kapyguts resolves them by their Czech labels
+inside the panel rather than by layout position. `fontSettingsState()` is a
+read-only value snapshot and identifies the `chatk_colit` serif experiment.
+
+Never depend on the generated emoji-prefixed classes or generated menu IDs.
+Expect this whole contract to change or disappear while the native page remains
+a test.
 
 ## New Post and Reply Composers
 
