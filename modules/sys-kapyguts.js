@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.3.0";
+  const VERSION = "0.4.0";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:not(.board-header):not(.post-header)",
@@ -14,6 +14,7 @@
     dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
     dropdownMenuItem: "[role='menuitem'][data-dropdown-menu-item]",
     nativeFontSettingsLink: "a[role='menuitem'][href='/test/fonts']",
+    nativePostDisplayLink: "a[role='menuitem'][href='/test/posts']",
     boardHeader: "header.board-header",
     boardTitleRow: ".board-header .title-row",
     boardTitleLink: ".board-header .title-link",
@@ -56,6 +57,11 @@
     fontSettingsCodeSelect: "#fs-code",
     fontSettingsBrandSelect: "#fs-brand",
     fontSettingsSizeRow: "label.fs-size-row",
+    postDisplayPanel: ".pd-panel[role='dialog'][aria-labelledby='pd-title']",
+    postDisplayCloseButton: "button.pd-close[aria-label='Zavřít']",
+    postDisplaySection: ".pd-section",
+    postDisplayAvatarSection: ".pd-section.av-section",
+    postDisplaySegmentButton: "button.av-seg-btn[aria-pressed]",
   };
   const TEXT = {
     postMenu: ["Smazat", "Upravit", "Označit"],
@@ -73,6 +79,33 @@
       actions: {
         reset: "Obnovit výchozí",
         cancel: "Zrušit",
+        save: "Uložit změny",
+      },
+    },
+    postDisplay: {
+      menuItem: "[test] Zobrazení příspěvků",
+      switches: {
+        largerGap: "Větší mezera",
+        separator: "Oddělovač",
+      },
+      options: {
+        shape: {
+          circle: "Kruh (výchozí)",
+          square: "Čtverec",
+          roundedSquare: "Zaoblený čtverec",
+          rect: "Obdélník 4:5",
+          roundedRect: "Zaoblený 4:5",
+        },
+        fit: {
+          contain: "contain (letterbox)",
+          cover: "cover (ořez)",
+        },
+        ring: {
+          none: "Bez",
+          hairline: "1px linka",
+        },
+      },
+      actions: {
         save: "Uložit změny",
       },
     },
@@ -101,6 +134,8 @@
     boardHeaderParts,
     fontSettingsParts,
     fontSettingsState,
+    postDisplayParts,
+    postDisplayState,
     visibleMenus,
     visiblePostMenus,
     allComposers,
@@ -137,6 +172,7 @@
     if (path.startsWith("/topics")) return "topics";
     if (path.startsWith("/active-users")) return "active-users";
     if (path === "/test/fonts") return "font-settings";
+    if (path === "/test/posts") return "post-display-settings";
     return "unknown";
   }
 
@@ -220,11 +256,13 @@
     const menu = Array.from(scope.querySelectorAll("[role='menu']")).find((candidate) => (
       isVisible(candidate) && (
         !!candidate.querySelector(SELECTORS.nativeFontSettingsLink) ||
+        !!candidate.querySelector(SELECTORS.nativePostDisplayLink) ||
         TEXT.avatarMenu.some((needle) => normalizeText(candidate.textContent).includes(needle))
       )
     )) || null;
     const items = menu ? Array.from(menu.querySelectorAll("[role='menuitem']")) : [];
     const fontSettingsLink = menu?.querySelector(SELECTORS.nativeFontSettingsLink) || null;
+    const postDisplayLink = menu?.querySelector(SELECTORS.nativePostDisplayLink) || null;
 
     return {
       trigger,
@@ -233,6 +271,7 @@
       menu,
       items,
       fontSettingsLink,
+      postDisplayLink,
       open: !!menu || trigger?.getAttribute("aria-expanded") === "true",
     };
   }
@@ -295,6 +334,53 @@
       fonts: Object.fromEntries(Object.entries(parts.selects).map(([key, select]) => [key, select?.value || ""])),
       sizes: Object.fromEntries(Object.entries(parts.sizes).map(([key, input]) => [key, input?.value || ""])),
       lowDprFallback: parts.lowDprSwitch?.getAttribute("aria-checked") === "true",
+      dirty: !!parts.actions.save && !parts.actions.save.disabled,
+    };
+  }
+
+  // Kapybara labels this route as temporary. Resolve controls by their Czech
+  // labels so callers are insulated from layout and generated class changes.
+  function postDisplayParts(scope = document) {
+    const panel = scope.querySelector(SELECTORS.postDisplayPanel);
+    const segmentButtons = panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySegmentButton)) : [];
+    const switches = Object.fromEntries(Object.entries(TEXT.postDisplay.switches).map(([key, label]) => (
+      [key, switchByText(panel, label)]
+    )));
+    const options = Object.fromEntries(Object.entries(TEXT.postDisplay.options).map(([group, labels]) => (
+      [group, Object.fromEntries(Object.entries(labels).map(([key, label]) => (
+        [key, buttonByText(panel, label)]
+      )))]
+    )));
+    const actions = Object.fromEntries(Object.entries(TEXT.postDisplay.actions).map(([key, label]) => (
+      [key, buttonByText(panel, label)]
+    )));
+
+    return {
+      panel,
+      closeButton: panel?.querySelector(SELECTORS.postDisplayCloseButton) || null,
+      sections: panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySection)) : [],
+      avatarSection: panel?.querySelector(SELECTORS.postDisplayAvatarSection) || null,
+      segmentButtons,
+      switches,
+      options,
+      actions,
+      previewPosts: panel ? Array.from(panel.querySelectorAll(SELECTORS.boardPost)) : [],
+      ready: !!panel && Object.values(switches).every(Boolean) &&
+        Object.values(options).every((group) => Object.values(group).every(Boolean)),
+    };
+  }
+
+  function postDisplayState(scope = document) {
+    const parts = postDisplayParts(scope);
+    if (!parts.panel) return null;
+
+    return {
+      ready: parts.ready,
+      largerGap: parts.switches.largerGap?.getAttribute("aria-checked") === "true",
+      separator: parts.switches.separator?.getAttribute("aria-checked") === "true",
+      shape: pressedOption(parts.options.shape),
+      fit: pressedOption(parts.options.fit),
+      ring: pressedOption(parts.options.ring),
       dirty: !!parts.actions.save && !parts.actions.save.disabled,
     };
   }
@@ -420,6 +506,7 @@
     const posts = visiblePosts();
     const menus = visibleMenus();
     const fontSettings = fontSettingsState();
+    const postDisplay = postDisplayState();
     const pageChrome = pageChromeParts();
     return {
       version: VERSION,
@@ -447,6 +534,7 @@
         readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
         visibleMenus: menus.length,
         nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,
+        nativePostDisplayLinks: document.querySelectorAll(SELECTORS.nativePostDisplayLink).length,
         viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,
       },
       pageChrome: {
@@ -455,6 +543,7 @@
         stripesActive: pageChrome.stripesActive,
       },
       fontSettings,
+      postDisplay,
       posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),
       menus: menus.map((info) => ({
         kind: info.kind,
@@ -513,6 +602,7 @@
 
   function menuKind(text, node = null) {
     if (node?.matches?.(SELECTORS.fontSettingsPanel)) return "font-settings";
+    if (node?.matches?.(SELECTORS.postDisplayPanel)) return "post-display-settings";
     if (TEXT.postMenu.some((needle) => text.includes(needle))) return "post";
     if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return "avatar";
     return "unknown";
@@ -532,6 +622,18 @@
     return Array.from(panel.querySelectorAll("button")).find((button) => (
       normalizeText(button.textContent).toLocaleLowerCase("cs").startsWith(normalizedLabel)
     )) || null;
+  }
+
+  function switchByText(panel, label) {
+    if (!panel) return null;
+    const normalizedLabel = normalizeText(label).toLocaleLowerCase("cs");
+    return Array.from(panel.querySelectorAll("button[role='switch']")).find((button) => (
+      normalizeText(button.textContent).toLocaleLowerCase("cs").startsWith(normalizedLabel)
+    )) || null;
+  }
+
+  function pressedOption(options) {
+    return Object.entries(options).find(([, button]) => button?.getAttribute("aria-pressed") === "true")?.[0] || "";
   }
 
   function summarizePost(post, index) {

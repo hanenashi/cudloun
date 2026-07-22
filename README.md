@@ -33,6 +33,8 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/thread-lane.js` owns the experimental mobile reply-thread side lane.
 - `modules/classic-look.js` brings classic Okoun's reading rhythm to Kapybara
   posts without replacing the new frontend controls.
+- `modules/post-tweaks.js` preserves Kapybara's temporary post spacing,
+  divider, and avatar-display controls as a default-disabled module.
 - `modules/post-fonts.js` owns the compact post font family and size control.
 - `modules/opuc/` contains the experimental OPUc-for-Kapybara integration.
 
@@ -100,6 +102,13 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.6.24 TL;DR
+
+- Added default-disabled Post Tweaks with Koles' native 12/16 px post spacing,
+  separators, five avatar shapes, contain/cover fill, and optional 1 px outline.
+- Kapyguts 0.4.0 now maps the temporary `/test/posts` route and its labeled
+  controls without relying on generated Kapybara classes.
 
 ## Version 0.6.23 TL;DR
 

@@ -50,6 +50,8 @@ It exposes:
 - `boardHeaderParts()`
 - `fontSettingsParts()`
 - `fontSettingsState()`
+- `postDisplayParts()`
+- `postDisplayState()`
 - `visibleMenus(kind)`
 - `visiblePostMenus()`
 - `inspect()`
@@ -242,6 +244,38 @@ read-only value snapshot and identifies the `chatk_colit` serif experiment.
 Never depend on the generated emoji-prefixed classes or generated menu IDs.
 Expect this whole contract to change or disappear while the native page remains
 a test.
+
+## Native Post Display Settings (Temporary Experiment)
+
+Observed on desktop and mobile on 2026-07-22. Kapybara labels the account-menu
+entry `[test] Zobrazení příspěvků` and says the page is temporary. Keep all
+dependencies behind Kapyguts so its removal cannot break feature modules.
+
+```text
+menu link: a[role="menuitem"][href="/test/posts"]
+route:     /test/posts
+panel:     .pd-panel[role="dialog"][aria-labelledby="pd-title"]
+close:     button.pd-close[aria-label="Zavřít"]
+```
+
+The panel offers switches labeled `Větší mezera` and `Oddělovač`, plus
+`aria-pressed` choices for five avatar shapes, contain/cover filling, and no
+outline/1 px outline. `postDisplayParts()` resolves these controls by their
+Czech labels, and `postDisplayState()` returns their read-only values.
+
+Measured native presentation contract:
+
+```text
+post gap:       12 px normally, 16 px with larger gap
+shape radius:   circle 50%, square/rectangle 0, rounded 22%
+shape aspect:   square 1, rectangle 4 / 5
+image fit:      contain or cover
+avatar outline: none or 1px solid var(--🐟-border)
+```
+
+Kapybara currently stores the experiment in its own local browser state. Do not
+read or overwrite that storage from Kapyguts; Cudloun's Post Tweaks module owns
+an independent copy so it remains useful after the native experiment vanishes.
 
 ## New Post and Reply Composers
 

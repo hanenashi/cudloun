@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.23";
+  const VERSION = "0.6.24";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -435,7 +435,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.23\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.24\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-tweaks\",\n      \"file\": \"modules/post-tweaks.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -471,14 +471,14 @@
 
   });
 
-  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.3.0\";\n  const SELECTORS = {\n    viewportStripes: \".🐟-stripes\",\n    pageHeader: \"header:not(.board-header):not(.post-header)\",\n    pageHeaderLogo: \"a[aria-label='Okoun home'], .logo\",\n    pageHeaderDesktopActions: \".desktop-right\",\n    desktopAvatarMenuTrigger: \"button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']\",\n    mobileAvatarMenuTrigger: \"nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]\",\n    dropdownMenu: \"[role='menu'][data-dropdown-menu-content]\",\n    dropdownMenuItem: \"[role='menuitem'][data-dropdown-menu-item]\",\n    nativeFontSettingsLink: \"a[role='menuitem'][href='/test/fonts']\",\n    boardHeader: \"header.board-header\",\n    boardTitleRow: \".board-header .title-row\",\n    boardTitleLink: \".board-header .title-link\",\n    boardTitleActions: \".board-header .title-row .title-actions\",\n    mobileBottomNav: \"nav.mobile-bottom-nav[aria-label='Spodní navigace']\",\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n    newPostComposer: \"section.new-post-composer[aria-label='Nový příspěvek']\",\n    replyComposer: \"section.reply-composer[aria-label='Odpověď']\",\n    composer: \".composer\",\n    composerEditor: \".composer-editor\",\n    composerEditable: \".composer-content-editable[role='textbox'][contenteditable='true']\",\n    composerToolbarSlot: \".composer-toolbar-slot\",\n    composerToolbar: \"[role='toolbar'][aria-label='Formátování textu']\",\n    composerImageButton: \"button[aria-label='Vložit obrázek']\",\n    composerModeToggle: \"button.mode-toggle[aria-pressed]\",\n    composerMarkdownNode: \"code[data-language='markdown']\",\n    fontSettingsPanel: \".fs-panel[role='dialog'][aria-labelledby='fs-title']\",\n    fontSettingsCopyButton: \"button.fs-copy\",\n    fontSettingsCloseButton: \"button.fs-close[aria-label='Zavřít']\",\n    fontSettingsChromeSelect: \"#fs-chrome\",\n    fontSettingsHeadersSelect: \"#fs-chrome-headers\",\n    fontSettingsContentSelect: \"#fs-content\",\n    fontSettingsCodeSelect: \"#fs-code\",\n    fontSettingsBrandSelect: \"#fs-brand\",\n    fontSettingsSizeRow: \"label.fs-size-row\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n    fontSettings: {\n      menuItem: \"[test] Nastavení fontů\",\n      lowDpr: \"Náhrada písma při nízkém DPR\",\n      sizeRows: {\n        chrome: \"Ovládání\",\n        headers: \"Nadpisy a záhlaví\",\n        content: \"Obsah\",\n        code: \"Kód (neproporcionální)\",\n        brand: \"Logo a značka\",\n      },\n      actions: {\n        reset: \"Obnovit výchozí\",\n        cancel: \"Zrušit\",\n        save: \"Uložit změny\",\n      },\n    },\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    pageChromeParts,\n    pageHeader,\n    pageHeaderParts,\n    avatarMenuParts,\n    boardHeaderParts,\n    fontSettingsParts,\n    fontSettingsState,\n    visibleMenus,\n    visiblePostMenus,\n    allComposers,\n    composerParts,\n    observeComposers,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    if (path === \"/test/fonts\") return \"font-settings\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function pageChromeParts(scope = document) {\n    const viewportStripes = scope.querySelector(SELECTORS.viewportStripes);\n    const stripeStyle = viewportStripes ? window.getComputedStyle(viewportStripes) : null;\n    const stripeBackground = stripeStyle?.backgroundImage || \"\";\n    return {\n      viewportStripes,\n      stripeBackground,\n      stripesActive: !!viewportStripes && stripeBackground !== \"none\",\n    };\n  }\n\n  function pageHeader(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (\n      !header.closest(\"article.post\") && !!header.querySelector(SELECTORS.pageHeaderLogo)\n    )) || null;\n  }\n\n  function pageHeaderParts(scope = document) {\n    const header = pageHeader(scope);\n    return {\n      header,\n      logo: header?.querySelector(SELECTORS.pageHeaderLogo) || null,\n      desktopActions: header?.querySelector(SELECTORS.pageHeaderDesktopActions) || null,\n    };\n  }\n\n  function avatarMenuParts(scope = document) {\n    const desktopTrigger = scope.querySelector(SELECTORS.desktopAvatarMenuTrigger);\n    const mobileTrigger = scope.querySelector(SELECTORS.mobileAvatarMenuTrigger);\n    const trigger = [desktopTrigger, mobileTrigger].find(isVisible) || desktopTrigger || mobileTrigger || null;\n    const menu = Array.from(scope.querySelectorAll(\"[role='menu']\")).find((candidate) => (\n      isVisible(candidate) && (\n        !!candidate.querySelector(SELECTORS.nativeFontSettingsLink) ||\n        TEXT.avatarMenu.some((needle) => normalizeText(candidate.textContent).includes(needle))\n      )\n    )) || null;\n    const items = menu ? Array.from(menu.querySelectorAll(\"[role='menuitem']\")) : [];\n    const fontSettingsLink = menu?.querySelector(SELECTORS.nativeFontSettingsLink) || null;\n\n    return {\n      trigger,\n      desktopTrigger,\n      mobileTrigger,\n      menu,\n      items,\n      fontSettingsLink,\n      open: !!menu || trigger?.getAttribute(\"aria-expanded\") === \"true\",\n    };\n  }\n\n  function boardHeaderParts(scope = document) {\n    const header = scope.querySelector(SELECTORS.boardHeader);\n    const titleRow = scope.querySelector(SELECTORS.boardTitleRow);\n    const titleLink = scope.querySelector(SELECTORS.boardTitleLink);\n    const actions = scope.querySelector(SELECTORS.boardTitleActions);\n    return {\n      header,\n      titleRow,\n      titleLink,\n      actions,\n      mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),\n      stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === \"sticky\",\n    };\n  }\n\n  // Kapybara labels this route as a temporary test. Keep its DOM contract\n  // isolated here so modules do not couple themselves to the experiment.\n  function fontSettingsParts(scope = document) {\n    const panel = scope.querySelector(SELECTORS.fontSettingsPanel);\n    const selects = {\n      chrome: panel?.querySelector(SELECTORS.fontSettingsChromeSelect) || null,\n      headers: panel?.querySelector(SELECTORS.fontSettingsHeadersSelect) || null,\n      content: panel?.querySelector(SELECTORS.fontSettingsContentSelect) || null,\n      code: panel?.querySelector(SELECTORS.fontSettingsCodeSelect) || null,\n      brand: panel?.querySelector(SELECTORS.fontSettingsBrandSelect) || null,\n    };\n    const sizes = Object.fromEntries(Object.entries(TEXT.fontSettings.sizeRows).map(([key, label]) => (\n      [key, labeledNumberInput(panel, label)]\n    )));\n    const lowDprSwitch = panel ? Array.from(panel.querySelectorAll(\"button[role='switch']\")).find((button) => (\n      normalizeText(button.textContent).startsWith(TEXT.fontSettings.lowDpr)\n    )) || null : null;\n    const actions = Object.fromEntries(Object.entries(TEXT.fontSettings.actions).map(([key, label]) => (\n      [key, buttonByText(panel, label)]\n    )));\n\n    return {\n      panel,\n      copyButton: panel?.querySelector(SELECTORS.fontSettingsCopyButton) || null,\n      closeButton: panel?.querySelector(SELECTORS.fontSettingsCloseButton) || null,\n      selects,\n      sizes,\n      lowDprSwitch,\n      actions,\n      ready: !!panel && Object.values(selects).every(Boolean) && Object.values(sizes).every(Boolean),\n    };\n  }\n\n  function fontSettingsState(scope = document) {\n    const parts = fontSettingsParts(scope);\n    if (!parts.panel) return null;\n\n    return {\n      ready: parts.ready,\n      serifExperiment: new URLSearchParams(window.location.search).get(\"k\") === \"chatk_colit\",\n      fonts: Object.fromEntries(Object.entries(parts.selects).map(([key, select]) => [key, select?.value || \"\"])),\n      sizes: Object.fromEntries(Object.entries(parts.sizes).map(([key, input]) => [key, input?.value || \"\"])),\n      lowDprFallback: parts.lowDprSwitch?.getAttribute(\"aria-checked\") === \"true\",\n      dirty: !!parts.actions.save && !parts.actions.save.disabled,\n    };\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function allComposers(scope = document) {\n    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));\n  }\n\n  function composerParts(section) {\n    if (!section) return null;\n\n    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);\n    const editor = section.querySelector(SELECTORS.composerEditor);\n    const editable = section.querySelector(SELECTORS.composerEditable);\n    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);\n    const toolbar = section.querySelector(SELECTORS.composerToolbar);\n    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||\n      section.querySelector(SELECTORS.composerImageButton);\n    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);\n    const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;\n\n    return {\n      section,\n      kind: section.matches?.(SELECTORS.newPostComposer) ? \"new-post\" : \"reply\",\n      composer,\n      editor,\n      editable,\n      toolbarSlot,\n      toolbar,\n      imageButton,\n      modeToggle,\n      markdownNode,\n      markdownMode: !!markdownNode || modeToggle?.getAttribute(\"aria-pressed\") === \"true\",\n      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),\n    };\n  }\n\n  function observeComposers(callback, scope = document.body, onRemoved = null) {\n    if (typeof callback !== \"function\") return () => {};\n\n    const active = new Map();\n    const scan = () => {\n      const current = new Set(allComposers(scope || document));\n\n      active.forEach((parts, section) => {\n        if (current.has(section) && section.isConnected) return;\n        active.delete(section);\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      });\n\n      current.forEach((section) => {\n        const parts = composerParts(section);\n        if (!parts?.ready || active.has(section)) return;\n        active.set(section, parts);\n        callback(parts);\n      });\n    };\n\n    scan();\n    const observer = new MutationObserver(scan);\n    observer.observe(scope || document.body, { childList: true, subtree: true });\n\n    return () => {\n      observer.disconnect();\n      active.clear();\n    };\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    const fontSettings = fontSettingsState();\n    const pageChrome = pageChromeParts();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        composers: allComposers().length,\n        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,\n        visibleMenus: menus.length,\n        nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,\n        viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,\n      },\n      pageChrome: {\n        hasViewportStripes: !!pageChrome.viewportStripes,\n        stripeBackground: pageChrome.stripeBackground,\n        stripesActive: pageChrome.stripesActive,\n      },\n      fontSettings,\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text, node),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text, node = null) {\n    if (node?.matches?.(SELECTORS.fontSettingsPanel)) return \"font-settings\";\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function labeledNumberInput(panel, label) {\n    if (!panel) return null;\n    const row = Array.from(panel.querySelectorAll(SELECTORS.fontSettingsSizeRow)).find((candidate) => (\n      normalizeText(candidate.textContent).startsWith(label)\n    ));\n    return row?.querySelector(\"input[type='number']\") || null;\n  }\n\n  function buttonByText(panel, label) {\n    if (!panel) return null;\n    const normalizedLabel = normalizeText(label).toLocaleLowerCase(\"cs\");\n    return Array.from(panel.querySelectorAll(\"button\")).find((button) => (\n      normalizeText(button.textContent).toLocaleLowerCase(\"cs\").startsWith(normalizedLabel)\n    )) || null;\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
+  embeddedText.set("modules/sys-kapyguts.js", "// Cudloun Kapybara DOM dictionary helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.4.0\";\n  const SELECTORS = {\n    viewportStripes: \".🐟-stripes\",\n    pageHeader: \"header:not(.board-header):not(.post-header)\",\n    pageHeaderLogo: \"a[aria-label='Okoun home'], .logo\",\n    pageHeaderDesktopActions: \".desktop-right\",\n    desktopAvatarMenuTrigger: \"button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']\",\n    mobileAvatarMenuTrigger: \"nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]\",\n    dropdownMenu: \"[role='menu'][data-dropdown-menu-content]\",\n    dropdownMenuItem: \"[role='menuitem'][data-dropdown-menu-item]\",\n    nativeFontSettingsLink: \"a[role='menuitem'][href='/test/fonts']\",\n    nativePostDisplayLink: \"a[role='menuitem'][href='/test/posts']\",\n    boardHeader: \"header.board-header\",\n    boardTitleRow: \".board-header .title-row\",\n    boardTitleLink: \".board-header .title-link\",\n    boardTitleActions: \".board-header .title-row .title-actions\",\n    mobileBottomNav: \"nav.mobile-bottom-nav[aria-label='Spodní navigace']\",\n    boardPost: \"article.post\",\n    avatarColumn: \".avatar-col\",\n    avatar: \".avatar\",\n    avatarImage: \".avatar img\",\n    content: \".post-main\",\n    header: \".post-header\",\n    author: \".author\",\n    meta: \".meta\",\n    dateButton: \"button.date\",\n    replyMeta: \".reply-ref\",\n    body: \".body\",\n    markdown: \".markdown\",\n    actions: \".actions\",\n    replyButton: \".reply-action\",\n    postMenuButton: \".post-menu-button[aria-label='menu']\",\n    favoriteBoardRow: \".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']\",\n    messageItem: \".conversation-item\",\n    messageCard: \".message-card\",\n    newPostComposer: \"section.new-post-composer[aria-label='Nový příspěvek']\",\n    replyComposer: \"section.reply-composer[aria-label='Odpověď']\",\n    composer: \".composer\",\n    composerEditor: \".composer-editor\",\n    composerEditable: \".composer-content-editable[role='textbox'][contenteditable='true']\",\n    composerToolbarSlot: \".composer-toolbar-slot\",\n    composerToolbar: \"[role='toolbar'][aria-label='Formátování textu']\",\n    composerImageButton: \"button[aria-label='Vložit obrázek']\",\n    composerModeToggle: \"button.mode-toggle[aria-pressed]\",\n    composerMarkdownNode: \"code[data-language='markdown']\",\n    fontSettingsPanel: \".fs-panel[role='dialog'][aria-labelledby='fs-title']\",\n    fontSettingsCopyButton: \"button.fs-copy\",\n    fontSettingsCloseButton: \"button.fs-close[aria-label='Zavřít']\",\n    fontSettingsChromeSelect: \"#fs-chrome\",\n    fontSettingsHeadersSelect: \"#fs-chrome-headers\",\n    fontSettingsContentSelect: \"#fs-content\",\n    fontSettingsCodeSelect: \"#fs-code\",\n    fontSettingsBrandSelect: \"#fs-brand\",\n    fontSettingsSizeRow: \"label.fs-size-row\",\n    postDisplayPanel: \".pd-panel[role='dialog'][aria-labelledby='pd-title']\",\n    postDisplayCloseButton: \"button.pd-close[aria-label='Zavřít']\",\n    postDisplaySection: \".pd-section\",\n    postDisplayAvatarSection: \".pd-section.av-section\",\n    postDisplaySegmentButton: \"button.av-seg-btn[aria-pressed]\",\n  };\n  const TEXT = {\n    postMenu: [\"Smazat\", \"Upravit\", \"Označit\"],\n    avatarMenu: [\"Nastavení\", \"Odhlásit\", \"Barevné schéma\"],\n    fontSettings: {\n      menuItem: \"[test] Nastavení fontů\",\n      lowDpr: \"Náhrada písma při nízkém DPR\",\n      sizeRows: {\n        chrome: \"Ovládání\",\n        headers: \"Nadpisy a záhlaví\",\n        content: \"Obsah\",\n        code: \"Kód (neproporcionální)\",\n        brand: \"Logo a značka\",\n      },\n      actions: {\n        reset: \"Obnovit výchozí\",\n        cancel: \"Zrušit\",\n        save: \"Uložit změny\",\n      },\n    },\n    postDisplay: {\n      menuItem: \"[test] Zobrazení příspěvků\",\n      switches: {\n        largerGap: \"Větší mezera\",\n        separator: \"Oddělovač\",\n      },\n      options: {\n        shape: {\n          circle: \"Kruh (výchozí)\",\n          square: \"Čtverec\",\n          roundedSquare: \"Zaoblený čtverec\",\n          rect: \"Obdélník 4:5\",\n          roundedRect: \"Zaoblený 4:5\",\n        },\n        fit: {\n          contain: \"contain (letterbox)\",\n          cover: \"cover (ořez)\",\n        },\n        ring: {\n          none: \"Bez\",\n          hairline: \"1px linka\",\n        },\n      },\n      actions: {\n        save: \"Uložit změny\",\n      },\n    },\n  };\n\n  const kapyguts = {\n    version: VERSION,\n    selectors: SELECTORS,\n    text: TEXT,\n    isKapybara,\n    route,\n    currentUser,\n    currentUserCandidates,\n    isBoardPage,\n    isFavoritesPage,\n    isMessagesPage,\n    isVisible,\n    visibleElements,\n    allPosts,\n    visiblePosts,\n    postParts,\n    pageChromeParts,\n    pageHeader,\n    pageHeaderParts,\n    avatarMenuParts,\n    boardHeaderParts,\n    fontSettingsParts,\n    fontSettingsState,\n    postDisplayParts,\n    postDisplayState,\n    visibleMenus,\n    visiblePostMenus,\n    allComposers,\n    composerParts,\n    observeComposers,\n    inspect,\n  };\n\n  root.kapyguts = kapyguts;\n  root.log.info(\"kapyguts\", \"ready\", VERSION);\n\n  function isKapybara() {\n    return window.location.hostname === \"kapybara.okoun.cz\";\n  }\n\n  function route() {\n    const path = window.location.pathname;\n    const boardMatch = path.match(/^\\/boards\\/([^/?#]+)/);\n    return {\n      href: window.location.href,\n      host: window.location.hostname,\n      path,\n      search: window.location.search,\n      hash: window.location.hash,\n      type: boardMatch ? \"board\" : routeType(path),\n      boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : \"\",\n    };\n  }\n\n  function routeType(path) {\n    if (path === \"/\") return \"home\";\n    if (path.startsWith(\"/fav/\")) return \"favorites\";\n    if (path.startsWith(\"/messages\")) return \"messages\";\n    if (path.startsWith(\"/topics\")) return \"topics\";\n    if (path.startsWith(\"/active-users\")) return \"active-users\";\n    if (path === \"/test/fonts\") return \"font-settings\";\n    if (path === \"/test/posts\") return \"post-display-settings\";\n    return \"unknown\";\n  }\n\n  function isBoardPage() {\n    return route().type === \"board\";\n  }\n\n  function isFavoritesPage() {\n    return route().type === \"favorites\";\n  }\n\n  function isMessagesPage() {\n    return route().type === \"messages\";\n  }\n\n  function currentUser() {\n    const candidates = currentUserCandidates();\n    return candidates.find((candidate) => candidate.confidence === \"high\")?.name ||\n      candidates.find((candidate) => candidate.name)?.name ||\n      \"\";\n  }\n\n  function currentUserCandidates() {\n    const candidates = [];\n\n    visibleElements(\".avatar-button\").forEach((button) => {\n      addUserCandidate(candidates, button.textContent, \"avatar-button-text\", \"high\", button);\n      addUserCandidate(candidates, button.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"avatar-button-img-alt\", \"high\", button);\n    });\n\n    visibleElements(\".user-item, .avatar-shell\").forEach((node) => {\n      addUserCandidate(candidates, node.textContent, \"mobile-user-text\", \"high\", node);\n      addUserCandidate(candidates, node.querySelector(\"img[alt]\")?.getAttribute(\"alt\"), \"mobile-user-img-alt\", \"medium\", node);\n    });\n\n    visibleElements(\"header img[alt], nav img[alt]\").forEach((img) => {\n      addUserCandidate(candidates, img.getAttribute(\"alt\"), \"header-nav-img-alt\", \"low\", img);\n    });\n\n    return candidates;\n  }\n\n  function allPosts(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.boardPost));\n  }\n\n  function visiblePosts(scope = document) {\n    return allPosts(scope).filter(isVisible);\n  }\n\n  function pageChromeParts(scope = document) {\n    const viewportStripes = scope.querySelector(SELECTORS.viewportStripes);\n    const stripeStyle = viewportStripes ? window.getComputedStyle(viewportStripes) : null;\n    const stripeBackground = stripeStyle?.backgroundImage || \"\";\n    return {\n      viewportStripes,\n      stripeBackground,\n      stripesActive: !!viewportStripes && stripeBackground !== \"none\",\n    };\n  }\n\n  function pageHeader(scope = document) {\n    return Array.from(scope.querySelectorAll(SELECTORS.pageHeader)).find((header) => (\n      !header.closest(\"article.post\") && !!header.querySelector(SELECTORS.pageHeaderLogo)\n    )) || null;\n  }\n\n  function pageHeaderParts(scope = document) {\n    const header = pageHeader(scope);\n    return {\n      header,\n      logo: header?.querySelector(SELECTORS.pageHeaderLogo) || null,\n      desktopActions: header?.querySelector(SELECTORS.pageHeaderDesktopActions) || null,\n    };\n  }\n\n  function avatarMenuParts(scope = document) {\n    const desktopTrigger = scope.querySelector(SELECTORS.desktopAvatarMenuTrigger);\n    const mobileTrigger = scope.querySelector(SELECTORS.mobileAvatarMenuTrigger);\n    const trigger = [desktopTrigger, mobileTrigger].find(isVisible) || desktopTrigger || mobileTrigger || null;\n    const menu = Array.from(scope.querySelectorAll(\"[role='menu']\")).find((candidate) => (\n      isVisible(candidate) && (\n        !!candidate.querySelector(SELECTORS.nativeFontSettingsLink) ||\n        !!candidate.querySelector(SELECTORS.nativePostDisplayLink) ||\n        TEXT.avatarMenu.some((needle) => normalizeText(candidate.textContent).includes(needle))\n      )\n    )) || null;\n    const items = menu ? Array.from(menu.querySelectorAll(\"[role='menuitem']\")) : [];\n    const fontSettingsLink = menu?.querySelector(SELECTORS.nativeFontSettingsLink) || null;\n    const postDisplayLink = menu?.querySelector(SELECTORS.nativePostDisplayLink) || null;\n\n    return {\n      trigger,\n      desktopTrigger,\n      mobileTrigger,\n      menu,\n      items,\n      fontSettingsLink,\n      postDisplayLink,\n      open: !!menu || trigger?.getAttribute(\"aria-expanded\") === \"true\",\n    };\n  }\n\n  function boardHeaderParts(scope = document) {\n    const header = scope.querySelector(SELECTORS.boardHeader);\n    const titleRow = scope.querySelector(SELECTORS.boardTitleRow);\n    const titleLink = scope.querySelector(SELECTORS.boardTitleLink);\n    const actions = scope.querySelector(SELECTORS.boardTitleActions);\n    return {\n      header,\n      titleRow,\n      titleLink,\n      actions,\n      mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),\n      stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === \"sticky\",\n    };\n  }\n\n  // Kapybara labels this route as a temporary test. Keep its DOM contract\n  // isolated here so modules do not couple themselves to the experiment.\n  function fontSettingsParts(scope = document) {\n    const panel = scope.querySelector(SELECTORS.fontSettingsPanel);\n    const selects = {\n      chrome: panel?.querySelector(SELECTORS.fontSettingsChromeSelect) || null,\n      headers: panel?.querySelector(SELECTORS.fontSettingsHeadersSelect) || null,\n      content: panel?.querySelector(SELECTORS.fontSettingsContentSelect) || null,\n      code: panel?.querySelector(SELECTORS.fontSettingsCodeSelect) || null,\n      brand: panel?.querySelector(SELECTORS.fontSettingsBrandSelect) || null,\n    };\n    const sizes = Object.fromEntries(Object.entries(TEXT.fontSettings.sizeRows).map(([key, label]) => (\n      [key, labeledNumberInput(panel, label)]\n    )));\n    const lowDprSwitch = panel ? Array.from(panel.querySelectorAll(\"button[role='switch']\")).find((button) => (\n      normalizeText(button.textContent).startsWith(TEXT.fontSettings.lowDpr)\n    )) || null : null;\n    const actions = Object.fromEntries(Object.entries(TEXT.fontSettings.actions).map(([key, label]) => (\n      [key, buttonByText(panel, label)]\n    )));\n\n    return {\n      panel,\n      copyButton: panel?.querySelector(SELECTORS.fontSettingsCopyButton) || null,\n      closeButton: panel?.querySelector(SELECTORS.fontSettingsCloseButton) || null,\n      selects,\n      sizes,\n      lowDprSwitch,\n      actions,\n      ready: !!panel && Object.values(selects).every(Boolean) && Object.values(sizes).every(Boolean),\n    };\n  }\n\n  function fontSettingsState(scope = document) {\n    const parts = fontSettingsParts(scope);\n    if (!parts.panel) return null;\n\n    return {\n      ready: parts.ready,\n      serifExperiment: new URLSearchParams(window.location.search).get(\"k\") === \"chatk_colit\",\n      fonts: Object.fromEntries(Object.entries(parts.selects).map(([key, select]) => [key, select?.value || \"\"])),\n      sizes: Object.fromEntries(Object.entries(parts.sizes).map(([key, input]) => [key, input?.value || \"\"])),\n      lowDprFallback: parts.lowDprSwitch?.getAttribute(\"aria-checked\") === \"true\",\n      dirty: !!parts.actions.save && !parts.actions.save.disabled,\n    };\n  }\n\n  // Kapybara labels this route as temporary. Resolve controls by their Czech\n  // labels so callers are insulated from layout and generated class changes.\n  function postDisplayParts(scope = document) {\n    const panel = scope.querySelector(SELECTORS.postDisplayPanel);\n    const segmentButtons = panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySegmentButton)) : [];\n    const switches = Object.fromEntries(Object.entries(TEXT.postDisplay.switches).map(([key, label]) => (\n      [key, switchByText(panel, label)]\n    )));\n    const options = Object.fromEntries(Object.entries(TEXT.postDisplay.options).map(([group, labels]) => (\n      [group, Object.fromEntries(Object.entries(labels).map(([key, label]) => (\n        [key, buttonByText(panel, label)]\n      )))]\n    )));\n    const actions = Object.fromEntries(Object.entries(TEXT.postDisplay.actions).map(([key, label]) => (\n      [key, buttonByText(panel, label)]\n    )));\n\n    return {\n      panel,\n      closeButton: panel?.querySelector(SELECTORS.postDisplayCloseButton) || null,\n      sections: panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySection)) : [],\n      avatarSection: panel?.querySelector(SELECTORS.postDisplayAvatarSection) || null,\n      segmentButtons,\n      switches,\n      options,\n      actions,\n      previewPosts: panel ? Array.from(panel.querySelectorAll(SELECTORS.boardPost)) : [],\n      ready: !!panel && Object.values(switches).every(Boolean) &&\n        Object.values(options).every((group) => Object.values(group).every(Boolean)),\n    };\n  }\n\n  function postDisplayState(scope = document) {\n    const parts = postDisplayParts(scope);\n    if (!parts.panel) return null;\n\n    return {\n      ready: parts.ready,\n      largerGap: parts.switches.largerGap?.getAttribute(\"aria-checked\") === \"true\",\n      separator: parts.switches.separator?.getAttribute(\"aria-checked\") === \"true\",\n      shape: pressedOption(parts.options.shape),\n      fit: pressedOption(parts.options.fit),\n      ring: pressedOption(parts.options.ring),\n      dirty: !!parts.actions.save && !parts.actions.save.disabled,\n    };\n  }\n\n  function postParts(post) {\n    if (!post) return null;\n\n    const avatarColumn = post.querySelector(SELECTORS.avatarColumn);\n    const avatar = post.querySelector(SELECTORS.avatar);\n    const avatarImage = post.querySelector(SELECTORS.avatarImage);\n    const content = post.querySelector(SELECTORS.content);\n    const header = post.querySelector(SELECTORS.header);\n    const author = post.querySelector(SELECTORS.author);\n    const meta = post.querySelector(SELECTORS.meta);\n    const dateButton = post.querySelector(SELECTORS.dateButton);\n    const replyMeta = post.querySelector(SELECTORS.replyMeta);\n    const body = post.querySelector(SELECTORS.body);\n    const markdown = post.querySelector(SELECTORS.markdown);\n    const actions = post.querySelector(SELECTORS.actions);\n    const reply = post.querySelector(SELECTORS.replyButton);\n    const postMenuButton = post.querySelector(SELECTORS.postMenuButton);\n\n    return {\n      post,\n      row: post,\n      avatarColumn,\n      avatar,\n      avatarImage,\n      content,\n      header,\n      author,\n      meta,\n      dateWrap: dateButton,\n      dateButton,\n      replyMeta,\n      body,\n      markdown,\n      actions,\n      reply,\n      postMenuButton,\n    };\n  }\n\n  function visibleMenus(kind = \"\") {\n    const menus = Array.from(document.querySelectorAll(\"[role='menu'], [role='dialog'], .menu, .bottom-sheet\"))\n      .filter(isVisible)\n      .map((node) => menuInfo(node))\n      .filter((info) => info.text);\n\n    if (!kind) return menus;\n    return menus.filter((info) => info.kind === kind);\n  }\n\n  function visiblePostMenus() {\n    return visibleMenus(\"post\");\n  }\n\n  function allComposers(scope = document) {\n    return Array.from(scope.querySelectorAll(`${SELECTORS.newPostComposer}, ${SELECTORS.replyComposer}`));\n  }\n\n  function composerParts(section) {\n    if (!section) return null;\n\n    const composer = section.matches?.(SELECTORS.composer) ? section : section.querySelector(SELECTORS.composer);\n    const editor = section.querySelector(SELECTORS.composerEditor);\n    const editable = section.querySelector(SELECTORS.composerEditable);\n    const toolbarSlot = section.querySelector(SELECTORS.composerToolbarSlot);\n    const toolbar = section.querySelector(SELECTORS.composerToolbar);\n    const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||\n      section.querySelector(SELECTORS.composerImageButton);\n    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);\n    const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;\n\n    return {\n      section,\n      kind: section.matches?.(SELECTORS.newPostComposer) ? \"new-post\" : \"reply\",\n      composer,\n      editor,\n      editable,\n      toolbarSlot,\n      toolbar,\n      imageButton,\n      modeToggle,\n      markdownNode,\n      markdownMode: !!markdownNode || modeToggle?.getAttribute(\"aria-pressed\") === \"true\",\n      ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),\n    };\n  }\n\n  function observeComposers(callback, scope = document.body, onRemoved = null) {\n    if (typeof callback !== \"function\") return () => {};\n\n    const active = new Map();\n    const scan = () => {\n      const current = new Set(allComposers(scope || document));\n\n      active.forEach((parts, section) => {\n        if (current.has(section) && section.isConnected) return;\n        active.delete(section);\n        if (typeof onRemoved === \"function\") onRemoved(parts);\n      });\n\n      current.forEach((section) => {\n        const parts = composerParts(section);\n        if (!parts?.ready || active.has(section)) return;\n        active.set(section, parts);\n        callback(parts);\n      });\n    };\n\n    scan();\n    const observer = new MutationObserver(scan);\n    observer.observe(scope || document.body, { childList: true, subtree: true });\n\n    return () => {\n      observer.disconnect();\n      active.clear();\n    };\n  }\n\n  function inspect() {\n    const posts = visiblePosts();\n    const menus = visibleMenus();\n    const fontSettings = fontSettingsState();\n    const postDisplay = postDisplayState();\n    const pageChrome = pageChromeParts();\n    return {\n      version: VERSION,\n      isKapybara: isKapybara(),\n      route: route(),\n      currentUser: currentUser(),\n      currentUserCandidates: currentUserCandidates().map((candidate) => ({\n        name: candidate.name,\n        source: candidate.source,\n        confidence: candidate.confidence,\n        rect: candidate.rect,\n      })),\n      viewport: { width: window.innerWidth, height: window.innerHeight },\n      counts: {\n        boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,\n        visibleBoardPosts: posts.length,\n        boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,\n        avatars: document.querySelectorAll(SELECTORS.avatar).length,\n        replies: document.querySelectorAll(SELECTORS.replyButton).length,\n        postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,\n        favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,\n        messageItems: document.querySelectorAll(SELECTORS.messageItem).length,\n        messageCards: document.querySelectorAll(SELECTORS.messageCard).length,\n        composers: allComposers().length,\n        readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,\n        visibleMenus: menus.length,\n        nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,\n        nativePostDisplayLinks: document.querySelectorAll(SELECTORS.nativePostDisplayLink).length,\n        viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,\n      },\n      pageChrome: {\n        hasViewportStripes: !!pageChrome.viewportStripes,\n        stripeBackground: pageChrome.stripeBackground,\n        stripesActive: pageChrome.stripesActive,\n      },\n      fontSettings,\n      postDisplay,\n      posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),\n      menus: menus.map((info) => ({\n        kind: info.kind,\n        tag: info.node.tagName,\n        role: info.node.getAttribute(\"role\") || \"\",\n        className: String(info.node.className || \"\"),\n        rect: info.rect,\n        text: info.text.slice(0, 260),\n      })),\n    };\n  }\n\n  function visibleElements(selector, scope = document) {\n    return Array.from(scope.querySelectorAll(selector)).filter(isVisible);\n  }\n\n  function addUserCandidate(candidates, value, source, confidence, node) {\n    const name = normalizeUserName(value);\n    if (!name) return;\n    if (candidates.some((candidate) => candidate.name === name && candidate.source === source)) return;\n    candidates.push({\n      name,\n      source,\n      confidence,\n      node,\n      rect: node ? rectInfo(node) : null,\n    });\n  }\n\n  function normalizeUserName(value) {\n    const text = normalizeText(value);\n    if (!text || text.length > 40) return \"\";\n    if (/^(menu|domů|vzkazník|oblíbené|účet|nastavení|odhlásit|barevné schéma)$/i.test(text)) return \"\";\n    return text;\n  }\n\n  function isVisible(node) {\n    if (!(node instanceof Element)) return false;\n    const rect = node.getBoundingClientRect();\n    if (rect.width <= 0 || rect.height <= 0) return false;\n    if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth) return false;\n\n    const style = window.getComputedStyle(node);\n    return style.display !== \"none\" && style.visibility !== \"hidden\" && style.opacity !== \"0\";\n  }\n\n  function menuInfo(node) {\n    const text = normalizeText(node.textContent || \"\");\n    return {\n      node,\n      kind: menuKind(text, node),\n      text,\n      rect: rectInfo(node),\n    };\n  }\n\n  function menuKind(text, node = null) {\n    if (node?.matches?.(SELECTORS.fontSettingsPanel)) return \"font-settings\";\n    if (node?.matches?.(SELECTORS.postDisplayPanel)) return \"post-display-settings\";\n    if (TEXT.postMenu.some((needle) => text.includes(needle))) return \"post\";\n    if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return \"avatar\";\n    return \"unknown\";\n  }\n\n  function labeledNumberInput(panel, label) {\n    if (!panel) return null;\n    const row = Array.from(panel.querySelectorAll(SELECTORS.fontSettingsSizeRow)).find((candidate) => (\n      normalizeText(candidate.textContent).startsWith(label)\n    ));\n    return row?.querySelector(\"input[type='number']\") || null;\n  }\n\n  function buttonByText(panel, label) {\n    if (!panel) return null;\n    const normalizedLabel = normalizeText(label).toLocaleLowerCase(\"cs\");\n    return Array.from(panel.querySelectorAll(\"button\")).find((button) => (\n      normalizeText(button.textContent).toLocaleLowerCase(\"cs\").startsWith(normalizedLabel)\n    )) || null;\n  }\n\n  function switchByText(panel, label) {\n    if (!panel) return null;\n    const normalizedLabel = normalizeText(label).toLocaleLowerCase(\"cs\");\n    return Array.from(panel.querySelectorAll(\"button[role='switch']\")).find((button) => (\n      normalizeText(button.textContent).toLocaleLowerCase(\"cs\").startsWith(normalizedLabel)\n    )) || null;\n  }\n\n  function pressedOption(options) {\n    return Object.entries(options).find(([, button]) => button?.getAttribute(\"aria-pressed\") === \"true\")?.[0] || \"\";\n  }\n\n  function summarizePost(post, index) {\n    const parts = postParts(post);\n    return {\n      index,\n      id: post.id || \"\",\n      postId: post.getAttribute(\"data-post-id\") || \"\",\n      threadId: post.getAttribute(\"data-thread-id\") || \"\",\n      rect: rectInfo(post),\n      text: normalizeText(post.textContent || \"\").slice(0, 220),\n      hasAvatar: !!parts?.avatar,\n      hasHeader: !!parts?.header,\n      hasBody: !!parts?.body,\n      hasActions: !!parts?.actions,\n      hasReply: !!parts?.reply,\n      hasReplyMeta: !!parts?.replyMeta,\n      hasDateWrap: !!parts?.dateWrap,\n      hasPostMenuButton: !!parts?.postMenuButton,\n    };\n  }\n\n  function rectInfo(node) {\n    const rect = node.getBoundingClientRect();\n    return {\n      x: Math.round(rect.x),\n      y: Math.round(rect.y),\n      width: Math.round(rect.width),\n      height: Math.round(rect.height),\n    };\n  }\n\n  function normalizeText(text) {\n    return String(text || \"\").replace(/\\s+/g, \" \").trim();\n  }\n})();\n");
   embeddedScripts.set("modules/sys-kapyguts.js", function () {
     // Cudloun Kapybara DOM dictionary helpers.
     (function () {
       "use strict";
 
       const root = window.Cudloun;
-      const VERSION = "0.3.0";
+      const VERSION = "0.4.0";
       const SELECTORS = {
         viewportStripes: ".🐟-stripes",
         pageHeader: "header:not(.board-header):not(.post-header)",
@@ -489,6 +489,7 @@
         dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
         dropdownMenuItem: "[role='menuitem'][data-dropdown-menu-item]",
         nativeFontSettingsLink: "a[role='menuitem'][href='/test/fonts']",
+        nativePostDisplayLink: "a[role='menuitem'][href='/test/posts']",
         boardHeader: "header.board-header",
         boardTitleRow: ".board-header .title-row",
         boardTitleLink: ".board-header .title-link",
@@ -531,6 +532,11 @@
         fontSettingsCodeSelect: "#fs-code",
         fontSettingsBrandSelect: "#fs-brand",
         fontSettingsSizeRow: "label.fs-size-row",
+        postDisplayPanel: ".pd-panel[role='dialog'][aria-labelledby='pd-title']",
+        postDisplayCloseButton: "button.pd-close[aria-label='Zavřít']",
+        postDisplaySection: ".pd-section",
+        postDisplayAvatarSection: ".pd-section.av-section",
+        postDisplaySegmentButton: "button.av-seg-btn[aria-pressed]",
       };
       const TEXT = {
         postMenu: ["Smazat", "Upravit", "Označit"],
@@ -548,6 +554,33 @@
           actions: {
             reset: "Obnovit výchozí",
             cancel: "Zrušit",
+            save: "Uložit změny",
+          },
+        },
+        postDisplay: {
+          menuItem: "[test] Zobrazení příspěvků",
+          switches: {
+            largerGap: "Větší mezera",
+            separator: "Oddělovač",
+          },
+          options: {
+            shape: {
+              circle: "Kruh (výchozí)",
+              square: "Čtverec",
+              roundedSquare: "Zaoblený čtverec",
+              rect: "Obdélník 4:5",
+              roundedRect: "Zaoblený 4:5",
+            },
+            fit: {
+              contain: "contain (letterbox)",
+              cover: "cover (ořez)",
+            },
+            ring: {
+              none: "Bez",
+              hairline: "1px linka",
+            },
+          },
+          actions: {
             save: "Uložit změny",
           },
         },
@@ -576,6 +609,8 @@
         boardHeaderParts,
         fontSettingsParts,
         fontSettingsState,
+        postDisplayParts,
+        postDisplayState,
         visibleMenus,
         visiblePostMenus,
         allComposers,
@@ -612,6 +647,7 @@
         if (path.startsWith("/topics")) return "topics";
         if (path.startsWith("/active-users")) return "active-users";
         if (path === "/test/fonts") return "font-settings";
+        if (path === "/test/posts") return "post-display-settings";
         return "unknown";
       }
 
@@ -695,11 +731,13 @@
         const menu = Array.from(scope.querySelectorAll("[role='menu']")).find((candidate) => (
           isVisible(candidate) && (
             !!candidate.querySelector(SELECTORS.nativeFontSettingsLink) ||
+            !!candidate.querySelector(SELECTORS.nativePostDisplayLink) ||
             TEXT.avatarMenu.some((needle) => normalizeText(candidate.textContent).includes(needle))
           )
         )) || null;
         const items = menu ? Array.from(menu.querySelectorAll("[role='menuitem']")) : [];
         const fontSettingsLink = menu?.querySelector(SELECTORS.nativeFontSettingsLink) || null;
+        const postDisplayLink = menu?.querySelector(SELECTORS.nativePostDisplayLink) || null;
 
         return {
           trigger,
@@ -708,6 +746,7 @@
           menu,
           items,
           fontSettingsLink,
+          postDisplayLink,
           open: !!menu || trigger?.getAttribute("aria-expanded") === "true",
         };
       }
@@ -770,6 +809,53 @@
           fonts: Object.fromEntries(Object.entries(parts.selects).map(([key, select]) => [key, select?.value || ""])),
           sizes: Object.fromEntries(Object.entries(parts.sizes).map(([key, input]) => [key, input?.value || ""])),
           lowDprFallback: parts.lowDprSwitch?.getAttribute("aria-checked") === "true",
+          dirty: !!parts.actions.save && !parts.actions.save.disabled,
+        };
+      }
+
+      // Kapybara labels this route as temporary. Resolve controls by their Czech
+      // labels so callers are insulated from layout and generated class changes.
+      function postDisplayParts(scope = document) {
+        const panel = scope.querySelector(SELECTORS.postDisplayPanel);
+        const segmentButtons = panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySegmentButton)) : [];
+        const switches = Object.fromEntries(Object.entries(TEXT.postDisplay.switches).map(([key, label]) => (
+          [key, switchByText(panel, label)]
+        )));
+        const options = Object.fromEntries(Object.entries(TEXT.postDisplay.options).map(([group, labels]) => (
+          [group, Object.fromEntries(Object.entries(labels).map(([key, label]) => (
+            [key, buttonByText(panel, label)]
+          )))]
+        )));
+        const actions = Object.fromEntries(Object.entries(TEXT.postDisplay.actions).map(([key, label]) => (
+          [key, buttonByText(panel, label)]
+        )));
+
+        return {
+          panel,
+          closeButton: panel?.querySelector(SELECTORS.postDisplayCloseButton) || null,
+          sections: panel ? Array.from(panel.querySelectorAll(SELECTORS.postDisplaySection)) : [],
+          avatarSection: panel?.querySelector(SELECTORS.postDisplayAvatarSection) || null,
+          segmentButtons,
+          switches,
+          options,
+          actions,
+          previewPosts: panel ? Array.from(panel.querySelectorAll(SELECTORS.boardPost)) : [],
+          ready: !!panel && Object.values(switches).every(Boolean) &&
+            Object.values(options).every((group) => Object.values(group).every(Boolean)),
+        };
+      }
+
+      function postDisplayState(scope = document) {
+        const parts = postDisplayParts(scope);
+        if (!parts.panel) return null;
+
+        return {
+          ready: parts.ready,
+          largerGap: parts.switches.largerGap?.getAttribute("aria-checked") === "true",
+          separator: parts.switches.separator?.getAttribute("aria-checked") === "true",
+          shape: pressedOption(parts.options.shape),
+          fit: pressedOption(parts.options.fit),
+          ring: pressedOption(parts.options.ring),
           dirty: !!parts.actions.save && !parts.actions.save.disabled,
         };
       }
@@ -895,6 +981,7 @@
         const posts = visiblePosts();
         const menus = visibleMenus();
         const fontSettings = fontSettingsState();
+        const postDisplay = postDisplayState();
         const pageChrome = pageChromeParts();
         return {
           version: VERSION,
@@ -922,6 +1009,7 @@
             readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
             visibleMenus: menus.length,
             nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,
+            nativePostDisplayLinks: document.querySelectorAll(SELECTORS.nativePostDisplayLink).length,
             viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,
           },
           pageChrome: {
@@ -930,6 +1018,7 @@
             stripesActive: pageChrome.stripesActive,
           },
           fontSettings,
+          postDisplay,
           posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),
           menus: menus.map((info) => ({
             kind: info.kind,
@@ -988,6 +1077,7 @@
 
       function menuKind(text, node = null) {
         if (node?.matches?.(SELECTORS.fontSettingsPanel)) return "font-settings";
+        if (node?.matches?.(SELECTORS.postDisplayPanel)) return "post-display-settings";
         if (TEXT.postMenu.some((needle) => text.includes(needle))) return "post";
         if (TEXT.avatarMenu.some((needle) => text.includes(needle))) return "avatar";
         return "unknown";
@@ -1007,6 +1097,18 @@
         return Array.from(panel.querySelectorAll("button")).find((button) => (
           normalizeText(button.textContent).toLocaleLowerCase("cs").startsWith(normalizedLabel)
         )) || null;
+      }
+
+      function switchByText(panel, label) {
+        if (!panel) return null;
+        const normalizedLabel = normalizeText(label).toLocaleLowerCase("cs");
+        return Array.from(panel.querySelectorAll("button[role='switch']")).find((button) => (
+          normalizeText(button.textContent).toLocaleLowerCase("cs").startsWith(normalizedLabel)
+        )) || null;
+      }
+
+      function pressedOption(options) {
+        return Object.entries(options).find(([, button]) => button?.getAttribute("aria-pressed") === "true")?.[0] || "";
       }
 
       function summarizePost(post, index) {
@@ -3450,6 +3552,240 @@
           }
         `;
         document.head.appendChild(style);
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/post-tweaks.js", "// Durable copy of Kapybara's temporary post-display experiment.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.0\";\n  const STYLE_ID = \"cudloun-post-tweaks-style\";\n  const ACTIVE_ATTR = \"data-cudloun-post-tweaks\";\n  const DEFAULTS = Object.freeze({\n    largerGap: false,\n    separator: false,\n    shape: \"circle\",\n    fit: \"contain\",\n    ring: \"none\",\n  });\n  const SHAPES = Object.freeze({\n    circle: { label: \"Kruh (výchozí)\", radius: \"50%\", aspect: \"1\" },\n    square: { label: \"Čtverec\", radius: \"0\", aspect: \"1\" },\n    \"rounded-square\": { label: \"Zaoblený čtverec\", radius: \"22%\", aspect: \"1\" },\n    rect: { label: \"Obdélník 4:5\", radius: \"0\", aspect: \"4 / 5\" },\n    \"rounded-rect\": { label: \"Zaoblený 4:5\", radius: \"22%\", aspect: \"4 / 5\" },\n  });\n  const FITS = Object.freeze({\n    contain: \"contain (letterbox)\",\n    cover: \"cover (ořez)\",\n  });\n  const RINGS = Object.freeze({\n    none: \"Bez\",\n    hairline: \"1px linka\",\n  });\n  const AVATAR_VARIABLES = [\n    \"--🐟-avatar-radius\",\n    \"--🐟-avatar-aspect\",\n    \"--🐟-avatar-fit\",\n    \"--🐟-avatar-ring\",\n  ];\n\n  let activeContext = null;\n  let previousVariables = null;\n\n  root.postTweaks = {\n    version: VERSION,\n    defaults: { ...DEFAULTS },\n    shapes: Object.fromEntries(Object.entries(SHAPES).map(([key, value]) => [key, { ...value }])),\n  };\n\n  root.registerModule({\n    id: \"post-tweaks\",\n    name: \"Post Tweaks\",\n    description: \"Keeps Kapybara's temporary spacing, divider, and avatar controls available.\",\n    version: VERSION,\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      activeContext = ctx;\n      captureVariables();\n      installStyle();\n      applySettings(ctx);\n      ctx.log.info(\"post tweaks ready\", readSettings(ctx));\n      return cleanup;\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n      wrap.appendChild(makeCheckboxRow(ctx, \"Větší mezera\", \"largerGap\", DEFAULTS.largerGap));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Oddělovač\", \"separator\", DEFAULTS.separator));\n      wrap.appendChild(makeSelectRow(ctx, \"Tvar ikonky\", \"shape\", SHAPES));\n      wrap.appendChild(makeSelectRow(ctx, \"Vyplnění\", \"fit\", FITS));\n      wrap.appendChild(makeSelectRow(ctx, \"Linka\", \"ring\", RINGS));\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"This default-off module preserves the useful controls from Kapybara's temporary /test/posts page.\",\n        \"It reproduces Koles' 12/16 px post spacing and the same avatar radius, 4:5 aspect, contain/cover, and 1 px outline values.\",\n        \"Settings live in Cudloun, so they remain available if Kapybara removes the test menu. Disable the module to restore the page's previous values.\",\n      ];\n    },\n  });\n\n  function readSettings(ctx) {\n    return {\n      largerGap: ctx.storage.get(\"largerGap\", DEFAULTS.largerGap) === true,\n      separator: ctx.storage.get(\"separator\", DEFAULTS.separator) === true,\n      shape: validChoice(ctx.storage.get(\"shape\", DEFAULTS.shape), SHAPES, DEFAULTS.shape),\n      fit: validChoice(ctx.storage.get(\"fit\", DEFAULTS.fit), FITS, DEFAULTS.fit),\n      ring: validChoice(ctx.storage.get(\"ring\", DEFAULTS.ring), RINGS, DEFAULTS.ring),\n    };\n  }\n\n  function applySettings(ctx) {\n    if (!activeContext) return;\n    const settings = readSettings(ctx);\n    const html = document.documentElement;\n    const shape = SHAPES[settings.shape];\n\n    html.setAttribute(ACTIVE_ATTR, \"true\");\n    html.setAttribute(\"data-cudloun-post-tweaks-gap\", settings.largerGap ? \"large\" : \"normal\");\n    html.setAttribute(\"data-cudloun-post-tweaks-separator\", String(settings.separator));\n    html.style.setProperty(\"--🐟-avatar-radius\", shape.radius);\n    html.style.setProperty(\"--🐟-avatar-aspect\", shape.aspect);\n    html.style.setProperty(\"--🐟-avatar-fit\", settings.fit);\n    html.style.setProperty(\"--🐟-avatar-ring\", settings.ring === \"hairline\" ? \"1px solid var(--🐟-border)\" : \"none\");\n  }\n\n  function cleanup() {\n    const html = document.documentElement;\n    html.removeAttribute(ACTIVE_ATTR);\n    html.removeAttribute(\"data-cudloun-post-tweaks-gap\");\n    html.removeAttribute(\"data-cudloun-post-tweaks-separator\");\n    restoreVariables();\n    document.getElementById(STYLE_ID)?.remove();\n    activeContext = null;\n    root.log.info(\"post-tweaks\", \"removed\");\n  }\n\n  function captureVariables() {\n    if (previousVariables) return;\n    const style = document.documentElement.style;\n    previousVariables = new Map(AVATAR_VARIABLES.map((name) => [name, {\n      value: style.getPropertyValue(name),\n      priority: style.getPropertyPriority(name),\n    }]));\n  }\n\n  function restoreVariables() {\n    if (!previousVariables) return;\n    const style = document.documentElement.style;\n    previousVariables.forEach(({ value, priority }, name) => {\n      if (value) style.setProperty(name, value, priority);\n      else style.removeProperty(name);\n    });\n    previousVariables = null;\n  }\n\n  function installStyle() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[${ACTIVE_ATTR}=\"true\"] main .posts:has(> article.post){\n        --post-gap:12px!important;\n        gap:var(--post-gap)!important;\n      }\n      html[${ACTIVE_ATTR}=\"true\"][data-cudloun-post-tweaks-gap=\"large\"] main .posts:has(> article.post){\n        --post-gap:16px!important;\n      }\n      html[${ACTIVE_ATTR}=\"true\"] article.post .avatar{\n        aspect-ratio:var(--🐟-avatar-aspect,1)!important;\n        border-radius:var(--🐟-avatar-radius,50%)!important;\n        outline:var(--🐟-avatar-ring,none)!important;\n        outline-offset:-1px!important;\n        height:auto!important;\n      }\n      html[${ACTIVE_ATTR}=\"true\"] article.post .avatar img{\n        border-radius:inherit!important;\n        object-fit:var(--🐟-avatar-fit,contain)!important;\n        width:100%!important;\n        height:100%!important;\n      }\n      html[data-cudloun-classic-look=\"true\"][${ACTIVE_ATTR}=\"true\"] article.post{\n        border-bottom:0!important;\n      }\n      html[data-cudloun-classic-look=\"true\"][${ACTIVE_ATTR}=\"true\"] article.post:first-of-type{\n        border-top:0!important;\n      }\n      html[${ACTIVE_ATTR}=\"true\"][data-cudloun-post-tweaks-separator=\"false\"] article.post.separator-above .post-main::before{\n        content:none!important;\n      }\n      html[${ACTIVE_ATTR}=\"true\"][data-cudloun-post-tweaks-separator=\"true\"] main .posts>article.post+article.post .post-main::before,\n      html[${ACTIVE_ATTR}=\"true\"][data-cudloun-post-tweaks-separator=\"true\"] article.post.separator-above .post-main::before{\n        content:\"\"!important;\n        top:calc(-1 * (10px + var(--post-gap,12px) / 2))!important;\n        border-top:1px solid var(--🐟-border)!important;\n        pointer-events:none!important;\n        position:absolute!important;\n        left:0!important;\n        right:0!important;\n      }\n    `;\n    document.head.appendChild(style);\n  }\n\n  function makeCheckboxRow(ctx, label, key, fallback) {\n    const row = document.createElement(\"label\");\n    row.className = \"cudloun-setting-row\";\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = label;\n    const input = document.createElement(\"input\");\n    input.type = \"checkbox\";\n    input.checked = ctx.storage.get(key, fallback) === true;\n    input.addEventListener(\"change\", () => {\n      ctx.storage.set(key, input.checked);\n      applySettings(ctx);\n    });\n    row.append(text, input);\n    return row;\n  }\n\n  function makeSelectRow(ctx, label, key, choices) {\n    const row = document.createElement(\"label\");\n    row.className = \"cudloun-setting-row\";\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = label;\n    const select = document.createElement(\"select\");\n    select.className = \"cudloun-setting-select\";\n    const fallback = DEFAULTS[key];\n    const current = validChoice(ctx.storage.get(key, fallback), choices, fallback);\n    Object.entries(choices).forEach(([value, config]) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = typeof config === \"string\" ? config : config.label;\n      select.appendChild(option);\n    });\n    select.value = current;\n    select.addEventListener(\"change\", () => {\n      ctx.storage.set(key, select.value);\n      applySettings(ctx);\n    });\n    row.append(text, select);\n    return row;\n  }\n\n  function validChoice(value, choices, fallback) {\n    return typeof value === \"string\" && Object.prototype.hasOwnProperty.call(choices, value) ? value : fallback;\n  }\n})();\n");
+  embeddedScripts.set("modules/post-tweaks.js", function () {
+    // Durable copy of Kapybara's temporary post-display experiment.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const VERSION = "0.1.0";
+      const STYLE_ID = "cudloun-post-tweaks-style";
+      const ACTIVE_ATTR = "data-cudloun-post-tweaks";
+      const DEFAULTS = Object.freeze({
+        largerGap: false,
+        separator: false,
+        shape: "circle",
+        fit: "contain",
+        ring: "none",
+      });
+      const SHAPES = Object.freeze({
+        circle: { label: "Kruh (výchozí)", radius: "50%", aspect: "1" },
+        square: { label: "Čtverec", radius: "0", aspect: "1" },
+        "rounded-square": { label: "Zaoblený čtverec", radius: "22%", aspect: "1" },
+        rect: { label: "Obdélník 4:5", radius: "0", aspect: "4 / 5" },
+        "rounded-rect": { label: "Zaoblený 4:5", radius: "22%", aspect: "4 / 5" },
+      });
+      const FITS = Object.freeze({
+        contain: "contain (letterbox)",
+        cover: "cover (ořez)",
+      });
+      const RINGS = Object.freeze({
+        none: "Bez",
+        hairline: "1px linka",
+      });
+      const AVATAR_VARIABLES = [
+        "--🐟-avatar-radius",
+        "--🐟-avatar-aspect",
+        "--🐟-avatar-fit",
+        "--🐟-avatar-ring",
+      ];
+
+      let activeContext = null;
+      let previousVariables = null;
+
+      root.postTweaks = {
+        version: VERSION,
+        defaults: { ...DEFAULTS },
+        shapes: Object.fromEntries(Object.entries(SHAPES).map(([key, value]) => [key, { ...value }])),
+      };
+
+      root.registerModule({
+        id: "post-tweaks",
+        name: "Post Tweaks",
+        description: "Keeps Kapybara's temporary spacing, divider, and avatar controls available.",
+        version: VERSION,
+        defaultEnabled: false,
+        start(ctx) {
+          if (!root.kapyguts?.isKapybara?.()) return null;
+          activeContext = ctx;
+          captureVariables();
+          installStyle();
+          applySettings(ctx);
+          ctx.log.info("post tweaks ready", readSettings(ctx));
+          return cleanup;
+        },
+        renderSettings(ctx) {
+          const wrap = document.createElement("div");
+          wrap.className = "cudloun-settings-list";
+          wrap.appendChild(makeCheckboxRow(ctx, "Větší mezera", "largerGap", DEFAULTS.largerGap));
+          wrap.appendChild(makeCheckboxRow(ctx, "Oddělovač", "separator", DEFAULTS.separator));
+          wrap.appendChild(makeSelectRow(ctx, "Tvar ikonky", "shape", SHAPES));
+          wrap.appendChild(makeSelectRow(ctx, "Vyplnění", "fit", FITS));
+          wrap.appendChild(makeSelectRow(ctx, "Linka", "ring", RINGS));
+          return wrap;
+        },
+        renderHelp() {
+          return [
+            "This default-off module preserves the useful controls from Kapybara's temporary /test/posts page.",
+            "It reproduces Koles' 12/16 px post spacing and the same avatar radius, 4:5 aspect, contain/cover, and 1 px outline values.",
+            "Settings live in Cudloun, so they remain available if Kapybara removes the test menu. Disable the module to restore the page's previous values.",
+          ];
+        },
+      });
+
+      function readSettings(ctx) {
+        return {
+          largerGap: ctx.storage.get("largerGap", DEFAULTS.largerGap) === true,
+          separator: ctx.storage.get("separator", DEFAULTS.separator) === true,
+          shape: validChoice(ctx.storage.get("shape", DEFAULTS.shape), SHAPES, DEFAULTS.shape),
+          fit: validChoice(ctx.storage.get("fit", DEFAULTS.fit), FITS, DEFAULTS.fit),
+          ring: validChoice(ctx.storage.get("ring", DEFAULTS.ring), RINGS, DEFAULTS.ring),
+        };
+      }
+
+      function applySettings(ctx) {
+        if (!activeContext) return;
+        const settings = readSettings(ctx);
+        const html = document.documentElement;
+        const shape = SHAPES[settings.shape];
+
+        html.setAttribute(ACTIVE_ATTR, "true");
+        html.setAttribute("data-cudloun-post-tweaks-gap", settings.largerGap ? "large" : "normal");
+        html.setAttribute("data-cudloun-post-tweaks-separator", String(settings.separator));
+        html.style.setProperty("--🐟-avatar-radius", shape.radius);
+        html.style.setProperty("--🐟-avatar-aspect", shape.aspect);
+        html.style.setProperty("--🐟-avatar-fit", settings.fit);
+        html.style.setProperty("--🐟-avatar-ring", settings.ring === "hairline" ? "1px solid var(--🐟-border)" : "none");
+      }
+
+      function cleanup() {
+        const html = document.documentElement;
+        html.removeAttribute(ACTIVE_ATTR);
+        html.removeAttribute("data-cudloun-post-tweaks-gap");
+        html.removeAttribute("data-cudloun-post-tweaks-separator");
+        restoreVariables();
+        document.getElementById(STYLE_ID)?.remove();
+        activeContext = null;
+        root.log.info("post-tweaks", "removed");
+      }
+
+      function captureVariables() {
+        if (previousVariables) return;
+        const style = document.documentElement.style;
+        previousVariables = new Map(AVATAR_VARIABLES.map((name) => [name, {
+          value: style.getPropertyValue(name),
+          priority: style.getPropertyPriority(name),
+        }]));
+      }
+
+      function restoreVariables() {
+        if (!previousVariables) return;
+        const style = document.documentElement.style;
+        previousVariables.forEach(({ value, priority }, name) => {
+          if (value) style.setProperty(name, value, priority);
+          else style.removeProperty(name);
+        });
+        previousVariables = null;
+      }
+
+      function installStyle() {
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          html[${ACTIVE_ATTR}="true"] main .posts:has(> article.post){
+            --post-gap:12px!important;
+            gap:var(--post-gap)!important;
+          }
+          html[${ACTIVE_ATTR}="true"][data-cudloun-post-tweaks-gap="large"] main .posts:has(> article.post){
+            --post-gap:16px!important;
+          }
+          html[${ACTIVE_ATTR}="true"] article.post .avatar{
+            aspect-ratio:var(--🐟-avatar-aspect,1)!important;
+            border-radius:var(--🐟-avatar-radius,50%)!important;
+            outline:var(--🐟-avatar-ring,none)!important;
+            outline-offset:-1px!important;
+            height:auto!important;
+          }
+          html[${ACTIVE_ATTR}="true"] article.post .avatar img{
+            border-radius:inherit!important;
+            object-fit:var(--🐟-avatar-fit,contain)!important;
+            width:100%!important;
+            height:100%!important;
+          }
+          html[data-cudloun-classic-look="true"][${ACTIVE_ATTR}="true"] article.post{
+            border-bottom:0!important;
+          }
+          html[data-cudloun-classic-look="true"][${ACTIVE_ATTR}="true"] article.post:first-of-type{
+            border-top:0!important;
+          }
+          html[${ACTIVE_ATTR}="true"][data-cudloun-post-tweaks-separator="false"] article.post.separator-above .post-main::before{
+            content:none!important;
+          }
+          html[${ACTIVE_ATTR}="true"][data-cudloun-post-tweaks-separator="true"] main .posts>article.post+article.post .post-main::before,
+          html[${ACTIVE_ATTR}="true"][data-cudloun-post-tweaks-separator="true"] article.post.separator-above .post-main::before{
+            content:""!important;
+            top:calc(-1 * (10px + var(--post-gap,12px) / 2))!important;
+            border-top:1px solid var(--🐟-border)!important;
+            pointer-events:none!important;
+            position:absolute!important;
+            left:0!important;
+            right:0!important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      function makeCheckboxRow(ctx, label, key, fallback) {
+        const row = document.createElement("label");
+        row.className = "cudloun-setting-row";
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = label;
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = ctx.storage.get(key, fallback) === true;
+        input.addEventListener("change", () => {
+          ctx.storage.set(key, input.checked);
+          applySettings(ctx);
+        });
+        row.append(text, input);
+        return row;
+      }
+
+      function makeSelectRow(ctx, label, key, choices) {
+        const row = document.createElement("label");
+        row.className = "cudloun-setting-row";
+        const text = document.createElement("span");
+        text.className = "cudloun-setting-text";
+        text.textContent = label;
+        const select = document.createElement("select");
+        select.className = "cudloun-setting-select";
+        const fallback = DEFAULTS[key];
+        const current = validChoice(ctx.storage.get(key, fallback), choices, fallback);
+        Object.entries(choices).forEach(([value, config]) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = typeof config === "string" ? config : config.label;
+          select.appendChild(option);
+        });
+        select.value = current;
+        select.addEventListener("change", () => {
+          ctx.storage.set(key, select.value);
+          applySettings(ctx);
+        });
+        row.append(text, select);
+        return row;
+      }
+
+      function validChoice(value, choices, fallback) {
+        return typeof value === "string" && Object.prototype.hasOwnProperty.call(choices, value) ? value : fallback;
       }
     })();
 
