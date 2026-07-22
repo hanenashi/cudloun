@@ -43,6 +43,7 @@ It exposes:
 - `allPosts()`
 - `visiblePosts()`
 - `postParts(post)`
+- `pageChromeParts()`
 - `pageHeader()`
 - `pageHeaderParts()`
 - `avatarMenuParts()`
@@ -170,6 +171,26 @@ scrolls away. At mobile width, the global page header scrolls away and the
 board title row becomes the sticky toolbar at `top: 0`. Use `pageHeaderParts()`
 for the desktop header and its native action group, and `boardHeaderParts()` for
 the mobile board toolbar, so modules do not repeat that responsive lookup.
+
+## Viewport Edge Stripes
+
+Observed on desktop on 2026-07-22 in the `kapybara` board:
+
+```text
+.🐟-stripes
+```
+
+This decorative `aria-hidden` element is fixed across the viewport at
+`z-index: 2000`. Its native `linear-gradient` paints 12 px blue strips at the
+far left and right edges. It is not an `html`/`body` border, which makes it easy
+to miss while inspecting the page shell. At mobile width the same element
+remains present, but its computed background image is `none`.
+
+Kapyguts owns this exceptional emoji-prefixed hook as
+`selectors.viewportStripes`. Use `pageChromeParts()` to obtain
+`viewportStripes`, `stripeBackground`, and `stripesActive` instead of repeating
+the selector in feature modules. `inspect()` exposes the same facts under
+`pageChrome`.
 
 ## Native Font Settings (Temporary Experiment)
 
@@ -319,6 +340,9 @@ Kapybara currently uses some semantic classes plus generated emoji-prefixed scop
 ```
 
 Use the semantic classes first. Do not rely on the generated classes unless there is no alternative and the tweak is explicitly experimental.
+
+The known exception is `.🐟-stripes`: it has no semantic alternative and is
+centralized behind Kapyguts' `viewportStripes` selector.
 
 ## Update Discipline
 

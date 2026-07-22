@@ -23,7 +23,7 @@ function loadModule() {
 test("Classic Look registers as an opt-in presentation module", () => {
   const { registered } = loadModule();
   assert.equal(registered.id, "classic-look");
-  assert.equal(registered.version, "0.1.1");
+  assert.equal(registered.version, "0.1.2");
   assert.equal(registered.defaultEnabled, false);
   assert.equal(typeof registered.start, "function");
 });
@@ -41,7 +41,8 @@ test("Classic Look styles only semantic Kapybara post parts", () => {
   [".🐟-stripes", "article.post", ".avatar-col", ".post-header", ".author", ".body", ".actions", ".reply-ref"].forEach((selector) => {
     assert.match(source, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
-  assert.match(source, /\.🐟-stripes\{\s*background:none!important;/u);
+  assert.match(source, /kapyguts\?\.selectors\?\.viewportStripes/u);
+  assert.match(source, /\$\{VIEWPORT_STRIPES_SELECTOR\}\{\s*background:none!important;/u);
   assert.doesNotMatch(source, /🇸-/u);
 });
 

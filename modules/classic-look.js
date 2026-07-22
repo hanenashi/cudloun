@@ -5,7 +5,8 @@
   const root = window.Cudloun;
   const STYLE_ID = "cudloun-classic-look-style";
   const THEME_ATTR = "data-cudloun-classic-look";
-  const VERSION = "0.1.1";
+  const VERSION = "0.1.2";
+  const VIEWPORT_STRIPES_SELECTOR = root.kapyguts?.selectors?.viewportStripes || ".🐟-stripes";
   const TOKENS = Object.freeze({
     fontFamily: "Verdana, \"Bitstream Vera Sans\", Arial, sans-serif",
     baseSize: "15px",
@@ -79,7 +80,7 @@
         font-size:${TOKENS.baseSize};
         line-height:1.5;
       }
-      html[${THEME_ATTR}="true"] .🐟-stripes{
+      html[${THEME_ATTR}="true"] ${VIEWPORT_STRIPES_SELECTOR}{
         background:none!important;
         background-image:none!important;
       }

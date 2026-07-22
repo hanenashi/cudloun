@@ -3,8 +3,9 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.2.0";
+  const VERSION = "0.3.0";
   const SELECTORS = {
+    viewportStripes: ".🐟-stripes",
     pageHeader: "header:not(.board-header):not(.post-header)",
     pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
     pageHeaderDesktopActions: ".desktop-right",
@@ -93,6 +94,7 @@
     allPosts,
     visiblePosts,
     postParts,
+    pageChromeParts,
     pageHeader,
     pageHeaderParts,
     avatarMenuParts,
@@ -183,6 +185,17 @@
 
   function visiblePosts(scope = document) {
     return allPosts(scope).filter(isVisible);
+  }
+
+  function pageChromeParts(scope = document) {
+    const viewportStripes = scope.querySelector(SELECTORS.viewportStripes);
+    const stripeStyle = viewportStripes ? window.getComputedStyle(viewportStripes) : null;
+    const stripeBackground = stripeStyle?.backgroundImage || "";
+    return {
+      viewportStripes,
+      stripeBackground,
+      stripesActive: !!viewportStripes && stripeBackground !== "none",
+    };
   }
 
   function pageHeader(scope = document) {
@@ -407,6 +420,7 @@
     const posts = visiblePosts();
     const menus = visibleMenus();
     const fontSettings = fontSettingsState();
+    const pageChrome = pageChromeParts();
     return {
       version: VERSION,
       isKapybara: isKapybara(),
@@ -433,6 +447,12 @@
         readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
         visibleMenus: menus.length,
         nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,
+        viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,
+      },
+      pageChrome: {
+        hasViewportStripes: !!pageChrome.viewportStripes,
+        stripeBackground: pageChrome.stripeBackground,
+        stripesActive: pageChrome.stripesActive,
       },
       fontSettings,
       posts: posts.slice(0, 12).map((post, index) => summarizePost(post, index)),

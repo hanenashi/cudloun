@@ -29,6 +29,9 @@ function loadModule(search = "?k=chatk_colit") {
       hash: "",
       href: `https://kapybara.okoun.cz/test/fonts${search}`,
     },
+    getComputedStyle(element) {
+      return { backgroundImage: element.backgroundImage || "none" };
+    },
   };
   const context = { window, document, URLSearchParams, console };
   vm.createContext(context);
@@ -39,9 +42,22 @@ function loadModule(search = "?k=chatk_colit") {
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.2.0");
+  assert.equal(kapyguts.version, "0.3.0");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
+});
+
+test("Kapyguts owns the viewport edge-stripe painter", () => {
+  const kapyguts = loadModule();
+  const stripes = node();
+  stripes.backgroundImage = "linear-gradient(to right, blue 0 12px, transparent 12px)";
+  const scope = node({ one: { ".🐟-stripes": stripes } });
+
+  const parts = kapyguts.pageChromeParts(scope);
+  assert.equal(kapyguts.selectors.viewportStripes, ".🐟-stripes");
+  assert.equal(parts.viewportStripes, stripes);
+  assert.equal(parts.stripesActive, true);
+  assert.match(parts.stripeBackground, /linear-gradient/);
 });
 
 test("Kapyguts maps native font controls without relying on layout order", () => {
