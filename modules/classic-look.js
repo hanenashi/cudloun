@@ -5,7 +5,7 @@
   const root = window.Cudloun;
   const STYLE_ID = "cudloun-classic-look-style";
   const THEME_ATTR = "data-cudloun-classic-look";
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const TOKENS = Object.freeze({
     fontFamily: "Verdana, \"Bitstream Vera Sans\", Arial, sans-serif",
     baseSize: "15px",
@@ -78,6 +78,10 @@
         font-family:${TOKENS.fontFamily}!important;
         font-size:${TOKENS.baseSize};
         line-height:1.5;
+      }
+      html[${THEME_ATTR}="true"] .🐟-stripes{
+        background:none!important;
+        background-image:none!important;
       }
       html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav.mobile-bottom-nav,section.new-post-composer,section.reply-composer),
       html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav.mobile-bottom-nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){

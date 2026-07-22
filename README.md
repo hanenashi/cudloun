@@ -101,6 +101,11 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.22 TL;DR
+
+- Classic Look now removes Kapybara's fixed `🐟-stripes` gradient, the hidden
+  painter responsible for the 12 px blue strips at both viewport edges.
+
 ## Version 0.6.21 TL;DR
 
 - Added a default-disabled Classic Look module with measured classic Okoun
