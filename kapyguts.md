@@ -54,7 +54,47 @@ It exposes:
 - `postDisplayState()`
 - `visibleMenus(kind)`
 - `visiblePostMenus()`
+- `allComposers()`
+- `composerParts(section)`
+- `observeComposers(callback, scope, onRemoved)`
+- `explain(element)`
 - `inspect()`
+
+## Selector Coach
+
+Select an element in DevTools and pass the console's `$0` reference to:
+
+```js
+Cudloun.kapyguts.explain($0)
+```
+
+The read-only result contains:
+
+```js
+{
+  ok: true,
+  component: "post body",
+  element: $0,
+  target: /* nearest recognized component */,
+  recommendedSelector: "article.post .body",
+  selector: "article.post .body",
+  avoid: [".🐟-content", ".🇸-trfpop"],
+  notes: [/* short Czech guidance */],
+  css: "article.post .body {\n  /* vlastní styl */\n}"
+}
+```
+
+Known mappings cover post parts, composers, global and board headers, mobile
+navigation, Favorites rows, messages, test settings panels, viewport stripes,
+and legacy classic-Okoun `div.code` blocks. Selecting a descendant is enough:
+Kapyguts walks to the nearest recognized component and returns that node as
+`target`.
+
+Classes beginning with `🇸-` and internal `🐟-` classes are reported under
+`avoid`. The mapped `.🐟-stripes` viewport painter is the intentional
+exception. For unknown elements, Kapyguts only constructs conservative
+fallbacks from a stable ID, `data-testid`, `aria-label`, or `role`; otherwise
+it returns `ok: false` instead of suggesting an unsafe generic selector.
 
 ## Access Notes
 

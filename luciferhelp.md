@@ -110,15 +110,15 @@ Okoun.
 - počítat s tím, že `.post.unread.read` je přechodná kombinace stavových tříd
   a nemusí příspěvek označovat trvale.
 
-## Možné další vylepšení Kapyguts
+## Vysvětlení označeného prvku
 
-Užitečná budoucí funkce by byla:
+Kapyguts 0.5.0 umí poradit přímo s prvkem označeným v inspectoru:
 
 ```js
 Cudloun.kapyguts.explain($0);
 ```
 
-Po označení libovolného prvku inspectorem by mohla vrátit například:
+Po označení libovolného prvku vrátí například:
 
 ```js
 {
@@ -129,15 +129,20 @@ Po označení libovolného prvku inspectorem by mohla vrátit například:
 }
 ```
 
-Tato funkce zatím v Kapyguts není. Smyslem by bylo zjednodušit celý postup na:
-ukázat na problematický prvek, zavolat `explain($0)`, zkopírovat doporučený
-selektor a pokračovat ve skinování.
+Výsledek obsahuje rozpoznanou součást Kapybary, skutečný cílový element,
+doporučený selektor, křehké třídy v poli `avoid`, krátké poznámky a hotovou
+CSS kostru. Pokud Kapyguts prvek nezná, poradí jen tehdy, když lze bezpečně
+použít jeho ID, `data-testid`, `aria-label` nebo roli. Jinak raději přizná, že
+bezpečný selektor nemá.
+
+Postup je tedy: ukázat na problematický prvek, zavolat `explain($0)`,
+zkopírovat `css` nebo `recommendedSelector` a pokračovat ve skinování.
 
 ## Krátká verze pro Lucifera
 
 > Kapyguts je živá mapa Kapybary uvnitř Cudlounu. Skin za tebe nenapíše, ale
 > nemusíš pokaždé lovit, pod jakou třídou je hlavička, příspěvek, avatar nebo
 > modré okraje. V konzoli zkus `const kg = Cudloun.kapyguts`, potom
-> `kg.inspect()` nebo `kg.postParts(kg.visiblePosts()[0])`. Vypsané elementy
+> `kg.explain($0)`, `kg.inspect()` nebo `kg.postParts(kg.visiblePosts()[0])`. Vypsané elementy
 > jsou rozklikávací přímo do inspectoru. Používej hlavně `.post`,
 > `.post-header`, `.body`, `.composer` a vyhýbej se třídám `🇸-něco`.

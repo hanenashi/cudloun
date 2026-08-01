@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun;
-  const VERSION = "0.4.0";
+  const VERSION = "0.5.0";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:not(.board-header):not(.post-header)",
@@ -48,6 +48,7 @@
     composerImageButton: "button[aria-label='Vložit obrázek']",
     composerModeToggle: "button.mode-toggle[aria-pressed]",
     composerMarkdownNode: "code[data-language='markdown']",
+    composerTitleInput: "section.new-post-composer input[type='text']",
     fontSettingsPanel: ".fs-panel[role='dialog'][aria-labelledby='fs-title']",
     fontSettingsCopyButton: "button.fs-copy",
     fontSettingsCloseButton: "button.fs-close[aria-label='Zavřít']",
@@ -111,6 +112,53 @@
     },
   };
 
+  const EXPLAIN_RULES = [
+    rule("legacy code block", "article.post .body > .code", "article.post .body > .code", [
+      "Klasický Okoun ukládá blok kódu jako div.code; pro zachování řádků použijte white-space: pre-wrap.",
+    ]),
+    rule("post Markdown body", "article.post .body .markdown", "article.post .body .markdown"),
+    rule("post reply metadata", `article.post ${SELECTORS.replyMeta}`, `article.post ${SELECTORS.replyMeta}`),
+    rule("post reply button", `article.post ${SELECTORS.replyButton}`, `article.post ${SELECTORS.replyButton}`),
+    rule("post menu button", `article.post ${SELECTORS.postMenuButton}`, `article.post ${SELECTORS.postMenuButton}`),
+    rule("post date", `article.post ${SELECTORS.dateButton}`, `article.post ${SELECTORS.dateButton}`),
+    rule("post actions", `article.post ${SELECTORS.actions}`, `article.post ${SELECTORS.actions}`),
+    rule("post metadata", `article.post ${SELECTORS.meta}`, `article.post ${SELECTORS.meta}`),
+    rule("post author", `article.post ${SELECTORS.author}`, `article.post ${SELECTORS.author}`),
+    rule("post header", `article.post ${SELECTORS.header}`, `article.post ${SELECTORS.header}`),
+    rule("post avatar image", `article.post ${SELECTORS.avatarImage}`, `article.post ${SELECTORS.avatarImage}`),
+    rule("post avatar", `article.post ${SELECTORS.avatar}`, `article.post ${SELECTORS.avatar}`),
+    rule("post avatar column", `article.post ${SELECTORS.avatarColumn}`, `article.post ${SELECTORS.avatarColumn}`),
+    rule("post body", `article.post ${SELECTORS.body}`, `article.post ${SELECTORS.body}`),
+    rule("post content", `article.post ${SELECTORS.content}`, `article.post ${SELECTORS.content}`),
+    rule("post", SELECTORS.boardPost, SELECTORS.boardPost),
+    rule("composer Markdown source", SELECTORS.composerMarkdownNode, SELECTORS.composerMarkdownNode),
+    rule("composer editable", SELECTORS.composerEditable, SELECTORS.composerEditable),
+    rule("composer mode switch", SELECTORS.composerModeToggle, SELECTORS.composerModeToggle),
+    rule("composer image button", SELECTORS.composerImageButton, SELECTORS.composerImageButton),
+    rule("composer title input", SELECTORS.composerTitleInput, SELECTORS.composerTitleInput),
+    rule("composer toolbar", SELECTORS.composerToolbar, SELECTORS.composerToolbar),
+    rule("composer editor", SELECTORS.composerEditor, SELECTORS.composerEditor),
+    rule("composer", SELECTORS.composer, SELECTORS.composer),
+    rule("new-post composer", SELECTORS.newPostComposer, SELECTORS.newPostComposer),
+    rule("reply composer", SELECTORS.replyComposer, SELECTORS.replyComposer),
+    rule("board header actions", SELECTORS.boardTitleActions, SELECTORS.boardTitleActions),
+    rule("board title link", SELECTORS.boardTitleLink, SELECTORS.boardTitleLink),
+    rule("board title row", SELECTORS.boardTitleRow, SELECTORS.boardTitleRow),
+    rule("board header", SELECTORS.boardHeader, SELECTORS.boardHeader),
+    rule("page-header logo", `${SELECTORS.pageHeader} :is(${SELECTORS.pageHeaderLogo})`, `${SELECTORS.pageHeader} :is(${SELECTORS.pageHeaderLogo})`),
+    rule("page-header actions", `${SELECTORS.pageHeader} ${SELECTORS.pageHeaderDesktopActions}`, `${SELECTORS.pageHeader} ${SELECTORS.pageHeaderDesktopActions}`),
+    rule("page header", SELECTORS.pageHeader, SELECTORS.pageHeader),
+    rule("viewport stripes", SELECTORS.viewportStripes, SELECTORS.viewportStripes, [
+      ".🐟-stripes je výjimečný záměrně mapovaný selektor; zde jej lze bezpečně použít.",
+    ]),
+    rule("mobile bottom navigation", SELECTORS.mobileBottomNav, SELECTORS.mobileBottomNav),
+    rule("Favorites board row", SELECTORS.favoriteBoardRow, SELECTORS.favoriteBoardRow),
+    rule("message card", SELECTORS.messageCard, SELECTORS.messageCard),
+    rule("message item", SELECTORS.messageItem, SELECTORS.messageItem),
+    rule("font-settings panel", SELECTORS.fontSettingsPanel, SELECTORS.fontSettingsPanel),
+    rule("post-display panel", SELECTORS.postDisplayPanel, SELECTORS.postDisplayPanel),
+  ];
+
   const kapyguts = {
     version: VERSION,
     selectors: SELECTORS,
@@ -141,6 +189,7 @@
     allComposers,
     composerParts,
     observeComposers,
+    explain,
     inspect,
   };
 
@@ -502,6 +551,49 @@
     };
   }
 
+  function explain(element) {
+    if (!isElementLike(element)) {
+      return {
+        ok: false,
+        component: "unknown",
+        element: null,
+        target: null,
+        recommendedSelector: "",
+        selector: "",
+        avoid: [],
+        notes: ["Nejdřív označte prvek v inspectoru a zavolejte Cudloun.kapyguts.explain($0)."],
+        css: "",
+      };
+    }
+
+    const matched = EXPLAIN_RULES.map((candidate) => ({
+      rule: candidate,
+      target: safeClosest(element, candidate.anchor),
+    })).find((candidate) => candidate.target);
+    const target = matched?.target || element;
+    const recommendedSelector = matched?.rule.selector || fallbackSelector(target);
+    const avoid = fragileClassesBetween(element, target);
+    const notes = [...(matched?.rule.notes || [])];
+    if (avoid.length) {
+      notes.push("Třídy uvedené v avoid jsou generované nebo interní; do trvalého skinu je raději nekopírujte.");
+    }
+    if (!recommendedSelector) {
+      notes.push("Pro tento prvek nebyl nalezen dostatečně bezpečný selektor; zkuste označit jeho sémantického rodiče.");
+    }
+
+    return {
+      ok: !!recommendedSelector,
+      component: matched?.rule.component || "unknown element",
+      element,
+      target,
+      recommendedSelector,
+      selector: recommendedSelector,
+      avoid,
+      notes,
+      css: recommendedSelector ? `${recommendedSelector} {\n  /* vlastní styl */\n}` : "",
+    };
+  }
+
   function inspect() {
     const posts = visiblePosts();
     const menus = visibleMenus();
@@ -668,5 +760,60 @@
 
   function normalizeText(text) {
     return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function rule(component, anchor, selector, notes = []) {
+    return { component, anchor, selector, notes };
+  }
+
+  function isElementLike(value) {
+    return !!value && value.nodeType === 1 && typeof value.closest === "function";
+  }
+
+  function safeClosest(element, selector) {
+    try {
+      return element.closest(selector);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function fragileClassesBetween(element, target) {
+    const found = new Set();
+    let current = element;
+    while (isElementLike(current)) {
+      Array.from(current.classList || []).forEach((className) => {
+        if (
+          className.startsWith("🇸-") ||
+          (className.startsWith("🐟-") && className !== "🐟-stripes")
+        ) found.add(`.${className}`);
+      });
+      if (current === target) break;
+      current = current.parentElement;
+    }
+    return Array.from(found);
+  }
+
+  function fallbackSelector(element) {
+    const tag = String(element.tagName || "").toLocaleLowerCase("en");
+    if (!tag) return "";
+    const id = element.getAttribute?.("id") || "";
+    if (id && !/^c\d+$/i.test(id)) return `#${escapeIdentifier(id)}`;
+    const testId = element.getAttribute?.("data-testid") || "";
+    if (testId) return `${tag}[data-testid="${escapeAttribute(testId)}"]`;
+    const ariaLabel = element.getAttribute?.("aria-label") || "";
+    if (ariaLabel) return `${tag}[aria-label="${escapeAttribute(ariaLabel)}"]`;
+    const role = element.getAttribute?.("role") || "";
+    if (role) return `${tag}[role="${escapeAttribute(role)}"]`;
+    return "";
+  }
+
+  function escapeIdentifier(value) {
+    if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(value);
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, (character) => `\\${character}`);
+  }
+
+  function escapeAttribute(value) {
+    return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
 })();

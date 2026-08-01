@@ -103,6 +103,17 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.25 TL;DR
+
+- Kapyguts 0.5.0 adds `explain(element)`: select a Kapybara element in DevTools
+  and run `Cudloun.kapyguts.explain($0)` to receive its known component, a
+  stable recommended selector, fragile classes to avoid, guidance notes, and a
+  ready-to-copy CSS skeleton.
+- The selector coach recognizes posts, composers, headers, navigation,
+  Favorites, messages, settings panels, viewport stripes, and classic Okoun
+  `div.code` blocks. Unknown elements receive only conservative ID,
+  `data-testid`, ARIA-label, or role fallbacks.
+
 ## Version 0.6.24 TL;DR
 
 - Added default-disabled Post Tweaks with Koles' native 12/16 px post spacing,

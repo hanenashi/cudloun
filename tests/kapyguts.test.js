@@ -40,11 +40,69 @@ function loadModule(search = "?k=chatk_colit", pathname = "/test/fonts") {
   return Cudloun.kapyguts;
 }
 
+function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } = {}) {
+  return {
+    nodeType: 1,
+    tagName: tag,
+    classList: classes,
+    parentElement: null,
+    getAttribute(name) { return attrs[name] ?? null; },
+    closest(selector) { return closest[selector] || null; },
+  };
+}
+
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.4.0");
+  assert.equal(kapyguts.version, "0.5.0");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
+});
+
+test("Kapyguts explains known components with stable selectors and CSS skeletons", () => {
+  const kapyguts = loadModule();
+  const body = explainElement({ classes: ["body", "🐟-content", "🇸-trfpop"] });
+  const paragraph = explainElement({ tag: "P", classes: ["🇸-paragraph"] });
+  paragraph.parentElement = body;
+  paragraph.closest = (selector) => selector === "article.post .body" ? body : null;
+
+  const result = kapyguts.explain(paragraph);
+  assert.equal(result.ok, true);
+  assert.equal(result.component, "post body");
+  assert.equal(result.element, paragraph);
+  assert.equal(result.target, body);
+  assert.equal(result.recommendedSelector, "article.post .body");
+  assert.equal(result.selector, "article.post .body");
+  assert.deepEqual(Array.from(result.avoid), [".🇸-paragraph", ".🐟-content", ".🇸-trfpop"]);
+  assert.match(result.notes.join(" "), /generované nebo interní/);
+  assert.equal(result.css, "article.post .body {\n  /* vlastní styl */\n}");
+});
+
+test("Kapyguts identifies classic code blocks and explains their whitespace fix", () => {
+  const kapyguts = loadModule();
+  const legacyCode = explainElement({ classes: ["code", "🇸-legacy"] });
+  legacyCode.closest = (selector) => selector === "article.post .body > .code" ? legacyCode : null;
+
+  const result = kapyguts.explain(legacyCode);
+  assert.equal(result.component, "legacy code block");
+  assert.equal(result.recommendedSelector, "article.post .body > .code");
+  assert.match(result.notes.join(" "), /white-space: pre-wrap/);
+  assert.deepEqual(Array.from(result.avoid), [".🇸-legacy"]);
+});
+
+test("Kapyguts uses conservative accessible fallbacks and handles missing selections", () => {
+  const kapyguts = loadModule();
+  const button = explainElement({
+    tag: "BUTTON",
+    attrs: { "aria-label": "Vlastní ovládání" },
+  });
+  const fallback = kapyguts.explain(button);
+  assert.equal(fallback.component, "unknown element");
+  assert.equal(fallback.recommendedSelector, 'button[aria-label="Vlastní ovládání"]');
+
+  const missing = kapyguts.explain(null);
+  assert.equal(missing.ok, false);
+  assert.equal(missing.recommendedSelector, "");
+  assert.match(missing.notes[0], /explain\(\$0\)/);
 });
 
 test("Kapyguts maps the temporary post-display route and labeled controls", () => {
