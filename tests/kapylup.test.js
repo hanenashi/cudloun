@@ -13,7 +13,7 @@ test("Kapylup is an installable Kapybara userscript pinned to the canonical Kapy
   const runtimeVersion = source.match(/const VERSION = "([^"]+)"/)?.[1];
   const requireVersion = source.match(/modules\/sys-kapyguts\.js\?v=([^\s]+)/)?.[1];
 
-  assert.equal(metadataVersion, "0.1.0");
+  assert.equal(metadataVersion, "0.1.1");
   assert.equal(runtimeVersion, metadataVersion);
   assert.equal(requireVersion, manifest.version);
   assert.match(source, /^\/\/ @match\s+https:\/\/kapybara\.okoun\.cz\/\*$/m);
@@ -33,6 +33,11 @@ test("Kapylup provides keyboard and pointer selection without intercepting edito
   assert.match(source, /event\.preventDefault\(\);\s*event\.stopImmediatePropagation\(\);\s*inspectElement\(element\)/);
   assert.match(source, /toggleAttribute\("data-kapylup-selecting", state\.selecting\)/);
   assert.match(source, /cursor: crosshair !important/);
+  assert.match(source, /document\.elementsFromPoint\(x, y\)/);
+  assert.match(source, /document\.addEventListener\("wheel", handleSelectionWheel, \{ capture: true, passive: false \}\)/);
+  assert.match(source, /function cycleCandidate\(direction\)/);
+  assert.match(source, /function cycleHierarchy\(direction\)/);
+  assert.match(source, /state\.hoveredElement \|\| event\.composedPath\(\)/);
 });
 
 test("Kapylup inspector window is isolated, draggable, resizable, and copy-oriented", () => {
@@ -48,6 +53,11 @@ test("Kapylup inspector window is isolated, draggable, resizable, and copy-orien
   assert.match(source, /console\.groupCollapsed\(`/);
   assert.match(source, /console\.log\("Selected element:", result\.element\)/);
   assert.match(source, /console\.log\("Kapyguts target:", result\.target\)/);
+  assert.match(source, /data-cycle="previous"/);
+  assert.match(source, /data-cycle="next"/);
+  assert.match(source, /data-cycle="parent"/);
+  assert.match(source, /data-cycle="child"/);
+  assert.match(source, /data-cycle="confirm"/);
 });
 
 test("Kapylup settings are reachable from the userscript manager and expose version and panel policy", () => {
@@ -55,10 +65,22 @@ test("Kapylup settings are reachable from the userscript manager and expose vers
   assert.match(source, /Kapylup: přepnout výběr prvku/);
   assert.match(source, /Kapylup: ukázat\/skrýt okno/);
   assert.match(source, /data-setting="hotkey"/);
+  assert.match(source, /data-setting="cycle-previous"/);
+  assert.match(source, /data-setting="cycle-next"/);
+  assert.match(source, /cyclePreviousKey: "\["/);
+  assert.match(source, /cycleNextKey: "\]"/);
   assert.match(source, /data-setting="show-panel"/);
   assert.match(source, /showPanelOnSelection/);
   assert.match(source, /Verze Kapylupu/);
   assert.match(source, /Zdroj překladu/);
   assert.match(source, /GM_getValue/);
   assert.match(source, /GM_setValue/);
+});
+
+test("Kapylup includes concise Czech help for selection and overlapping elements", () => {
+  assert.match(source, /data-action="help"/);
+  assert.match(source, /Kapylup · nápověda/);
+  assert.match(source, /Překrývající se prvky/);
+  assert.match(source, /Kolečkem myši/);
+  assert.match(source, /Kopírovat vše/);
 });

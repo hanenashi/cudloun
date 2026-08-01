@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Kapylup
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.1.0
+// @version      0.1.1
 // @description  Interactive Kapyguts-powered Kapybara element explorer.
 // @author       hanenashi
 // @match        https://kapybara.okoun.cz/*
 // @run-at       document-idle
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.26
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.27
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @grant        GM_getValue
@@ -22,10 +22,12 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.1.0";
+  const VERSION = "0.1.1";
   const SETTINGS_KEY = "kapylup.settings.v1";
   const DEFAULTS = Object.freeze({
     hotkey: "K",
+    cyclePreviousKey: "[",
+    cycleNextKey: "]",
     showPanelOnSelection: true,
     panel: { left: 24, top: 72, width: 430, height: 560 },
   });
@@ -43,10 +45,15 @@
     panelBody: null,
     panelTitle: null,
     modeBadge: null,
+    cycleNav: null,
     highlight: null,
     cursorStyle: null,
     hoverFrame: 0,
+    lastWheelCycle: 0,
     hoveredElement: null,
+    candidates: [],
+    candidateIndex: -1,
+    pointer: { x: 0, y: 0 },
     badgeTimer: 0,
     saveGeometryTimer: 0,
     resizeObserver: null,
@@ -120,7 +127,7 @@
         .window[data-visible="true"] { display: grid; grid-template-rows: auto minmax(0,1fr); }
         .window-header {
           display: grid;
-          grid-template-columns: minmax(0,1fr) auto auto auto;
+          grid-template-columns: minmax(0,1fr) auto auto auto auto;
           align-items: center;
           min-height: 38px;
           padding-left: 10px;
@@ -200,6 +207,35 @@
           pointer-events: none;
         }
         .mode-badge[data-visible="true"] { display: block; }
+        .cycle-nav {
+          position: fixed;
+          left: 12px;
+          bottom: max(12px, env(safe-area-inset-bottom));
+          display: none;
+          align-items: center;
+          gap: 4px;
+          padding: 4px;
+          border: 1px solid #66513a;
+          border-radius: 2px;
+          background: rgba(18,19,20,.96);
+          box-shadow: 0 4px 18px rgba(0,0,0,.42);
+          pointer-events: auto;
+        }
+        .cycle-nav[data-visible="true"] { display: flex; }
+        .cycle-button {
+          min-width: 34px;
+          min-height: 34px;
+          padding: 3px 7px;
+          border: 1px solid #544536;
+          border-radius: 2px;
+          background: #24211e;
+          color: #ffd8a4;
+          font: 700 13px/1 system-ui,sans-serif;
+          cursor: pointer;
+        }
+        .cycle-button:hover, .cycle-button:focus-visible { border-color: #e38a2f; outline: none; }
+        .help-list { margin: 8px 0 14px; padding-left: 20px; }
+        .help-list li { margin: 0 0 7px; }
         .settings-row { display: grid; gap: 5px; margin: 0 0 14px; }
         .settings-row > span { color: #d6cec4; font: 600 12px/1.3 system-ui,sans-serif; }
         .hotkey-input { min-height: 38px; padding: 7px 9px; text-align: center; }
@@ -208,18 +244,27 @@
         @media (max-width: 520px) {
           .window { min-width: 260px; }
           .version { display: none; }
+          .mode-badge { right: 12px; bottom: max(58px, calc(env(safe-area-inset-bottom) + 58px)); }
         }
       </style>
       <section class="window" role="dialog" aria-label="Kapylup inspector" data-visible="false">
         <header class="window-header">
           <span class="window-title">Kapylup</span>
           <span class="version">v${VERSION}</span>
+          <button class="header-button" type="button" data-action="help" aria-label="Nápověda Kapylupu" title="Nápověda">?</button>
           <button class="header-button" type="button" data-action="settings" aria-label="Nastavení Kapylupu" title="Nastavení">⚙</button>
           <button class="header-button" type="button" data-action="close" aria-label="Skrýt Kapylup" title="Skrýt">×</button>
         </header>
         <div class="window-body"></div>
       </section>
       <div class="mode-badge" role="status" aria-live="polite" data-visible="false"></div>
+      <nav class="cycle-nav" aria-label="Výběr překrývajících se prvků" data-visible="false">
+        <button class="cycle-button" type="button" data-cycle="previous" aria-label="Předchozí překrývající se prvek" title="Předchozí prvek">‹</button>
+        <button class="cycle-button" type="button" data-cycle="next" aria-label="Další překrývající se prvek" title="Další prvek">›</button>
+        <button class="cycle-button" type="button" data-cycle="parent" aria-label="Rodičovský prvek" title="Rodič">↑</button>
+        <button class="cycle-button" type="button" data-cycle="child" aria-label="Vnořený prvek" title="Potomek">↓</button>
+        <button class="cycle-button" type="button" data-cycle="confirm" aria-label="Potvrdit zvýrazněný prvek" title="Vybrat">✓</button>
+      </nav>
     `;
     document.documentElement.appendChild(host);
 
@@ -250,6 +295,7 @@
     state.panelBody = shadow.querySelector(".window-body");
     state.panelTitle = shadow.querySelector(".window-title");
     state.modeBadge = shadow.querySelector(".mode-badge");
+    state.cycleNav = shadow.querySelector(".cycle-nav");
     state.highlight = highlight;
     state.cursorStyle = cursorStyle;
     applyPanelGeometry();
@@ -259,6 +305,7 @@
   function installEvents() {
     document.addEventListener("keydown", handleGlobalKeydown, true);
     document.addEventListener("pointermove", handlePointerMove, true);
+    document.addEventListener("wheel", handleSelectionWheel, { capture: true, passive: false });
     document.addEventListener("click", handleSelectionClick, true);
     window.addEventListener("resize", clampPanelGeometry);
   }
@@ -268,11 +315,23 @@
       const action = event.target.closest?.("[data-action]")?.dataset.action;
       if (action === "close") hidePanel();
       if (action === "settings") openSettings();
+      if (action === "help") renderHelp();
       if (action === "toggle") toggleSelection();
       if (action === "copy") void handleCopy(event.target.dataset.copy);
       if (action === "save-settings") void saveSettingsFromPanel();
       if (action === "reset-hotkey") setHotkeyDraft("K");
+      if (action === "reset-cycle-keys") {
+        setHotkeyDraft("[", "cycle-previous");
+        setHotkeyDraft("]", "cycle-next");
+      }
       if (action === "back") state.result ? renderInspector() : renderWelcome();
+
+      const cycle = event.target.closest?.("[data-cycle]")?.dataset.cycle;
+      if (cycle === "previous") cycleCandidate(-1);
+      if (cycle === "next") cycleCandidate(1);
+      if (cycle === "parent") cycleHierarchy(1);
+      if (cycle === "child") cycleHierarchy(-1);
+      if (cycle === "confirm" && state.hoveredElement) inspectElement(state.hoveredElement);
     });
 
     const header = state.shadow.querySelector(".window-header");
@@ -291,7 +350,20 @@
       return;
     }
     if (isEditableEvent(event) || event.repeat) return;
-    if (eventHotkey(event) !== state.settings.hotkey) return;
+    const hotkey = eventHotkey(event);
+    if (state.selecting && hotkey === state.settings.cyclePreviousKey) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      cycleCandidate(-1);
+      return;
+    }
+    if (state.selecting && hotkey === state.settings.cycleNextKey) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      cycleCandidate(1);
+      return;
+    }
+    if (hotkey !== state.settings.hotkey) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     toggleSelection();
@@ -299,23 +371,77 @@
 
   function handlePointerMove(event) {
     if (!state.selecting || event.composedPath().includes(state.uiHost)) return;
-    const element = event.composedPath().find((node) => node instanceof Element && !isKapylupElement(node));
-    if (!element) return;
-    state.hoveredElement = element;
+    state.pointer = { x: event.clientX, y: event.clientY };
     if (state.hoverFrame) return;
     state.hoverFrame = requestAnimationFrame(() => {
       state.hoverFrame = 0;
-      highlightElement(state.hoveredElement);
+      refreshCandidateStack(state.pointer.x, state.pointer.y);
     });
+  }
+
+  function handleSelectionWheel(event) {
+    if (!state.selecting || event.composedPath().includes(state.uiHost) || !event.deltaY) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const now = performance.now();
+    if (now - state.lastWheelCycle < 80) return;
+    state.lastWheelCycle = now;
+    if (!state.candidates.length) refreshCandidateStack(event.clientX, event.clientY);
+    cycleCandidate(event.deltaY > 0 ? 1 : -1);
   }
 
   function handleSelectionClick(event) {
     if (!state.selecting || event.composedPath().includes(state.uiHost)) return;
-    const element = event.composedPath().find((node) => node instanceof Element && !isKapylupElement(node));
+    if (!state.candidates.length) refreshCandidateStack(event.clientX, event.clientY);
+    const element = state.hoveredElement || event.composedPath().find((node) => node instanceof Element && !isKapylupElement(node));
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     inspectElement(element);
+  }
+
+  function refreshCandidateStack(x, y) {
+    const current = state.hoveredElement;
+    const candidates = document.elementsFromPoint(x, y).filter((element, index, all) => (
+      isSelectableCandidate(element) && all.indexOf(element) === index
+    ));
+    state.candidates = candidates;
+    const preservedIndex = candidates.indexOf(current);
+    selectCandidate(preservedIndex >= 0 ? preservedIndex : candidates.length ? 0 : -1);
+  }
+
+  function isSelectableCandidate(element) {
+    if (!isElement(element) || isKapylupElement(element)) return false;
+    if (element === document.documentElement || element === document.body) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    const style = getComputedStyle(element);
+    return style.display !== "none" && style.visibility !== "hidden" && style.pointerEvents !== "none";
+  }
+
+  function cycleCandidate(direction) {
+    if (!state.candidates.length) return;
+    const current = state.candidateIndex >= 0 ? state.candidateIndex : 0;
+    selectCandidate((current + direction + state.candidates.length) % state.candidates.length);
+  }
+
+  function cycleHierarchy(direction) {
+    if (!state.hoveredElement || !state.candidates.length) return;
+    const current = state.candidateIndex;
+    const indexes = direction > 0
+      ? Array.from({ length: state.candidates.length - current - 1 }, (_, index) => current + index + 1)
+      : Array.from({ length: current }, (_, index) => current - index - 1);
+    const next = indexes.find((index) => direction > 0
+      ? state.candidates[index].contains(state.hoveredElement)
+      : state.hoveredElement.contains(state.candidates[index]));
+    if (next !== undefined) selectCandidate(next);
+  }
+
+  function selectCandidate(index) {
+    state.candidateIndex = index;
+    state.hoveredElement = index >= 0 ? state.candidates[index] : null;
+    highlightElement(state.hoveredElement);
+    updateSelectionUi();
   }
 
   function inspectElement(element) {
@@ -387,12 +513,36 @@
       <p class="intro">Ruční průzkumník Kapybary. Přepněte výběrový kurzor, ukažte na prvek a klikněte. Překlad vždy poskytuje Kapyguts.</p>
       <div class="toolbar">
         <button class="button button--primary" type="button" data-action="toggle">${state.selecting ? "Ukončit výběr" : "Spustit výběr"} (${escapeHtml(state.settings.hotkey)})</button>
+        <button class="button" type="button" data-action="help">Jak se používá?</button>
         <button class="button" type="button" data-action="settings">Nastavení</button>
       </div>
       <div class="field"><div><span class="field-label">Kapylup</span><div class="field-value">${VERSION}</div></div></div>
       <div class="field"><div><span class="field-label">Kapyguts</span><div class="field-value">${escapeHtml(window.Kapyguts.version)}</div></div></div>
       <div class="field"><div><span class="field-label">Použití z konzole</span><div class="field-value">Kapylup.inspect($0)\nKapyguts.explain($0)</div></div><button class="copy-button" data-action="copy" data-copy="console-help">Kopírovat</button></div>
     `;
+  }
+
+  function renderHelp() {
+    state.view = "help";
+    state.panelTitle.textContent = "Kapylup · nápověda";
+    state.panelBody.innerHTML = `
+      <p class="intro"><strong>TL;DR:</strong> Stiskněte ${escapeHtml(state.settings.hotkey)}, ukažte na část Kapybary a klikněte. Kapylup ji přeloží přes Kapyguts a nabídne bezpečný selektor i CSS kostru ke zkopírování.</p>
+      <div class="section-title">Překrývající se prvky</div>
+      <ul class="help-list">
+        <li>Kolečkem myši nebo klávesami <strong>${escapeHtml(state.settings.cyclePreviousKey)}</strong> / <strong>${escapeHtml(state.settings.cycleNextKey)}</strong> procházejte prvky pod kurzorem.</li>
+        <li>Oranžový štítek ukazuje pořadí ve vrstvě a jméno přeložené komponenty.</li>
+        <li>Na dotykové obrazovce použijte tlačítka ‹ ›, ↑ rodič, ↓ potomek a ✓ pro potvrzení.</li>
+        <li>Kliknutím potvrdíte zvýrazněný prvek; Escape výběrový režim ukončí.</li>
+      </ul>
+      <div class="section-title">Výsledek</div>
+      <p class="intro">Každou hodnotu lze kopírovat zvlášť, nebo tlačítkem „Kopírovat vše“ získat celý souhrn. Okno můžete táhnout za záhlaví a měnit jeho velikost za pravý dolní roh.</p>
+      <div class="toolbar">
+        <button class="button button--primary" type="button" data-action="toggle">${state.selecting ? "Ukončit výběr" : "Spustit výběr"} (${escapeHtml(state.settings.hotkey)})</button>
+        <button class="button" type="button" data-action="settings">Nastavení kláves</button>
+        <button class="button" type="button" data-action="back">Zpět</button>
+      </div>
+    `;
+    showPanel();
   }
 
   function renderInspector() {
@@ -442,6 +592,9 @@
       <p class="intro">Nastavení se ukládá přes userscript manager. Klávesová zkratka se ignoruje při psaní do editorů a formulářů.</p>
       <label class="settings-row"><span>Klávesa pro přepnutí kurzoru</span><input class="hotkey-input" data-setting="hotkey" value="${escapeHtml(state.settings.hotkey)}" readonly aria-label="Klávesová zkratka"><small class="hint">Klikněte do pole a stiskněte novou kombinaci. Escape je vyhrazen pro ukončení výběru.</small></label>
       <div class="toolbar"><button class="button" type="button" data-action="reset-hotkey">Vrátit K</button></div>
+      <label class="settings-row"><span>Předchozí překrývající se prvek</span><input class="hotkey-input" data-setting="cycle-previous" value="${escapeHtml(state.settings.cyclePreviousKey)}" readonly aria-label="Klávesa pro předchozí překrývající se prvek"></label>
+      <label class="settings-row"><span>Další překrývající se prvek</span><input class="hotkey-input" data-setting="cycle-next" value="${escapeHtml(state.settings.cycleNextKey)}" readonly aria-label="Klávesa pro další překrývající se prvek"></label>
+      <div class="toolbar"><button class="button" type="button" data-action="reset-cycle-keys">Vrátit [ a ]</button></div>
       <label class="settings-row check-row"><input type="checkbox" data-setting="show-panel" ${state.settings.showPanelOnSelection ? "checked" : ""}><span>Po výběru automaticky ukázat okno</span></label>
       <div class="field"><div><span class="field-label">Verze Kapylupu</span><div class="field-value">${VERSION}</div></div></div>
       <div class="field"><div><span class="field-label">Zdroj překladu</span><div class="field-value">Kapyguts ${escapeHtml(window.Kapyguts.version)}</div></div></div>
@@ -450,7 +603,7 @@
         <button class="button" type="button" data-action="back">Zpět</button>
       </div>
     `;
-    state.panelBody.querySelector("[data-setting='hotkey']").addEventListener("keydown", captureHotkey);
+    state.panelBody.querySelectorAll(".hotkey-input").forEach((input) => input.addEventListener("keydown", captureHotkey));
     showPanel();
   }
 
@@ -462,18 +615,24 @@
       showBadge("Tuto klávesu nelze použít.");
       return;
     }
-    setHotkeyDraft(hotkey);
+    event.currentTarget.value = hotkey;
   }
 
-  function setHotkeyDraft(value) {
-    const input = state.panelBody.querySelector("[data-setting='hotkey']");
+  function setHotkeyDraft(value, setting = "hotkey") {
+    const input = state.panelBody.querySelector(`[data-setting='${setting}']`);
     if (input) input.value = value;
   }
 
   async function saveSettingsFromPanel() {
     const hotkey = state.panelBody.querySelector("[data-setting='hotkey']")?.value || "K";
+    const cyclePreviousKey = state.panelBody.querySelector("[data-setting='cycle-previous']")?.value || "[";
+    const cycleNextKey = state.panelBody.querySelector("[data-setting='cycle-next']")?.value || "]";
     const showPanelOnSelection = !!state.panelBody.querySelector("[data-setting='show-panel']")?.checked;
-    state.settings = normalizeSettings({ ...state.settings, hotkey, showPanelOnSelection });
+    if (new Set([hotkey, cyclePreviousKey, cycleNextKey]).size !== 3) {
+      showBadge("Ovládací klávesy musí být navzájem odlišné.");
+      return;
+    }
+    state.settings = normalizeSettings({ ...state.settings, hotkey, cyclePreviousKey, cycleNextKey, showPanelOnSelection });
     await writeSetting(SETTINGS_KEY, state.settings);
     showBadge("Nastavení uloženo.");
     state.result ? renderInspector() : renderWelcome();
@@ -536,7 +695,10 @@
     if (!state.selecting) {
       state.highlight.style.display = "none";
       state.hoveredElement = null;
+      state.candidates = [];
+      state.candidateIndex = -1;
     }
+    state.cycleNav.dataset.visible = state.selecting ? "true" : "false";
     showBadge(
       state.selecting
         ? selectionBadgeText()
@@ -656,7 +818,18 @@
   }
 
   function selectionBadgeText() {
-    return `Kapylup: vybírejte prvky · ${state.settings.hotkey} nebo Esc ukončí`;
+    if (state.hoveredElement && state.candidates.length) {
+      const component = window.Kapyguts.explain(state.hoveredElement).component;
+      return `Kapylup · ${state.candidateIndex + 1}/${state.candidates.length} · ${component} · klik = vybrat`;
+    }
+    return `Kapylup: vyberte prvek · ${state.settings.cyclePreviousKey}/${state.settings.cycleNextKey} nebo kolečko pro vrstvy · Esc ukončí`;
+  }
+
+  function updateSelectionUi() {
+    if (!state.selecting) return;
+    showBadge(selectionBadgeText(), true);
+    state.cycleNav.querySelector('[data-cycle="previous"]').title = `Předchozí (${state.settings.cyclePreviousKey})`;
+    state.cycleNav.querySelector('[data-cycle="next"]').title = `Další (${state.settings.cycleNextKey})`;
   }
 
   function isKapylupElement(element) {
@@ -707,6 +880,10 @@
     const panel = value?.panel || {};
     return {
       hotkey: typeof value?.hotkey === "string" && value.hotkey && value.hotkey !== "Escape" ? value.hotkey : DEFAULTS.hotkey,
+      cyclePreviousKey: typeof value?.cyclePreviousKey === "string" && value.cyclePreviousKey && value.cyclePreviousKey !== "Escape"
+        ? value.cyclePreviousKey : DEFAULTS.cyclePreviousKey,
+      cycleNextKey: typeof value?.cycleNextKey === "string" && value.cycleNextKey && value.cycleNextKey !== "Escape"
+        ? value.cycleNextKey : DEFAULTS.cycleNextKey,
       showPanelOnSelection: value?.showPanelOnSelection !== false,
       panel: {
         left: finite(panel.left, DEFAULTS.panel.left),

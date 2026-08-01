@@ -71,9 +71,12 @@ current-user candidates, board post helpers, visible menu helpers, the
 source through `@require`; it contains no private copy of Kapybara selectors.
 Press **K** to toggle selection mode, hover and click a page element, then read
 the Kapyguts translation in the console or in the draggable, resizable and
-copy-friendly inspector window. Its userscript-manager settings can redefine
-the hotkey, choose whether selection opens the window, show/hide the window,
-and display the installed version.
+copy-friendly inspector window. Mouse wheel or the configurable **[** and **]**
+keys cycle through overlapping elements. Touch controls also move through the
+stack, select a parent or child, and confirm the highlighted element. The
+built-in **?** page contains a Czech quick-start guide. Userscript-manager
+settings can redefine all three keys, choose whether selection opens the
+window, show/hide the window, and display the installed version.
 
 Keep `kapyguts.md` updated as the quick field guide for Kapybara live-DOM tweaking sessions.
 
@@ -115,6 +118,15 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.6.27 TL;DR
+
+- Kapylup 0.1.1 can cycle through the complete `elementsFromPoint()` stack with
+  the mouse wheel, configurable previous/next keys, or compact touch controls.
+- The selection badge shows the current layer and Kapyguts component. Parent,
+  child and explicit confirm controls make overlapping elements practical on
+  touchscreens.
+- Added a Czech **?** quick-start page and settings for all selector keys.
 
 ## Version 0.6.26 TL;DR
 
