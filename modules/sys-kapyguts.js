@@ -2,8 +2,8 @@
 (function () {
   "use strict";
 
-  const root = window.Cudloun;
-  const VERSION = "0.5.0";
+  const root = window.Cudloun || null;
+  const VERSION = "0.5.1";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:not(.board-header):not(.post-header)",
@@ -193,8 +193,9 @@
     inspect,
   };
 
-  root.kapyguts = kapyguts;
-  root.log.info("kapyguts", "ready", VERSION);
+  window.Kapyguts = kapyguts;
+  if (root) root.kapyguts = kapyguts;
+  root?.log?.info?.("kapyguts", "ready", VERSION);
 
   function isKapybara() {
     return window.location.hostname === "kapybara.okoun.cz";

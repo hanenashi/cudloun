@@ -53,7 +53,7 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.5.0");
+  assert.equal(kapyguts.version, "0.5.1");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
 });

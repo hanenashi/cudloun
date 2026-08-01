@@ -6,7 +6,9 @@
 
 Kapybara extension framework for Okoun userscripts.
 
-Install: [cudloun.user.js](https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js)
+Install Cudloun: [cudloun.user.js](https://raw.githubusercontent.com/hanenashi/cudloun/main/cudloun.user.js)
+
+Install standalone Kapylup inspector: [kapylup.user.js](https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js)
 
 ## Archive
 
@@ -58,9 +60,20 @@ transport decision are documented in [`grease.md`](grease.md).
 
 ```js
 window.Cudloun.kapyguts
+window.Kapyguts
 ```
 
-It starts with route helpers, current-user candidates, board post helpers for `article.post`, visible menu helpers, and a compact `inspect()` snapshot.
+Both names point to the same implementation. It starts with route helpers,
+current-user candidates, board post helpers, visible menu helpers, the
+`explain(element)` selector coach, and a compact `inspect()` snapshot.
+
+`kapylup.user.js` is an optional standalone hand inspector built on that exact
+source through `@require`; it contains no private copy of Kapybara selectors.
+Press **K** to toggle selection mode, hover and click a page element, then read
+the Kapyguts translation in the console or in the draggable, resizable and
+copy-friendly inspector window. Its userscript-manager settings can redefine
+the hotkey, choose whether selection opens the window, show/hide the window,
+and display the installed version.
 
 Keep `kapyguts.md` updated as the quick field guide for Kapybara live-DOM tweaking sessions.
 
@@ -102,6 +115,19 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.6.26 TL;DR
+
+- Added standalone [Kapylup](kapylup.user.js), an interactive manual Kapybara
+  explorer powered exclusively by the canonical Kapyguts source. **K** toggles
+  a crosshair selection mode; clicks log selected and translated elements and
+  can open a draggable/resizable window with per-field, per-element and full
+  summary copy controls.
+- Kapylup's userscript-manager menu opens settings for a configurable hotkey,
+  automatic inspector-window display, direct show/hide controls and version
+  information. Keyboard handling leaves inputs and rich editors alone.
+- Kapyguts 0.5.1 now also exports `window.Kapyguts`, while Cudloun continues to
+  use the identical object through `window.Cudloun.kapyguts`.
 
 ## Version 0.6.25 TL;DR
 

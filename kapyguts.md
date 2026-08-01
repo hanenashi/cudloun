@@ -31,6 +31,11 @@ Kapyguts lives in:
 modules/sys-kapyguts.js
 ```
 
+The canonical source publishes the same dictionary as both
+`window.Cudloun.kapyguts` and `window.Kapyguts`. The standalone
+[`kapylup.user.js`](kapylup.user.js) loads this file directly with `@require`;
+it does not carry a second selector table.
+
 It exposes:
 
 - `isKapybara()`
