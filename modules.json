@@ -1,5 +1,5 @@
 {
-  "version": "0.6.28",
+  "version": "0.6.29",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-kapyguts", "file": "modules/sys-kapyguts.js", "required": true },
@@ -8,6 +8,7 @@
   ],
   "modules": [
     { "id": "settoun", "file": "modules/settoun.js", "defaultEnabled": true },
+    { "id": "first-unread", "file": "modules/first-unread.js", "defaultEnabled": false },
     { "id": "kapybara-theme", "file": "modules/kapybara-theme.js", "defaultEnabled": false },
     { "id": "thread-lane", "file": "modules/thread-lane.js", "defaultEnabled": false },
     { "id": "classic-look", "file": "modules/classic-look.js", "defaultEnabled": false },

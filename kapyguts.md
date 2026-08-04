@@ -47,6 +47,8 @@ It exposes:
 - `isMessagesPage()`
 - `allPosts()`
 - `visiblePosts()`
+- `unreadPosts()`
+- `firstUnreadPost()`
 - `postParts(post)`
 - `pageChromeParts()`
 - `pageHeader()`
@@ -161,6 +163,7 @@ Useful post selectors:
 article.post
 article.post[data-post-id]
 article.post[data-thread-id]
+article.post[data-unread]
 .avatar-col
 .avatar
 .post-main
@@ -175,6 +178,11 @@ button.date
 .reply-action
 button[aria-label="menu"]
 ```
+
+Kapybara's current unread state is semantic: unread articles carry the empty
+`data-unread` attribute. `unreadPosts()` returns them in rendered DOM order and
+`firstUnreadPost()` returns the first one or `null`. The optional First Unread
+module consumes only these helpers and never changes the marker itself.
 
 `postParts(post)` returns:
 

@@ -31,6 +31,8 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/sys-feedback.js` owns Firestore-backed per-feature feedback threads.
 - `modules/sys-menu.js` owns Kapybara account-menu injection and the Cudloun hub.
 - `modules/settoun.js` owns framework settings for Cudloun itself.
+- `modules/first-unread.js` optionally jumps once to Kapybara's first unread
+  post when a club finishes rendering.
 - `modules/kapybara-theme.js` owns the experimental Kapybara dark theme.
 - `modules/thread-lane.js` owns the experimental mobile reply-thread side lane.
 - `modules/classic-look.js` brings classic Okoun's reading rhythm to Kapybara
@@ -118,6 +120,17 @@ Each `cudlounThreads/{threadId}` document owns a `messages` subcollection. The i
 The visible Kapybara username is convenience identity, not authentication. `parentId`, `parentAuthor`, and `parentExcerpt` are optional and only present on replies. The client shows Delete for messages owned by the current visible Kapybara user, and for all messages when the visible user is `Blasnik`.
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
+
+## Version 0.6.29 TL;DR
+
+- Added default-disabled **First Unread**. Enable it in the Cudloun hub to jump
+  once to the first post carrying Kapybara's semantic `data-unread` marker when
+  a club finishes rendering.
+- Explicit URL anchors and manual wheel, touch, or keyboard scrolling cancel
+  the jump. The module keeps Kapybara's read state untouched and performs no
+  network requests.
+- Kapyguts 0.6.1 now owns unread-post discovery; Kapylup 0.1.3 pins that updated
+  canonical dictionary.
 
 ## Version 0.6.28 TL;DR
 

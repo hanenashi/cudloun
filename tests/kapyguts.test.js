@@ -55,9 +55,20 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.0");
+  assert.equal(kapyguts.version, "0.6.1");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
+});
+
+test("Kapyguts owns Kapybara's semantic unread-post marker", () => {
+  const kapyguts = loadModule("", "/boards/demo");
+  const unread = node({ attrs: { "data-post-id": "123", "data-unread": "" } });
+  const scope = node({ many: { "article.post[data-unread]": [unread] } });
+
+  assert.equal(kapyguts.selectors.unreadPost, "article.post[data-unread]");
+  assert.deepEqual(Array.from(kapyguts.unreadPosts(scope)), [unread]);
+  assert.equal(kapyguts.firstUnreadPost(scope), unread);
+  assert.equal(kapyguts.firstUnreadPost(node()), null);
 });
 
 test("Kapyguts maps current top-level Kapybara routes and stable live controls", () => {

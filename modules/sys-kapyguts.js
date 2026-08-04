@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.0";
+  const VERSION = "0.6.1";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
@@ -32,6 +32,7 @@
     boardPager: "nav.pager[aria-label='Stránkování příspěvků']",
     mobileBottomNav: "nav.mobile-bottom-nav[aria-label='Spodní navigace']",
     boardPost: "article.post",
+    unreadPost: "article.post[data-unread]",
     avatarColumn: ".avatar-col",
     avatar: ".avatar",
     avatarImage: ".avatar img",
@@ -162,6 +163,7 @@
     rule("post avatar column", `article.post ${SELECTORS.avatarColumn}`, `article.post ${SELECTORS.avatarColumn}`),
     rule("post body", `article.post ${SELECTORS.body}`, `article.post ${SELECTORS.body}`),
     rule("post content", `article.post ${SELECTORS.content}`, `article.post ${SELECTORS.content}`),
+    rule("unread post", SELECTORS.unreadPost, SELECTORS.unreadPost),
     rule("post", SELECTORS.boardPost, SELECTORS.boardPost),
     rule("message Markdown body", `${SELECTORS.message} ${SELECTORS.messageMarkdown}`, `${SELECTORS.message} ${SELECTORS.messageMarkdown}`),
     rule("message reply button", `${SELECTORS.message} ${SELECTORS.messageReplyButton}`, `${SELECTORS.message} ${SELECTORS.messageReplyButton}`),
@@ -228,6 +230,8 @@
     visibleElements,
     allPosts,
     visiblePosts,
+    unreadPosts,
+    firstUnreadPost,
     postParts,
     pageChromeParts,
     pageHeader,
@@ -329,6 +333,14 @@
 
   function visiblePosts(scope = document) {
     return allPosts(scope).filter(isVisible);
+  }
+
+  function unreadPosts(scope = document) {
+    return Array.from(scope.querySelectorAll(SELECTORS.unreadPost));
+  }
+
+  function firstUnreadPost(scope = document) {
+    return unreadPosts(scope)[0] || null;
   }
 
   function pageChromeParts(scope = document) {
@@ -748,6 +760,7 @@
       counts: {
         boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,
         visibleBoardPosts: posts.length,
+        unreadBoardPosts: document.querySelectorAll(SELECTORS.unreadPost).length,
         boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,
         pageHeaders: document.querySelectorAll(SELECTORS.pageHeader).length,
         homeTabs: home.tabs.length,
@@ -896,6 +909,7 @@
       hasReplyMeta: !!parts?.replyMeta,
       hasDateWrap: !!parts?.dateWrap,
       hasPostMenuButton: !!parts?.postMenuButton,
+      unread: post.hasAttribute("data-unread"),
     };
   }
 
