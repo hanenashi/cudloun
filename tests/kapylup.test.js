@@ -13,7 +13,7 @@ test("Kapylup is an installable Kapybara userscript pinned to the canonical Kapy
   const runtimeVersion = source.match(/const VERSION = "([^"]+)"/)?.[1];
   const requireVersion = source.match(/modules\/sys-kapyguts\.js\?v=([^\s]+)/)?.[1];
 
-  assert.equal(metadataVersion, "0.1.1");
+  assert.equal(metadataVersion, "0.1.2");
   assert.equal(runtimeVersion, metadataVersion);
   assert.equal(requireVersion, manifest.version);
   assert.match(source, /^\/\/ @match\s+https:\/\/kapybara\.okoun\.cz\/\*$/m);

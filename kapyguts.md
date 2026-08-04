@@ -51,8 +51,11 @@ It exposes:
 - `pageChromeParts()`
 - `pageHeader()`
 - `pageHeaderParts()`
+- `homeParts()`
 - `avatarMenuParts()`
 - `boardHeaderParts()`
+- `messagesParts()`
+- `messageParts(message)`
 - `fontSettingsParts()`
 - `fontSettingsState()`
 - `postDisplayParts()`
@@ -115,6 +118,27 @@ button[type="submit"]
 
 Do not print credentials, access codes, cookies, or local automation details in logs.
 
+## Main Screen
+
+Rechecked on desktop on 2026-08-04. The home route is `/`; its sibling tab
+route for new clubs is `/new-boards`. Prefer the labeled navigation and the
+section-qualified row selector over generic `.row` or `.list` hooks:
+
+```text
+nav[aria-label="Hlavní navigace"]
+nav[aria-label="Domovská navigace"]
+nav[aria-label="Domovská navigace"] a[href]
+nav[aria-label="Domovská navigace"] a[aria-current="page"]
+section.boards-section
+section.boards-section ul.list
+section.boards-section a.row[href^="/boards/"]
+```
+
+`homeParts()` returns the two navigation regions, all four home tabs, the
+active tab, board section/list/rows, mobile navigation, and a compact `ready`
+flag. On the inspected active-clubs screen it found four tabs and twenty club
+rows.
+
 ## Board Page Lab Species
 
 Baseline page inspected on 2026-06-11:
@@ -149,7 +173,7 @@ button.date
 .markdown
 .actions
 .reply-action
-.post-menu-button[aria-label="menu"]
+button[aria-label="menu"]
 ```
 
 `postParts(post)` returns:
@@ -200,10 +224,10 @@ data-thread-id
 
 ## Persistent And Board Headers
 
-Observed on desktop and mobile on 2026-07-20 in `nepotrebny_pokus`:
+Rechecked on desktop on 2026-08-04 in `nepotrebny_pokus`:
 
 ```text
-global page header:  header:not(.board-header):not(.post-header)
+global page header:  header:has(a[aria-label="Okoun home"], .logo)
 home marker:         a[aria-label="Okoun home"], .logo
 desktop actions:     .desktop-right
 board header:        header.board-header
@@ -218,6 +242,22 @@ scrolls away. At mobile width, the global page header scrolls away and the
 board title row becomes the sticky toolbar at `top: 0`. Use `pageHeaderParts()`
 for the desktop header and its native action group, and `boardHeaderParts()` for
 the mobile board toolbar, so modules do not repeat that responsive lookup.
+
+The `:has()` qualification matters on Vzkazník, where every message card also
+contains a plain `<header>`. The previous negative-class selector matched all
+of those message headers even though `pageHeader()` later filtered them.
+
+Current board controls also have shared mappings:
+
+```text
+button.entry-placeholder, button.new-post.mobile
+button.images-toggle[aria-pressed]
+button[role="radio"][data-toggle-group-item]
+nav.pager[aria-label="Stránkování příspěvků"]
+```
+
+`boardHeaderParts()` includes these as `newPostButton`, `imageToggle`,
+`viewToggles`, and `pagers` in addition to the header fields.
 
 ## Viewport Edge Stripes
 
@@ -387,7 +427,8 @@ Rows are board links, not MUI list items.
 
 ## Messages
 
-Observed route:
+Rechecked on desktop on 2026-08-04. The route stays `/messages`; selecting a
+conversation updates the two-pane view without navigating away.
 
 ```text
 https://kapybara.okoun.cz/messages
@@ -397,15 +438,40 @@ Useful hooks:
 
 ```text
 .messages-page
+.messages-shell
 .conversation-list
+.conversation-search-field
+button.new-message-button[aria-label="Nová zpráva"]
 .conversation-item
+.conversation-item.selected
 .conversation-detail
+button[aria-label="Zpět na konverzace"]
+.inline-compose
+button.collapsed-composer
+button.collapsed-send
+.messages-scroll
 .message-list
-.message
+article.message
 .message-card
-.reply-button
-.message-menu-trigger
+.message-meta
+.message-menu
+button.message-menu-trigger[aria-label="Další možnosti"]
+.message-body
+.message-body .markdown
+.message-actions
+button.reply-button
 ```
+
+`messagesParts()` maps the list and detail panes, search/new-message controls,
+selected conversation, collapsed composer controls, message list, message
+articles, and cards. `messageParts(message)` maps one incoming/outgoing article
+to its card header, avatar, metadata, menu, body, Markdown, actions, reply
+button, and direction. The inspected desktop screen contained thirty
+conversation buttons and twenty-five loaded message cards; selecting the next
+conversation preserved exactly one selected row and replaced the detail list.
+At mobile width Kapybara renders either the conversation list or the detail
+pane, never both: `messagesParts().layout` reports `list`, `detail`, or `split`,
+and `ready` accepts all three valid responsive states.
 
 Do not quote Vzkaznik text into public notes or logs. Treat it as private user content. Record structure, counts, selectors, and layout only.
 

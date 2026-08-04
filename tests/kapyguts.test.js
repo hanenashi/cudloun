@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
 
-function node({ text = "", attrs = {}, value = "", disabled = false, one = {}, many = {} } = {}) {
+function node({ text = "", attrs = {}, value = "", disabled = false, one = {}, many = {}, matches = [], closest = {} } = {}) {
   return {
     textContent: text,
     value,
@@ -14,6 +14,8 @@ function node({ text = "", attrs = {}, value = "", disabled = false, one = {}, m
     querySelector(selector) { return one[selector] || null; },
     querySelectorAll(selector) { return many[selector] || []; },
     getAttribute(name) { return attrs[name] ?? null; },
+    matches(selector) { return matches.includes(selector); },
+    closest(selector) { return closest[selector] || null; },
   };
 }
 
@@ -53,9 +55,136 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.5.1");
+  assert.equal(kapyguts.version, "0.6.0");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
+});
+
+test("Kapyguts maps current top-level Kapybara routes and stable live controls", () => {
+  assert.equal(loadModule("", "/").route().type, "home");
+  assert.equal(loadModule("", "/new-boards").route().type, "new-boards");
+  assert.equal(loadModule("", "/fav").route().type, "favorites");
+  assert.equal(loadModule("", "/messages").route().type, "messages");
+
+  const kapyguts = loadModule();
+  assert.equal(kapyguts.selectors.pageHeader, "header:has(a[aria-label='Okoun home'], .logo)");
+  assert.equal(kapyguts.selectors.postMenuButton, "button[aria-label='menu']");
+});
+
+test("Kapyguts describes the current home navigation and club rows", () => {
+  const kapyguts = loadModule("", "/");
+  const primaryNavigation = node();
+  const navigation = node();
+  const activeTab = node({ attrs: { href: "/" } });
+  const tabs = [activeTab, node({ attrs: { href: "/new-boards" } })];
+  const boardsSection = node();
+  const boardList = node();
+  const boardRows = [node(), node()];
+  const mobileBottomNav = node();
+  const scope = node({
+    one: {
+      "nav[aria-label='Hlavní navigace']": primaryNavigation,
+      "nav[aria-label='Domovská navigace']": navigation,
+      "nav[aria-label='Domovská navigace'] a[aria-current='page']": activeTab,
+      "section.boards-section": boardsSection,
+      "section.boards-section ul.list": boardList,
+      "nav.mobile-bottom-nav[aria-label='Spodní navigace']": mobileBottomNav,
+    },
+    many: {
+      "nav[aria-label='Domovská navigace'] a[href]": tabs,
+      "section.boards-section a.row[href^='/boards/']": boardRows,
+    },
+  });
+
+  const parts = kapyguts.homeParts(scope);
+  assert.equal(parts.ready, true);
+  assert.equal(parts.primaryNavigation, primaryNavigation);
+  assert.equal(parts.activeTab, activeTab);
+  assert.deepEqual(Array.from(parts.tabs), tabs);
+  assert.deepEqual(Array.from(parts.boardRows), boardRows);
+});
+
+test("Kapyguts describes current Vzkazník panes and message cards", () => {
+  const kapyguts = loadModule("", "/messages");
+  const searchInput = node();
+  const searchField = node({ one: { input: searchInput } });
+  const conversationItems = [node(), node()];
+  const selectedConversation = conversationItems[0];
+  const cardParts = {
+    header: node(),
+    ".avatar": node(),
+    ".message-meta": node(),
+    ".message-menu": node(),
+    "button.message-menu-trigger[aria-label='Další možnosti']": node(),
+    ".message-body": node(),
+    ".message-body .markdown": node(),
+    ".message-actions": node(),
+    "button.reply-button": node(),
+  };
+  const card = node({ one: cardParts, matches: [".message-card"] });
+  const message = node({
+    one: { ".message-card": card },
+    matches: ["article.message", ".outgoing"],
+  });
+  const page = node();
+  const conversationList = node();
+  const detail = node();
+  const scope = node({
+    one: {
+      "section.messages-page": page,
+      ".messages-shell": node(),
+      ".conversation-list": conversationList,
+      ".conversation-search-field": searchField,
+      "button.new-message-button[aria-label='Nová zpráva']": node(),
+      ".conversation-item.selected": selectedConversation,
+      "section.conversation-detail": detail,
+      ".inline-compose": node(),
+      "button.collapsed-composer": node(),
+      "button.collapsed-send": node(),
+      ".messages-scroll": node(),
+      ".message-list": node(),
+    },
+    many: {
+      ".conversation-item": conversationItems,
+      "article.message": [message],
+      ".message-card": [card],
+    },
+  });
+
+  const pageParts = kapyguts.messagesParts(scope);
+  const parts = kapyguts.messageParts(message);
+  assert.equal(pageParts.ready, true);
+  assert.equal(pageParts.layout, "split");
+  assert.equal(pageParts.searchInput, searchInput);
+  assert.equal(pageParts.selectedConversation, selectedConversation);
+  assert.deepEqual(Array.from(pageParts.messages), [message]);
+  assert.equal(parts.card, card);
+  assert.equal(parts.menuButton, cardParts["button.message-menu-trigger[aria-label='Další možnosti']"]);
+  assert.equal(parts.markdown, cardParts[".message-body .markdown"]);
+  assert.equal(parts.direction, "outgoing");
+});
+
+test("Kapyguts treats mobile Vzkazník list-only and detail-only panes as ready", () => {
+  const kapyguts = loadModule("", "/messages");
+  const listScope = node({
+    one: {
+      "section.messages-page": node(),
+      ".conversation-list": node(),
+    },
+  });
+  const detailScope = node({
+    one: {
+      "section.messages-page": node(),
+      "section.conversation-detail": node(),
+      "button[aria-label='Zpět na konverzace']": node(),
+    },
+  });
+
+  assert.equal(kapyguts.messagesParts(listScope).ready, true);
+  assert.equal(kapyguts.messagesParts(listScope).layout, "list");
+  assert.equal(kapyguts.messagesParts(detailScope).ready, true);
+  assert.equal(kapyguts.messagesParts(detailScope).layout, "detail");
+  assert.ok(kapyguts.messagesParts(detailScope).backButton);
 });
 
 test("Kapyguts explains known components with stable selectors and CSS skeletons", () => {

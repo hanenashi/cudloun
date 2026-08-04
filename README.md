@@ -119,6 +119,18 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.28 TL;DR
+
+- Kapyguts 0.6.0 was rechecked against the live Kapybara home, club, and
+  Vzkazník screens and now exposes `homeParts()`, `messagesParts()`, and
+  `messageParts()` for their current semantic DOM.
+- Fixed the live post-menu selector, exact `/fav` and `/new-boards` route
+  classification, and global-header matching inside message cards.
+- `inspect()` and the selector coach now cover home tabs/club rows, current
+  board controls, conversation panes, message articles, and message actions.
+- Kapylup 0.1.2 pins the refreshed canonical dictionary for standalone
+  inspector installations.
+
 ## Version 0.6.27 TL;DR
 
 - Kapylup 0.1.1 can cycle through the complete `elementsFromPoint()` stack with

@@ -3,12 +3,19 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.5.1";
+  const VERSION = "0.6.0";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
-    pageHeader: "header:not(.board-header):not(.post-header)",
+    pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
     pageHeaderLogo: "a[aria-label='Okoun home'], .logo",
     pageHeaderDesktopActions: ".desktop-right",
+    primaryNavigation: "nav[aria-label='Hlavní navigace']",
+    homeNavigation: "nav[aria-label='Domovská navigace']",
+    homeTab: "nav[aria-label='Domovská navigace'] a[href]",
+    homeActiveTab: "nav[aria-label='Domovská navigace'] a[aria-current='page']",
+    homeBoardsSection: "section.boards-section",
+    homeBoardList: "section.boards-section ul.list",
+    homeBoardRow: "section.boards-section a.row[href^='/boards/']",
     desktopAvatarMenuTrigger: "button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']",
     mobileAvatarMenuTrigger: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]",
     dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
@@ -19,6 +26,10 @@
     boardTitleRow: ".board-header .title-row",
     boardTitleLink: ".board-header .title-link",
     boardTitleActions: ".board-header .title-row .title-actions",
+    boardNewPostButton: "button.entry-placeholder, button.new-post.mobile",
+    boardImageToggle: "button.images-toggle[aria-pressed]",
+    boardViewToggle: "button[role='radio'][data-toggle-group-item]",
+    boardPager: "nav.pager[aria-label='Stránkování příspěvků']",
     mobileBottomNav: "nav.mobile-bottom-nav[aria-label='Spodní navigace']",
     boardPost: "article.post",
     avatarColumn: ".avatar-col",
@@ -34,10 +45,31 @@
     markdown: ".markdown",
     actions: ".actions",
     replyButton: ".reply-action",
-    postMenuButton: ".post-menu-button[aria-label='menu']",
+    postMenuButton: "button[aria-label='menu']",
     favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
+    messagesPage: "section.messages-page",
+    messagesShell: ".messages-shell",
+    conversationList: ".conversation-list",
+    conversationSearchField: ".conversation-search-field",
+    newMessageButton: "button.new-message-button[aria-label='Nová zpráva']",
     messageItem: ".conversation-item",
+    selectedMessageItem: ".conversation-item.selected",
+    conversationDetail: "section.conversation-detail",
+    conversationBackButton: "button[aria-label='Zpět na konverzace']",
+    inlineMessageCompose: ".inline-compose",
+    collapsedMessageComposer: "button.collapsed-composer",
+    collapsedMessageSend: "button.collapsed-send",
+    messagesScroll: ".messages-scroll",
+    messageList: ".message-list",
+    message: "article.message",
     messageCard: ".message-card",
+    messageMeta: ".message-meta",
+    messageMenu: ".message-menu",
+    messageMenuButton: "button.message-menu-trigger[aria-label='Další možnosti']",
+    messageBody: ".message-body",
+    messageMarkdown: ".message-body .markdown",
+    messageActions: ".message-actions",
+    messageReplyButton: "button.reply-button",
     newPostComposer: "section.new-post-composer[aria-label='Nový příspěvek']",
     replyComposer: "section.reply-composer[aria-label='Odpověď']",
     composer: ".composer",
@@ -131,6 +163,14 @@
     rule("post body", `article.post ${SELECTORS.body}`, `article.post ${SELECTORS.body}`),
     rule("post content", `article.post ${SELECTORS.content}`, `article.post ${SELECTORS.content}`),
     rule("post", SELECTORS.boardPost, SELECTORS.boardPost),
+    rule("message Markdown body", `${SELECTORS.message} ${SELECTORS.messageMarkdown}`, `${SELECTORS.message} ${SELECTORS.messageMarkdown}`),
+    rule("message reply button", `${SELECTORS.message} ${SELECTORS.messageReplyButton}`, `${SELECTORS.message} ${SELECTORS.messageReplyButton}`),
+    rule("message actions", `${SELECTORS.message} ${SELECTORS.messageActions}`, `${SELECTORS.message} ${SELECTORS.messageActions}`),
+    rule("message body", `${SELECTORS.message} ${SELECTORS.messageBody}`, `${SELECTORS.message} ${SELECTORS.messageBody}`),
+    rule("message menu button", `${SELECTORS.message} ${SELECTORS.messageMenuButton}`, `${SELECTORS.message} ${SELECTORS.messageMenuButton}`),
+    rule("message metadata", `${SELECTORS.message} ${SELECTORS.messageMeta}`, `${SELECTORS.message} ${SELECTORS.messageMeta}`),
+    rule("message card", `${SELECTORS.message} ${SELECTORS.messageCard}`, `${SELECTORS.message} ${SELECTORS.messageCard}`),
+    rule("message", SELECTORS.message, SELECTORS.message),
     rule("composer Markdown source", SELECTORS.composerMarkdownNode, SELECTORS.composerMarkdownNode),
     rule("composer editable", SELECTORS.composerEditable, SELECTORS.composerEditable),
     rule("composer mode switch", SELECTORS.composerModeToggle, SELECTORS.composerModeToggle),
@@ -145,6 +185,10 @@
     rule("board title link", SELECTORS.boardTitleLink, SELECTORS.boardTitleLink),
     rule("board title row", SELECTORS.boardTitleRow, SELECTORS.boardTitleRow),
     rule("board header", SELECTORS.boardHeader, SELECTORS.boardHeader),
+    rule("board new-post launcher", SELECTORS.boardNewPostButton, SELECTORS.boardNewPostButton),
+    rule("board image filter", SELECTORS.boardImageToggle, SELECTORS.boardImageToggle),
+    rule("board view switch", SELECTORS.boardViewToggle, SELECTORS.boardViewToggle),
+    rule("board pager", SELECTORS.boardPager, SELECTORS.boardPager),
     rule("page-header logo", `${SELECTORS.pageHeader} :is(${SELECTORS.pageHeaderLogo})`, `${SELECTORS.pageHeader} :is(${SELECTORS.pageHeaderLogo})`),
     rule("page-header actions", `${SELECTORS.pageHeader} ${SELECTORS.pageHeaderDesktopActions}`, `${SELECTORS.pageHeader} ${SELECTORS.pageHeaderDesktopActions}`),
     rule("page header", SELECTORS.pageHeader, SELECTORS.pageHeader),
@@ -152,9 +196,19 @@
       ".🐟-stripes je výjimečný záměrně mapovaný selektor; zde jej lze bezpečně použít.",
     ]),
     rule("mobile bottom navigation", SELECTORS.mobileBottomNav, SELECTORS.mobileBottomNav),
+    rule("home board row", SELECTORS.homeBoardRow, SELECTORS.homeBoardRow),
+    rule("home board list", SELECTORS.homeBoardList, SELECTORS.homeBoardList),
+    rule("home boards section", SELECTORS.homeBoardsSection, SELECTORS.homeBoardsSection),
+    rule("home navigation tab", SELECTORS.homeTab, SELECTORS.homeTab),
+    rule("home navigation", SELECTORS.homeNavigation, SELECTORS.homeNavigation),
+    rule("primary navigation", SELECTORS.primaryNavigation, SELECTORS.primaryNavigation),
     rule("Favorites board row", SELECTORS.favoriteBoardRow, SELECTORS.favoriteBoardRow),
-    rule("message card", SELECTORS.messageCard, SELECTORS.messageCard),
-    rule("message item", SELECTORS.messageItem, SELECTORS.messageItem),
+    rule("selected conversation", SELECTORS.selectedMessageItem, SELECTORS.selectedMessageItem),
+    rule("conversation item", SELECTORS.messageItem, SELECTORS.messageItem),
+    rule("conversation back button", SELECTORS.conversationBackButton, SELECTORS.conversationBackButton),
+    rule("conversation detail", SELECTORS.conversationDetail, SELECTORS.conversationDetail),
+    rule("conversation list", SELECTORS.conversationList, SELECTORS.conversationList),
+    rule("Vzkazník page", SELECTORS.messagesPage, SELECTORS.messagesPage),
     rule("font-settings panel", SELECTORS.fontSettingsPanel, SELECTORS.fontSettingsPanel),
     rule("post-display panel", SELECTORS.postDisplayPanel, SELECTORS.postDisplayPanel),
   ];
@@ -178,8 +232,11 @@
     pageChromeParts,
     pageHeader,
     pageHeaderParts,
+    homeParts,
     avatarMenuParts,
     boardHeaderParts,
+    messagesParts,
+    messageParts,
     fontSettingsParts,
     fontSettingsState,
     postDisplayParts,
@@ -217,7 +274,8 @@
 
   function routeType(path) {
     if (path === "/") return "home";
-    if (path.startsWith("/fav/")) return "favorites";
+    if (path === "/new-boards" || path.startsWith("/new-boards/")) return "new-boards";
+    if (path === "/fav" || path.startsWith("/fav/")) return "favorites";
     if (path.startsWith("/messages")) return "messages";
     if (path.startsWith("/topics")) return "topics";
     if (path.startsWith("/active-users")) return "active-users";
@@ -299,6 +357,25 @@
     };
   }
 
+  function homeParts(scope = document) {
+    const navigation = scope.querySelector(SELECTORS.homeNavigation);
+    const boardsSection = scope.querySelector(SELECTORS.homeBoardsSection);
+    const boardList = scope.querySelector(SELECTORS.homeBoardList);
+    const tabs = Array.from(scope.querySelectorAll(SELECTORS.homeTab));
+    const boardRows = Array.from(scope.querySelectorAll(SELECTORS.homeBoardRow));
+    return {
+      primaryNavigation: scope.querySelector(SELECTORS.primaryNavigation),
+      navigation,
+      tabs,
+      activeTab: scope.querySelector(SELECTORS.homeActiveTab),
+      boardsSection,
+      boardList,
+      boardRows,
+      mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
+      ready: !!(navigation && boardsSection && boardList),
+    };
+  }
+
   function avatarMenuParts(scope = document) {
     const desktopTrigger = scope.querySelector(SELECTORS.desktopAvatarMenuTrigger);
     const mobileTrigger = scope.querySelector(SELECTORS.mobileAvatarMenuTrigger);
@@ -336,8 +413,61 @@
       titleRow,
       titleLink,
       actions,
+      newPostButton: scope.querySelector(SELECTORS.boardNewPostButton),
+      imageToggle: scope.querySelector(SELECTORS.boardImageToggle),
+      viewToggles: Array.from(scope.querySelectorAll(SELECTORS.boardViewToggle)),
+      pagers: Array.from(scope.querySelectorAll(SELECTORS.boardPager)),
       mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
       stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === "sticky",
+    };
+  }
+
+  function messagesParts(scope = document) {
+    const page = scope.querySelector(SELECTORS.messagesPage);
+    const conversationList = scope.querySelector(SELECTORS.conversationList);
+    const detail = scope.querySelector(SELECTORS.conversationDetail);
+    const searchField = scope.querySelector(SELECTORS.conversationSearchField);
+    return {
+      page,
+      shell: scope.querySelector(SELECTORS.messagesShell),
+      conversationList,
+      searchField,
+      searchInput: searchField?.querySelector("input") || null,
+      newMessageButton: scope.querySelector(SELECTORS.newMessageButton),
+      conversationItems: Array.from(scope.querySelectorAll(SELECTORS.messageItem)),
+      selectedConversation: scope.querySelector(SELECTORS.selectedMessageItem),
+      detail,
+      backButton: scope.querySelector(SELECTORS.conversationBackButton),
+      inlineCompose: scope.querySelector(SELECTORS.inlineMessageCompose),
+      collapsedComposer: scope.querySelector(SELECTORS.collapsedMessageComposer),
+      collapsedSend: scope.querySelector(SELECTORS.collapsedMessageSend),
+      scroll: scope.querySelector(SELECTORS.messagesScroll),
+      messageList: scope.querySelector(SELECTORS.messageList),
+      messages: Array.from(scope.querySelectorAll(SELECTORS.message)),
+      cards: Array.from(scope.querySelectorAll(SELECTORS.messageCard)),
+      layout: conversationList && detail ? "split" : detail ? "detail" : conversationList ? "list" : "unknown",
+      ready: !!page && !!(conversationList || detail),
+    };
+  }
+
+  function messageParts(node) {
+    if (!node) return null;
+    const message = node.matches?.(SELECTORS.message) ? node : node.closest?.(SELECTORS.message) || null;
+    const card = node.matches?.(SELECTORS.messageCard) ? node : message?.querySelector(SELECTORS.messageCard) || null;
+    if (!message || !card) return null;
+    return {
+      message,
+      card,
+      header: card.querySelector("header"),
+      avatar: card.querySelector(SELECTORS.avatar),
+      meta: card.querySelector(SELECTORS.messageMeta),
+      menu: card.querySelector(SELECTORS.messageMenu),
+      menuButton: card.querySelector(SELECTORS.messageMenuButton),
+      body: card.querySelector(SELECTORS.messageBody),
+      markdown: card.querySelector(SELECTORS.messageMarkdown),
+      actions: card.querySelector(SELECTORS.messageActions),
+      replyButton: card.querySelector(SELECTORS.messageReplyButton),
+      direction: message.matches?.(".outgoing") ? "outgoing" : message.matches?.(".incoming") ? "incoming" : "",
     };
   }
 
@@ -601,6 +731,8 @@
     const fontSettings = fontSettingsState();
     const postDisplay = postDisplayState();
     const pageChrome = pageChromeParts();
+    const home = homeParts();
+    const messages = messagesParts();
     return {
       version: VERSION,
       isKapybara: isKapybara(),
@@ -617,11 +749,15 @@
         boardPosts: document.querySelectorAll(SELECTORS.boardPost).length,
         visibleBoardPosts: posts.length,
         boardHeaders: document.querySelectorAll(SELECTORS.boardHeader).length,
+        pageHeaders: document.querySelectorAll(SELECTORS.pageHeader).length,
+        homeTabs: home.tabs.length,
+        homeBoardRows: home.boardRows.length,
         avatars: document.querySelectorAll(SELECTORS.avatar).length,
         replies: document.querySelectorAll(SELECTORS.replyButton).length,
         postMenuButtons: document.querySelectorAll(SELECTORS.postMenuButton).length,
         favoriteRows: document.querySelectorAll(SELECTORS.favoriteBoardRow).length,
         messageItems: document.querySelectorAll(SELECTORS.messageItem).length,
+        messageArticles: document.querySelectorAll(SELECTORS.message).length,
         messageCards: document.querySelectorAll(SELECTORS.messageCard).length,
         composers: allComposers().length,
         readyComposers: allComposers().filter((section) => composerParts(section)?.ready).length,
@@ -634,6 +770,20 @@
         hasViewportStripes: !!pageChrome.viewportStripes,
         stripeBackground: pageChrome.stripeBackground,
         stripesActive: pageChrome.stripesActive,
+      },
+      home: {
+        ready: home.ready,
+        tabs: home.tabs.length,
+        boardRows: home.boardRows.length,
+        activeHref: home.activeTab?.getAttribute("href") || "",
+      },
+      messages: {
+        ready: messages.ready,
+        conversations: messages.conversationItems.length,
+        selected: !!messages.selectedConversation,
+        messageArticles: messages.messages.length,
+        cards: messages.cards.length,
+        hasComposerLauncher: !!messages.collapsedComposer,
       },
       fontSettings,
       postDisplay,

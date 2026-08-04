@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Kapylup
 // @namespace    https://github.com/hanenashi/cudloun
-// @version      0.1.1
+// @version      0.1.2
 // @description  Interactive Kapyguts-powered Kapybara element explorer.
 // @author       hanenashi
 // @match        https://kapybara.okoun.cz/*
 // @run-at       document-idle
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.27
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.28
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @grant        GM_getValue
@@ -22,7 +22,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.1.1";
+  const VERSION = "0.1.2";
   const SETTINGS_KEY = "kapylup.settings.v1";
   const DEFAULTS = Object.freeze({
     hotkey: "K",
