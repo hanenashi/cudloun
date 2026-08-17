@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.1";
+  const VERSION = "0.6.2";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
@@ -16,6 +16,14 @@
     homeBoardsSection: "section.boards-section",
     homeBoardList: "section.boards-section ul.list",
     homeBoardRow: "section.boards-section a.row[href^='/boards/']",
+    loginLink: "a[href^='/login']",
+    directLoginLink: "a[href='/login']",
+    loginUsername: "input[autocomplete='username']",
+    loginPassword: "input[autocomplete='current-password']",
+    siteMenuTrigger: "button[aria-label='Otevřít menu']",
+    siteMenu: "[role='dialog'][aria-label='menu']",
+    siteMenuLoginLink: "[role='dialog'][aria-label='menu'] a[href='/login']",
+    mobileLoginLink: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] a[href^='/login']",
     desktopAvatarMenuTrigger: "button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']",
     mobileAvatarMenuTrigger: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]",
     dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
@@ -98,6 +106,7 @@
     postDisplaySegmentButton: "button.av-seg-btn[aria-pressed]",
   };
   const TEXT = {
+    access: { login: "Přihlásit" },
     postMenu: ["Smazat", "Upravit", "Označit"],
     avatarMenu: ["Nastavení", "Odhlásit", "Barevné schéma"],
     fontSettings: {
@@ -204,6 +213,11 @@
     rule("home navigation tab", SELECTORS.homeTab, SELECTORS.homeTab),
     rule("home navigation", SELECTORS.homeNavigation, SELECTORS.homeNavigation),
     rule("primary navigation", SELECTORS.primaryNavigation, SELECTORS.primaryNavigation),
+    rule("site menu login", SELECTORS.siteMenuLoginLink, SELECTORS.siteMenuLoginLink),
+    rule("site menu", SELECTORS.siteMenu, SELECTORS.siteMenu),
+    rule("site menu trigger", SELECTORS.siteMenuTrigger, SELECTORS.siteMenuTrigger),
+    rule("login username", SELECTORS.loginUsername, SELECTORS.loginUsername),
+    rule("login password", SELECTORS.loginPassword, SELECTORS.loginPassword),
     rule("Favorites board row", SELECTORS.favoriteBoardRow, SELECTORS.favoriteBoardRow),
     rule("selected conversation", SELECTORS.selectedMessageItem, SELECTORS.selectedMessageItem),
     rule("conversation item", SELECTORS.messageItem, SELECTORS.messageItem),
@@ -237,6 +251,7 @@
     pageHeader,
     pageHeaderParts,
     homeParts,
+    accessParts,
     avatarMenuParts,
     boardHeaderParts,
     messagesParts,
@@ -385,6 +400,32 @@
       boardRows,
       mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
       ready: !!(navigation && boardsSection && boardList),
+    };
+  }
+
+  function accessParts(scope = document) {
+    const loginLinks = Array.from(scope.querySelectorAll(SELECTORS.loginLink));
+    const directLoginLink = scope.querySelector(SELECTORS.siteMenuLoginLink) ||
+      scope.querySelector(SELECTORS.directLoginLink);
+    const mobileLoginLink = Array.from(scope.querySelectorAll(SELECTORS.mobileLoginLink)).find((link) => (
+      normalizeText(link.textContent) === TEXT.access.login
+    )) || null;
+    const usernameInput = scope.querySelector(SELECTORS.loginUsername);
+    const passwordInput = scope.querySelector(SELECTORS.loginPassword);
+    const form = usernameInput?.closest?.("form") || passwordInput?.closest?.("form") || null;
+    return {
+      loginLinks,
+      directLoginLink,
+      mobileLoginLink,
+      siteMenuTrigger: scope.querySelector(SELECTORS.siteMenuTrigger),
+      siteMenu: scope.querySelector(SELECTORS.siteMenu),
+      siteMenuLoginLink: scope.querySelector(SELECTORS.siteMenuLoginLink),
+      form,
+      usernameInput,
+      passwordInput,
+      submitButton: form?.querySelector?.("button[type='submit']") || null,
+      authenticationRequired: loginLinks.length > 0 || !!usernameInput || !!passwordInput,
+      loginAvailable: !!directLoginLink || !!mobileLoginLink || !!(usernameInput && passwordInput),
     };
   }
 
@@ -744,6 +785,7 @@
     const postDisplay = postDisplayState();
     const pageChrome = pageChromeParts();
     const home = homeParts();
+    const access = accessParts();
     const messages = messagesParts();
     return {
       version: VERSION,
@@ -778,6 +820,7 @@
         nativeFontSettingsLinks: document.querySelectorAll(SELECTORS.nativeFontSettingsLink).length,
         nativePostDisplayLinks: document.querySelectorAll(SELECTORS.nativePostDisplayLink).length,
         viewportStripes: document.querySelectorAll(SELECTORS.viewportStripes).length,
+        loginLinks: access.loginLinks.length,
       },
       pageChrome: {
         hasViewportStripes: !!pageChrome.viewportStripes,
@@ -789,6 +832,15 @@
         tabs: home.tabs.length,
         boardRows: home.boardRows.length,
         activeHref: home.activeTab?.getAttribute("href") || "",
+      },
+      access: {
+        authenticationRequired: access.authenticationRequired,
+        loginAvailable: access.loginAvailable,
+        hasDirectLogin: !!access.directLoginLink,
+        hasMobileLogin: !!access.mobileLoginLink,
+        hasSiteMenuTrigger: !!access.siteMenuTrigger,
+        hasSiteMenu: !!access.siteMenu,
+        hasLoginForm: !!(access.usernameInput && access.passwordInput),
       },
       messages: {
         ready: messages.ready,

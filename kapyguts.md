@@ -54,6 +54,7 @@ It exposes:
 - `pageHeader()`
 - `pageHeaderParts()`
 - `homeParts()`
+- `accessParts()`
 - `avatarMenuParts()`
 - `boardHeaderParts()`
 - `messagesParts()`
@@ -110,7 +111,25 @@ it returns `ok: false` instead of suggesting an unsafe generic selector.
 
 Kapybara may show its own access gate and has a separate login form. Keep access mechanics, credentials, cookies, and local automation details in private local notes, not in public Cudloun docs.
 
-The current login form uses:
+Rechecked unauthenticated desktop and Pixel-width layouts on 2026-08-17.
+Kapybara now exposes mobile sign-in through both the fixed bottom navigation
+and a hamburger-triggered bottom sheet, while the direct form remains stable:
+
+```text
+mobile trigger: button[aria-label="Otevřít menu"]
+mobile sheet:   [role="dialog"][aria-label="menu"]
+sheet login:    [role="dialog"][aria-label="menu"] a[href="/login"]
+bottom login:   nav.mobile-bottom-nav[aria-label="Spodní navigace"] a[href^="/login"]
+direct route:   /login
+```
+
+The bottom navigation also contains protected Vzkazník and Oblíbené links
+whose targets begin with `/login`; use `accessParts().mobileLoginLink` rather
+than choosing the first matching link. The helper normalizes direct, mobile,
+sheet, and form surfaces and reports `authenticationRequired` and
+`loginAvailable` without reading any credential value.
+
+The direct login form still uses:
 
 ```text
 input[autocomplete="username"]

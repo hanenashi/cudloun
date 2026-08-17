@@ -55,9 +55,59 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.1");
+  assert.equal(kapyguts.version, "0.6.2");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
+});
+
+test("Kapyguts normalizes Kapybara's current mobile sign-in surfaces", () => {
+  const kapyguts = loadModule("", "/");
+  const hiddenDesktopLogin = node({ text: "Přihlásit", attrs: { href: "/login" } });
+  const mobileMessages = node({ text: "Vzkazník", attrs: { href: "/login?redirectTo=%2Fmessages" } });
+  const mobileLogin = node({ text: "Přihlásit", attrs: { href: "/login?redirectTo=%2Fsettings" } });
+  const sheetLogin = node({ text: "Přihlásit", attrs: { href: "/login" } });
+  const trigger = node({ attrs: { "aria-label": "Otevřít menu" } });
+  const menu = node();
+  const scope = node({
+    one: {
+      "button[aria-label='Otevřít menu']": trigger,
+      "[role='dialog'][aria-label='menu']": menu,
+      "[role='dialog'][aria-label='menu'] a[href='/login']": sheetLogin,
+      "a[href='/login']": hiddenDesktopLogin,
+    },
+    many: {
+      "a[href^='/login']": [hiddenDesktopLogin, mobileMessages, mobileLogin, sheetLogin],
+      "nav.mobile-bottom-nav[aria-label='Spodní navigace'] a[href^='/login']": [mobileMessages, mobileLogin],
+    },
+  });
+
+  const parts = kapyguts.accessParts(scope);
+  assert.equal(parts.authenticationRequired, true);
+  assert.equal(parts.loginAvailable, true);
+  assert.equal(parts.directLoginLink, sheetLogin);
+  assert.equal(parts.mobileLoginLink, mobileLogin);
+  assert.equal(parts.siteMenuTrigger, trigger);
+  assert.equal(parts.siteMenu, menu);
+});
+
+test("Kapyguts recognizes the unchanged direct login form", () => {
+  const kapyguts = loadModule("", "/login");
+  const submit = node();
+  const form = node({ one: { "button[type='submit']": submit } });
+  const username = node({ closest: { form } });
+  const password = node({ closest: { form } });
+  const scope = node({
+    one: {
+      "input[autocomplete='username']": username,
+      "input[autocomplete='current-password']": password,
+    },
+  });
+
+  const parts = kapyguts.accessParts(scope);
+  assert.equal(parts.form, form);
+  assert.equal(parts.submitButton, submit);
+  assert.equal(parts.loginAvailable, true);
+  assert.equal(parts.authenticationRequired, true);
 });
 
 test("Kapyguts owns Kapybara's semantic unread-post marker", () => {

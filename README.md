@@ -121,6 +121,13 @@ The visible Kapybara username is convenience identity, not authentication. `pare
 
 Before opening this to real users, Firebase rules should allow public reads and message creates only, reject client edits/deletes unless there is a server-side/admin story, validate the allowed fields, and cap feedback text length.
 
+## Version 0.6.30 TL;DR
+
+- Kapyguts 0.6.2 records Kapybara's reorganized unauthenticated mobile chrome:
+  bottom navigation, the **Otevřít menu** bottom sheet, and direct `/login`.
+- New `accessParts()` normalizes those links and the unchanged username/password
+  form without inspecting or exposing credential values.
+
 ## Version 0.6.29 TL;DR
 
 - Added default-disabled **First Unread**. Enable it in the Cudloun hub to jump
