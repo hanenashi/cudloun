@@ -33,7 +33,9 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/settoun.js` owns framework settings for Cudloun itself.
 - `modules/first-unread.js` optionally jumps once to Kapybara's first unread
   post when a club finishes rendering.
-- `modules/kapybara-theme.js` owns the experimental Kapybara dark theme.
+- `modules/kapybara-theme.js` owns the experimental Kapybara dark theme, whose
+  default `Temná strana Síly` preset is adapted from Lucifer’s published skin
+  with responsive and dynamic-post compatibility refinements.
 - `modules/thread-lane.js` owns the experimental mobile reply-thread side lane.
 - `modules/classic-look.js` brings classic Okoun's reading rhythm to Kapybara
   posts without replacing the new frontend controls.
@@ -47,6 +49,15 @@ The installable seed uses `@require` so CSP-strict frontends such as Kapybara do
 ```text
 node scripts/build-bundle.js
 ```
+
+## Version 0.6.31 TL;DR
+
+- Reworked the opt-in Kapybara Theme around Lucifer’s `Temná strana Síly`
+  black/graphite/amber treatment, while retaining the previous palettes.
+- Added responsive mobile rules and a safe legacy `.code` block treatment for
+  posts inserted dynamically by Kapybara.
+- Uses semantic Kapybara selectors and avoids the original fixed header height
+  and negative margins that made the desktop userstyle fragile.
 
 ## OPUc Integration
 

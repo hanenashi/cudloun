@@ -6,7 +6,7 @@
 // @author       hanenashi
 // @match        https://kapybara.okoun.cz/*
 // @run-at       document-idle
-// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.30
+// @require      https://raw.githubusercontent.com/hanenashi/cudloun/main/modules/sys-kapyguts.js?v=0.6.31
 // @updateURL    https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @downloadURL  https://raw.githubusercontent.com/hanenashi/cudloun/main/kapylup.user.js
 // @grant        GM_getValue

@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.30";
+  const VERSION = "0.6.31";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -435,7 +435,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.30\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"first-unread\",\n      \"file\": \"modules/first-unread.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-tweaks\",\n      \"file\": \"modules/post-tweaks.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.31\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"first-unread\",\n      \"file\": \"modules/first-unread.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-tweaks\",\n      \"file\": \"modules/post-tweaks.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -3273,9 +3273,9 @@
 
   });
 
-  embeddedText.set("modules/kapybara-theme.js", "// Kapybara dark theme.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-kapybara-theme-style\";\n  const THEME_ATTR = \"data-cudloun-kapybara-theme\";\n\n  const DEFAULTS = {\n    preset: \"black\",\n    accent: \"#d68a1f\",\n    pitchBlack: true,\n    softenCards: true,\n  };\n\n  root.registerModule({\n    id: \"kapybara-theme\",\n    name: \"Kapybara Theme\",\n    description: \"Dark theme experiment for Kapybara pages.\",\n    version: \"0.1.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      apply(ctx);\n      return () => cleanup();\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      wrap.appendChild(makeSelectRow(ctx, \"Color preset\", \"preset\", [\n        [\"black\", \"Black\"],\n        [\"charcoal\", \"Charcoal\"],\n        [\"blueblack\", \"Blue black\"],\n      ]));\n      wrap.appendChild(makeColorRow(ctx, \"Accent\", \"accent\", DEFAULTS.accent));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Pitch black page\", \"pitchBlack\", DEFAULTS.pitchBlack));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Softer post cards\", \"softenCards\", DEFAULTS.softenCards));\n\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"Enable this module to apply a Cudloun dark theme to Kapybara.\",\n        \"The first pass uses semantic Kapybara classes where possible and keeps generated class overrides minimal.\",\n        \"Disable the module to remove the theme style and return to native Kapybara colors.\",\n      ];\n    },\n  });\n\n  function apply(ctx) {\n    if (!root.kapyguts?.isKapybara?.()) return;\n\n    const settings = readSettings(ctx);\n    document.documentElement.setAttribute(THEME_ATTR, \"dark\");\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-bg\", palette(settings).bg);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-surface\", palette(settings).surface);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-surface-2\", palette(settings).surface2);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-line\", palette(settings).line);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-text\", palette(settings).text);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-muted\", palette(settings).muted);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-accent\", settings.accent);\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-accent-soft\", hexToRgba(settings.accent, 0.16));\n    document.documentElement.style.setProperty(\"--cudloun-kapybara-radius\", settings.softenCards ? \"10px\" : \"0px\");\n    installStyle();\n    root.log.info(\"kapybara-theme\", \"applied\", settings);\n  }\n\n  function cleanup() {\n    document.documentElement.removeAttribute(THEME_ATTR);\n    [\n      \"--cudloun-kapybara-bg\",\n      \"--cudloun-kapybara-surface\",\n      \"--cudloun-kapybara-surface-2\",\n      \"--cudloun-kapybara-line\",\n      \"--cudloun-kapybara-text\",\n      \"--cudloun-kapybara-muted\",\n      \"--cudloun-kapybara-accent\",\n      \"--cudloun-kapybara-accent-soft\",\n      \"--cudloun-kapybara-radius\",\n    ].forEach((name) => document.documentElement.style.removeProperty(name));\n    document.getElementById(STYLE_ID)?.remove();\n    root.log.info(\"kapybara-theme\", \"removed\");\n  }\n\n  function readSettings(ctx) {\n    return {\n      preset: ctx.storage.get(\"preset\", DEFAULTS.preset),\n      accent: validColor(ctx.storage.get(\"accent\", DEFAULTS.accent), DEFAULTS.accent),\n      pitchBlack: ctx.storage.get(\"pitchBlack\", DEFAULTS.pitchBlack) !== false,\n      softenCards: ctx.storage.get(\"softenCards\", DEFAULTS.softenCards) !== false,\n    };\n  }\n\n  function palette(settings) {\n    const presets = {\n      black: {\n        bg: settings.pitchBlack ? \"#000000\" : \"#070707\",\n        surface: \"#141414\",\n        surface2: \"#1f1f1f\",\n        line: \"#303030\",\n        text: \"#f4f4f4\",\n        muted: \"#aaaeb6\",\n      },\n      charcoal: {\n        bg: \"#101214\",\n        surface: \"#191d21\",\n        surface2: \"#242a30\",\n        line: \"#36404a\",\n        text: \"#f2f4f7\",\n        muted: \"#a8b0ba\",\n      },\n      blueblack: {\n        bg: \"#080b10\",\n        surface: \"#111827\",\n        surface2: \"#1d2636\",\n        line: \"#334155\",\n        text: \"#f8fafc\",\n        muted: \"#a6b1c2\",\n      },\n    };\n    return presets[settings.preset] || presets.black;\n  }\n\n  function installStyle() {\n    if (document.getElementById(STYLE_ID)) return;\n\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[${THEME_ATTR}=\"dark\"]{color-scheme:dark;background:var(--cudloun-kapybara-bg)!important;scrollbar-color:var(--cudloun-kapybara-accent) var(--cudloun-kapybara-bg)}\n      html[${THEME_ATTR}=\"dark\"] body,\n      html[${THEME_ATTR}=\"dark\"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}\n      html[${THEME_ATTR}=\"dark\"] body::before,\n      html[${THEME_ATTR}=\"dark\"] body::after,\n      html[${THEME_ATTR}=\"dark\"] #root::before,\n      html[${THEME_ATTR}=\"dark\"] #root::after{background:transparent!important;background-image:none!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(main,header,nav,footer,aside,section,form):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^=\"cudloun-\"]){background-color:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.post,.post-main,.message-card,.conversation-item,.bottom-sheet,[role=\"dialog\"],[role=\"menu\"]):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^=\"cudloun-\"]){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] article.post{border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}\n      html[${THEME_ATTR}=\"dark\"] article.post + article.post{border-top:1px solid var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] .post-header,\n      html[${THEME_ATTR}=\"dark\"] .meta,\n      html[${THEME_ATTR}=\"dark\"] .reply-ref,\n      html[${THEME_ATTR}=\"dark\"] .actions,\n      html[${THEME_ATTR}=\"dark\"] .conversation-item{border-color:var(--cudloun-kapybara-line)!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(.body,.markdown,.post-main,p,li,span,div):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:inherit}\n      html[${THEME_ATTR}=\"dark\"] :where(.meta,.reply-ref,time,small,label):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:var(--cudloun-kapybara-muted)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a,.author,.reply-action,button.date):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){color:var(--cudloun-kapybara-accent)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a):not(.cudloun-dialog *){text-decoration-color:color-mix(in srgb,var(--cudloun-kapybara-accent) 60%,transparent)!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(button,input,textarea,select):not(.cudloun-dialog *):not([class^=\"cudloun-\"]){background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(button):not(.cudloun-dialog *):not([class^=\"cudloun-\"]):hover{background:var(--cudloun-kapybara-accent-soft)!important}\n      html[${THEME_ATTR}=\"dark\"] input::placeholder,\n      html[${THEME_ATTR}=\"dark\"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}\n\n      html[${THEME_ATTR}=\"dark\"] .avatar,\n      html[${THEME_ATTR}=\"dark\"] .avatar img,\n      html[${THEME_ATTR}=\"dark\"] .avatar-button img,\n      html[${THEME_ATTR}=\"dark\"] .avatar-shell img{background:transparent!important;border-color:transparent!important}\n      html[${THEME_ATTR}=\"dark\"] :where(img,video,canvas):not(.cudloun-mascot){color-scheme:normal}\n      html[${THEME_ATTR}=\"dark\"] :where(hr){border-color:var(--cudloun-kapybara-line)!important}\n    `;\n    document.head.appendChild(style);\n  }\n\n  function makeCheckboxRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const input = document.createElement(\"input\");\n    input.type = \"checkbox\";\n    input.checked = ctx.storage.get(key, fallback) !== false;\n    input.addEventListener(\"change\", () => {\n      ctx.storage.set(key, input.checked);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(input);\n    return label;\n  }\n\n  function makeColorRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const input = document.createElement(\"input\");\n    input.type = \"color\";\n    input.value = validColor(ctx.storage.get(key, fallback), fallback);\n    input.addEventListener(\"input\", () => {\n      ctx.storage.set(key, input.value);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(input);\n    return label;\n  }\n\n  function makeSelectRow(ctx, labelText, key, options) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n\n    const select = document.createElement(\"select\");\n    select.className = \"cudloun-select\";\n    const current = ctx.storage.get(key, DEFAULTS[key]);\n    options.forEach(([value, name]) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = name;\n      option.selected = value === current;\n      select.appendChild(option);\n    });\n    select.addEventListener(\"change\", () => {\n      ctx.storage.set(key, select.value);\n      apply(ctx);\n    });\n\n    label.appendChild(text);\n    label.appendChild(select);\n    return label;\n  }\n\n  function validColor(value, fallback) {\n    const text = String(value || \"\");\n    return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;\n  }\n\n  function hexToRgba(hex, alpha) {\n    const clean = validColor(hex, DEFAULTS.accent).slice(1);\n    const value = Number.parseInt(clean, 16);\n    const red = (value >> 16) & 255;\n    const green = (value >> 8) & 255;\n    const blue = value & 255;\n    return `rgba(${red},${green},${blue},${alpha})`;\n  }\n})();\n");
+  embeddedText.set("modules/kapybara-theme.js", "// Kapybara dark theme, with the \"Temná strana Síly\" treatment by Lucifer as its default.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const STYLE_ID = \"cudloun-kapybara-theme-style\";\n  const THEME_ATTR = \"data-cudloun-kapybara-theme\";\n\n  const DEFAULTS = {\n    preset: \"lucifer\",\n    accent: \"#eba500\",\n    pitchBlack: true,\n    softenCards: false,\n  };\n\n  root.registerModule({\n    id: \"kapybara-theme\",\n    name: \"Kapybara Theme\",\n    description: \"Dark Kapybara skin with Lucifer-inspired black, graphite, amber, and unread rails.\",\n    version: \"0.2.0\",\n    defaultEnabled: false,\n    start(ctx) {\n      apply(ctx);\n      return () => cleanup();\n    },\n    renderSettings(ctx) {\n      const wrap = document.createElement(\"div\");\n      wrap.className = \"cudloun-settings-list\";\n\n      wrap.appendChild(makeSelectRow(ctx, \"Color preset\", \"preset\", [\n        [\"lucifer\", \"Temná strana Síly\"],\n        [\"black\", \"Black\"],\n        [\"charcoal\", \"Charcoal\"],\n        [\"blueblack\", \"Blue black\"],\n      ]));\n      wrap.appendChild(makeColorRow(ctx, \"Accent\", \"accent\", DEFAULTS.accent));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Pitch black page\", \"pitchBlack\", DEFAULTS.pitchBlack));\n      wrap.appendChild(makeCheckboxRow(ctx, \"Softer post cards\", \"softenCards\", DEFAULTS.softenCards));\n\n      return wrap;\n    },\n    renderHelp() {\n      return [\n        \"The default preset adapts Lucifer’s Temná strana Síly: black canvas, graphite post chrome, amber actions, and blue/amber unread rails.\",\n        \"It uses stable Kapybara parts rather than generated classes, and its responsive rules deliberately avoid the original desktop-only negative margins and fixed header height.\",\n        \"It also keeps legacy .code blocks readable when Kapybara dynamically inserts an old-format post.\",\n        \"Visual inspiration: https://userstyles.world/style/29691/temn-strana-sly (Lucifer, CocaColaWare).\",\n        \"Disable the module to remove the theme style and return to native Kapybara colors.\",\n      ];\n    },\n  });\n\n  function apply(ctx) {\n    if (!root.kapyguts?.isKapybara?.()) return;\n\n    const settings = readSettings(ctx);\n    const colors = palette(settings);\n    document.documentElement.setAttribute(THEME_ATTR, \"dark\");\n    Object.entries({\n      \"--cudloun-kapybara-bg\": colors.bg,\n      \"--cudloun-kapybara-surface\": colors.surface,\n      \"--cudloun-kapybara-surface-2\": colors.surface2,\n      \"--cudloun-kapybara-line\": colors.line,\n      \"--cudloun-kapybara-text\": colors.text,\n      \"--cudloun-kapybara-muted\": colors.muted,\n      \"--cudloun-kapybara-unread\": colors.unread,\n      \"--cudloun-kapybara-unread-read\": colors.unreadRead,\n      \"--cudloun-kapybara-accent\": settings.accent,\n      \"--cudloun-kapybara-accent-soft\": hexToRgba(settings.accent, 0.18),\n      \"--cudloun-kapybara-radius\": settings.softenCards ? \"10px\" : \"0px\",\n    }).forEach(([name, value]) => document.documentElement.style.setProperty(name, value));\n    installStyle();\n    root.log.info(\"kapybara-theme\", \"applied\", settings);\n  }\n\n  function cleanup() {\n    document.documentElement.removeAttribute(THEME_ATTR);\n    [\n      \"--cudloun-kapybara-bg\", \"--cudloun-kapybara-surface\", \"--cudloun-kapybara-surface-2\",\n      \"--cudloun-kapybara-line\", \"--cudloun-kapybara-text\", \"--cudloun-kapybara-muted\",\n      \"--cudloun-kapybara-unread\", \"--cudloun-kapybara-unread-read\", \"--cudloun-kapybara-accent\",\n      \"--cudloun-kapybara-accent-soft\", \"--cudloun-kapybara-radius\",\n    ].forEach((name) => document.documentElement.style.removeProperty(name));\n    document.getElementById(STYLE_ID)?.remove();\n    root.log.info(\"kapybara-theme\", \"removed\");\n  }\n\n  function readSettings(ctx) {\n    return {\n      preset: ctx.storage.get(\"preset\", DEFAULTS.preset),\n      accent: validColor(ctx.storage.get(\"accent\", DEFAULTS.accent), DEFAULTS.accent),\n      pitchBlack: ctx.storage.get(\"pitchBlack\", DEFAULTS.pitchBlack) !== false,\n      softenCards: ctx.storage.get(\"softenCards\", DEFAULTS.softenCards) === true,\n    };\n  }\n\n  function palette(settings) {\n    const presets = {\n      lucifer: {\n        bg: settings.pitchBlack ? \"#000000\" : \"#0b0b0b\",\n        surface: \"#161819\",\n        surface2: \"#24282b\",\n        line: \"#666666\",\n        text: \"#eeeeee\",\n        muted: \"#aaaaaa\",\n        unread: \"#4f8cbe\",\n        unreadRead: \"#9e6700\",\n      },\n      black: {\n        bg: settings.pitchBlack ? \"#000000\" : \"#070707\",\n        surface: \"#141414\",\n        surface2: \"#1f1f1f\",\n        line: \"#303030\",\n        text: \"#f4f4f4\",\n        muted: \"#aaaeb6\",\n        unread: \"#4f8cbe\",\n        unreadRead: \"#9e6700\",\n      },\n      charcoal: {\n        bg: \"#101214\", surface: \"#191d21\", surface2: \"#242a30\", line: \"#36404a\",\n        text: \"#f2f4f7\", muted: \"#a8b0ba\", unread: \"#4f8cbe\", unreadRead: \"#9e6700\",\n      },\n      blueblack: {\n        bg: \"#080b10\", surface: \"#111827\", surface2: \"#1d2636\", line: \"#334155\",\n        text: \"#f8fafc\", muted: \"#a6b1c2\", unread: \"#4f8cbe\", unreadRead: \"#9e6700\",\n      },\n    };\n    return presets[settings.preset] || presets.lucifer;\n  }\n\n  function installStyle() {\n    if (document.getElementById(STYLE_ID)) return;\n    const style = document.createElement(\"style\");\n    style.id = STYLE_ID;\n    style.textContent = `\n      html[${THEME_ATTR}=\"dark\"]{color-scheme:dark;background:var(--cudloun-kapybara-bg)!important;scrollbar-color:var(--cudloun-kapybara-accent) var(--cudloun-kapybara-bg)}\n      html[${THEME_ATTR}=\"dark\"] body,html[${THEME_ATTR}=\"dark\"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(body,#root)::before,html[${THEME_ATTR}=\"dark\"] :where(body,#root)::after,html[${THEME_ATTR}=\"dark\"] .🐟-stripes{background:transparent!important;background-image:none!important}\n\n      /* Stable Kapybara chrome: only semantic selectors. */\n      html[${THEME_ATTR}=\"dark\"] header:not(.board-header):not(.post-header){background:#1c1816!important;color:var(--cudloun-kapybara-text)!important;border-color:#444!important}\n      html[${THEME_ATTR}=\"dark\"] header.board-header,html[${THEME_ATTR}=\"dark\"] main,html[${THEME_ATTR}=\"dark\"] footer,html[${THEME_ATTR}=\"dark\"] nav,html[${THEME_ATTR}=\"dark\"] aside{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.bottom-sheet,[role=\"dialog\"],[role=\"menu\"],.message-card,.conversation-item,.welcome-box,.alert.info){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n\n      html[${THEME_ATTR}=\"dark\"] article.post{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}\n      html[${THEME_ATTR}=\"dark\"] article.post + article.post{border-top:1px solid var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] article.post .post-header{min-height:24px!important;margin:0!important;padding:3px 0!important;background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-top:1px solid #777!important;border-bottom:1px solid #777!important}\n      html[${THEME_ATTR}=\"dark\"] article.post .body{margin-top:12px!important;color:var(--cudloun-kapybara-text)!important}\n      html[${THEME_ATTR}=\"dark\"] article.post.unread{background:#202224!important;border-left:6px solid var(--cudloun-kapybara-unread)!important;border-right:2px solid var(--cudloun-kapybara-unread)!important;border-bottom-left-radius:13px!important}\n      html[${THEME_ATTR}=\"dark\"] article.post.unread.read{background:var(--cudloun-kapybara-surface)!important;border-left-color:var(--cudloun-kapybara-unread-read)!important;border-right-color:var(--cudloun-kapybara-unread-read)!important}\n      html[${THEME_ATTR}=\"dark\"] article.post.muted{opacity:1!important}\n      html[${THEME_ATTR}=\"dark\"] article.post.muted :where(.avatar-col,.post-header){opacity:.45!important;filter:saturate(0)}\n      html[${THEME_ATTR}=\"dark\"] article.post.unread.muted.read{background:color-mix(in srgb,var(--cudloun-kapybara-surface) 70%,transparent)!important;border-color:#9999996e!important}\n\n      /* Dynamic old-format posts arrive as .code divs, not native pre/code. */\n      html[${THEME_ATTR}=\"dark\"] article.post .body > .code{display:block;padding:10px 12px;overflow-x:auto;white-space:pre-wrap!important;tab-size:4;background:#111!important;color:#ddd!important;border:1px solid #444!important;font:13px/1.45 ui-monospace,Consolas,monospace}\n      html[${THEME_ATTR}=\"dark\"] article.post :where(pre,.markdown-code){display:block;padding:10px 12px;overflow-x:auto;white-space:pre-wrap!important;tab-size:4;background:#111!important;color:#ddd!important;border:1px solid #444!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.meta,.reply-ref,time,small,label,.muted-inline-excerpt){color:var(--cudloun-kapybara-muted)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a,.author,.reply-action,button.date){color:var(--cudloun-kapybara-accent)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(a,.reply-action,button):hover{color:#ffcc33!important;text-decoration-color:currentColor!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.row,li > a.row){border-color:transparent!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.row,li > a.row):hover{background:#151515!important;border-color:#444!important}\n\n      html[${THEME_ATTR}=\"dark\"] :where(button,input,textarea,select,.composer,.composer-entry,section.new-post-composer){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(input,textarea,.composer){background:#111!important}\n      html[${THEME_ATTR}=\"dark\"] :where(button):hover{background:var(--cudloun-kapybara-accent-soft)!important}\n      html[${THEME_ATTR}=\"dark\"] input::placeholder,html[${THEME_ATTR}=\"dark\"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.avatar,.avatar-button){border-radius:0!important;border-color:#123!important;box-shadow:0 0 0 1px #666!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.spoiler){border-color:#666!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.spoiler.revealed){background:#323232!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.reply-preview){background:#181d21f5!important;border:3px solid #497e8d5e!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.🐟-button--primary,.entry-prispet){background:var(--cudloun-kapybara-accent)!important;color:#000!important;border-color:var(--cudloun-kapybara-accent)!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.🐟-button--primary,.entry-prispet):hover{background:#ffcc33!important;border-color:#ffcc33!important}\n      html[${THEME_ATTR}=\"dark\"] :where(.🐟-button--primary,.entry-prispet):disabled{background:#323232!important;color:#aaa!important;border-color:#666!important}\n      html[${THEME_ATTR}=\"dark\"] :where(img,video,canvas):not(.cudloun-mascot){color-scheme:normal}\n      html[${THEME_ATTR}=\"dark\"] hr{border-color:var(--cudloun-kapybara-line)!important}\n\n      /* Mobile: retain the treatment without squeezing headers or overlapping posts. */\n      @media (max-width:640px){\n        html[${THEME_ATTR}=\"dark\"] article.post .post-header{min-height:unset!important;padding:6px 0!important}\n        html[${THEME_ATTR}=\"dark\"] article.post .body{margin-top:10px!important}\n        html[${THEME_ATTR}=\"dark\"] article.post.unread{border-left-width:4px!important;border-right-width:1px!important;border-bottom-left-radius:10px!important}\n        html[${THEME_ATTR}=\"dark\"] :where(.composer-entry,section.new-post-composer){margin-inline:0!important}\n        html[${THEME_ATTR}=\"dark\"] article.post .body > .code{padding:8px 10px;font-size:12px}\n        html[${THEME_ATTR}=\"dark\"] article.post :where(pre,.markdown-code){padding:8px 10px}\n      }\n    `;\n    document.head.appendChild(style);\n  }\n\n  function makeCheckboxRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n    const input = document.createElement(\"input\");\n    input.type = \"checkbox\";\n    input.checked = ctx.storage.get(key, fallback) === true;\n    input.addEventListener(\"change\", () => { ctx.storage.set(key, input.checked); apply(ctx); });\n    label.append(text, input);\n    return label;\n  }\n\n  function makeColorRow(ctx, labelText, key, fallback) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n    const input = document.createElement(\"input\");\n    input.type = \"color\";\n    input.value = validColor(ctx.storage.get(key, fallback), fallback);\n    input.addEventListener(\"input\", () => { ctx.storage.set(key, input.value); apply(ctx); });\n    label.append(text, input);\n    return label;\n  }\n\n  function makeSelectRow(ctx, labelText, key, options) {\n    const label = document.createElement(\"label\");\n    label.className = \"cudloun-setting-row\";\n    const text = document.createElement(\"span\");\n    text.className = \"cudloun-setting-text\";\n    text.textContent = labelText;\n    const select = document.createElement(\"select\");\n    select.className = \"cudloun-select\";\n    const current = ctx.storage.get(key, DEFAULTS[key]);\n    options.forEach(([value, name]) => {\n      const option = document.createElement(\"option\");\n      option.value = value;\n      option.textContent = name;\n      option.selected = value === current;\n      select.appendChild(option);\n    });\n    select.addEventListener(\"change\", () => { ctx.storage.set(key, select.value); apply(ctx); });\n    label.append(text, select);\n    return label;\n  }\n\n  function validColor(value, fallback) {\n    const text = String(value || \"\");\n    return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;\n  }\n\n  function hexToRgba(hex, alpha) {\n    const value = Number.parseInt(validColor(hex, DEFAULTS.accent).slice(1), 16);\n    return `rgba(${(value >> 16) & 255},${(value >> 8) & 255},${value & 255},${alpha})`;\n  }\n})();\n");
   embeddedScripts.set("modules/kapybara-theme.js", function () {
-    // Kapybara dark theme.
+    // Kapybara dark theme, with the "Temná strana Síly" treatment by Lucifer as its default.
     (function () {
       "use strict";
 
@@ -3284,17 +3284,17 @@
       const THEME_ATTR = "data-cudloun-kapybara-theme";
 
       const DEFAULTS = {
-        preset: "black",
-        accent: "#d68a1f",
+        preset: "lucifer",
+        accent: "#eba500",
         pitchBlack: true,
-        softenCards: true,
+        softenCards: false,
       };
 
       root.registerModule({
         id: "kapybara-theme",
         name: "Kapybara Theme",
-        description: "Dark theme experiment for Kapybara pages.",
-        version: "0.1.0",
+        description: "Dark Kapybara skin with Lucifer-inspired black, graphite, amber, and unread rails.",
+        version: "0.2.0",
         defaultEnabled: false,
         start(ctx) {
           apply(ctx);
@@ -3305,6 +3305,7 @@
           wrap.className = "cudloun-settings-list";
 
           wrap.appendChild(makeSelectRow(ctx, "Color preset", "preset", [
+            ["lucifer", "Temná strana Síly"],
             ["black", "Black"],
             ["charcoal", "Charcoal"],
             ["blueblack", "Blue black"],
@@ -3317,8 +3318,10 @@
         },
         renderHelp() {
           return [
-            "Enable this module to apply a Cudloun dark theme to Kapybara.",
-            "The first pass uses semantic Kapybara classes where possible and keeps generated class overrides minimal.",
+            "The default preset adapts Lucifer’s Temná strana Síly: black canvas, graphite post chrome, amber actions, and blue/amber unread rails.",
+            "It uses stable Kapybara parts rather than generated classes, and its responsive rules deliberately avoid the original desktop-only negative margins and fixed header height.",
+            "It also keeps legacy .code blocks readable when Kapybara dynamically inserts an old-format post.",
+            "Visual inspiration: https://userstyles.world/style/29691/temn-strana-sly (Lucifer, CocaColaWare).",
             "Disable the module to remove the theme style and return to native Kapybara colors.",
           ];
         },
@@ -3328,16 +3331,21 @@
         if (!root.kapyguts?.isKapybara?.()) return;
 
         const settings = readSettings(ctx);
+        const colors = palette(settings);
         document.documentElement.setAttribute(THEME_ATTR, "dark");
-        document.documentElement.style.setProperty("--cudloun-kapybara-bg", palette(settings).bg);
-        document.documentElement.style.setProperty("--cudloun-kapybara-surface", palette(settings).surface);
-        document.documentElement.style.setProperty("--cudloun-kapybara-surface-2", palette(settings).surface2);
-        document.documentElement.style.setProperty("--cudloun-kapybara-line", palette(settings).line);
-        document.documentElement.style.setProperty("--cudloun-kapybara-text", palette(settings).text);
-        document.documentElement.style.setProperty("--cudloun-kapybara-muted", palette(settings).muted);
-        document.documentElement.style.setProperty("--cudloun-kapybara-accent", settings.accent);
-        document.documentElement.style.setProperty("--cudloun-kapybara-accent-soft", hexToRgba(settings.accent, 0.16));
-        document.documentElement.style.setProperty("--cudloun-kapybara-radius", settings.softenCards ? "10px" : "0px");
+        Object.entries({
+          "--cudloun-kapybara-bg": colors.bg,
+          "--cudloun-kapybara-surface": colors.surface,
+          "--cudloun-kapybara-surface-2": colors.surface2,
+          "--cudloun-kapybara-line": colors.line,
+          "--cudloun-kapybara-text": colors.text,
+          "--cudloun-kapybara-muted": colors.muted,
+          "--cudloun-kapybara-unread": colors.unread,
+          "--cudloun-kapybara-unread-read": colors.unreadRead,
+          "--cudloun-kapybara-accent": settings.accent,
+          "--cudloun-kapybara-accent-soft": hexToRgba(settings.accent, 0.18),
+          "--cudloun-kapybara-radius": settings.softenCards ? "10px" : "0px",
+        }).forEach(([name, value]) => document.documentElement.style.setProperty(name, value));
         installStyle();
         root.log.info("kapybara-theme", "applied", settings);
       }
@@ -3345,15 +3353,10 @@
       function cleanup() {
         document.documentElement.removeAttribute(THEME_ATTR);
         [
-          "--cudloun-kapybara-bg",
-          "--cudloun-kapybara-surface",
-          "--cudloun-kapybara-surface-2",
-          "--cudloun-kapybara-line",
-          "--cudloun-kapybara-text",
-          "--cudloun-kapybara-muted",
-          "--cudloun-kapybara-accent",
-          "--cudloun-kapybara-accent-soft",
-          "--cudloun-kapybara-radius",
+          "--cudloun-kapybara-bg", "--cudloun-kapybara-surface", "--cudloun-kapybara-surface-2",
+          "--cudloun-kapybara-line", "--cudloun-kapybara-text", "--cudloun-kapybara-muted",
+          "--cudloun-kapybara-unread", "--cudloun-kapybara-unread-read", "--cudloun-kapybara-accent",
+          "--cudloun-kapybara-accent-soft", "--cudloun-kapybara-radius",
         ].forEach((name) => document.documentElement.style.removeProperty(name));
         document.getElementById(STYLE_ID)?.remove();
         root.log.info("kapybara-theme", "removed");
@@ -3364,12 +3367,22 @@
           preset: ctx.storage.get("preset", DEFAULTS.preset),
           accent: validColor(ctx.storage.get("accent", DEFAULTS.accent), DEFAULTS.accent),
           pitchBlack: ctx.storage.get("pitchBlack", DEFAULTS.pitchBlack) !== false,
-          softenCards: ctx.storage.get("softenCards", DEFAULTS.softenCards) !== false,
+          softenCards: ctx.storage.get("softenCards", DEFAULTS.softenCards) === true,
         };
       }
 
       function palette(settings) {
         const presets = {
+          lucifer: {
+            bg: settings.pitchBlack ? "#000000" : "#0b0b0b",
+            surface: "#161819",
+            surface2: "#24282b",
+            line: "#666666",
+            text: "#eeeeee",
+            muted: "#aaaaaa",
+            unread: "#4f8cbe",
+            unreadRead: "#9e6700",
+          },
           black: {
             bg: settings.pitchBlack ? "#000000" : "#070707",
             surface: "#141414",
@@ -3377,67 +3390,77 @@
             line: "#303030",
             text: "#f4f4f4",
             muted: "#aaaeb6",
+            unread: "#4f8cbe",
+            unreadRead: "#9e6700",
           },
           charcoal: {
-            bg: "#101214",
-            surface: "#191d21",
-            surface2: "#242a30",
-            line: "#36404a",
-            text: "#f2f4f7",
-            muted: "#a8b0ba",
+            bg: "#101214", surface: "#191d21", surface2: "#242a30", line: "#36404a",
+            text: "#f2f4f7", muted: "#a8b0ba", unread: "#4f8cbe", unreadRead: "#9e6700",
           },
           blueblack: {
-            bg: "#080b10",
-            surface: "#111827",
-            surface2: "#1d2636",
-            line: "#334155",
-            text: "#f8fafc",
-            muted: "#a6b1c2",
+            bg: "#080b10", surface: "#111827", surface2: "#1d2636", line: "#334155",
+            text: "#f8fafc", muted: "#a6b1c2", unread: "#4f8cbe", unreadRead: "#9e6700",
           },
         };
-        return presets[settings.preset] || presets.black;
+        return presets[settings.preset] || presets.lucifer;
       }
 
       function installStyle() {
         if (document.getElementById(STYLE_ID)) return;
-
         const style = document.createElement("style");
         style.id = STYLE_ID;
         style.textContent = `
           html[${THEME_ATTR}="dark"]{color-scheme:dark;background:var(--cudloun-kapybara-bg)!important;scrollbar-color:var(--cudloun-kapybara-accent) var(--cudloun-kapybara-bg)}
-          html[${THEME_ATTR}="dark"] body,
-          html[${THEME_ATTR}="dark"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}
-          html[${THEME_ATTR}="dark"] body::before,
-          html[${THEME_ATTR}="dark"] body::after,
-          html[${THEME_ATTR}="dark"] #root::before,
-          html[${THEME_ATTR}="dark"] #root::after{background:transparent!important;background-image:none!important}
+          html[${THEME_ATTR}="dark"] body,html[${THEME_ATTR}="dark"] #root{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important}
+          html[${THEME_ATTR}="dark"] :where(body,#root)::before,html[${THEME_ATTR}="dark"] :where(body,#root)::after,html[${THEME_ATTR}="dark"] .🐟-stripes{background:transparent!important;background-image:none!important}
 
-          html[${THEME_ATTR}="dark"] :where(main,header,nav,footer,aside,section,form):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^="cudloun-"]){background-color:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
-          html[${THEME_ATTR}="dark"] :where(.post,.post-main,.message-card,.conversation-item,.bottom-sheet,[role="dialog"],[role="menu"]):not(.cudloun-dialog):not(.cudloun-backdrop):not([class^="cudloun-"]){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
-          html[${THEME_ATTR}="dark"] article.post{border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}
+          /* Stable Kapybara chrome: only semantic selectors. */
+          html[${THEME_ATTR}="dark"] header:not(.board-header):not(.post-header){background:#1c1816!important;color:var(--cudloun-kapybara-text)!important;border-color:#444!important}
+          html[${THEME_ATTR}="dark"] header.board-header,html[${THEME_ATTR}="dark"] main,html[${THEME_ATTR}="dark"] footer,html[${THEME_ATTR}="dark"] nav,html[${THEME_ATTR}="dark"] aside{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] :where(.bottom-sheet,[role="dialog"],[role="menu"],.message-card,.conversation-item,.welcome-box,.alert.info){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+
+          html[${THEME_ATTR}="dark"] article.post{background:var(--cudloun-kapybara-bg)!important;color:var(--cudloun-kapybara-text)!important;border-radius:var(--cudloun-kapybara-radius)!important;box-shadow:none!important}
           html[${THEME_ATTR}="dark"] article.post + article.post{border-top:1px solid var(--cudloun-kapybara-line)!important}
-          html[${THEME_ATTR}="dark"] .post-header,
-          html[${THEME_ATTR}="dark"] .meta,
-          html[${THEME_ATTR}="dark"] .reply-ref,
-          html[${THEME_ATTR}="dark"] .actions,
-          html[${THEME_ATTR}="dark"] .conversation-item{border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] article.post .post-header{min-height:24px!important;margin:0!important;padding:3px 0!important;background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-top:1px solid #777!important;border-bottom:1px solid #777!important}
+          html[${THEME_ATTR}="dark"] article.post .body{margin-top:12px!important;color:var(--cudloun-kapybara-text)!important}
+          html[${THEME_ATTR}="dark"] article.post.unread{background:#202224!important;border-left:6px solid var(--cudloun-kapybara-unread)!important;border-right:2px solid var(--cudloun-kapybara-unread)!important;border-bottom-left-radius:13px!important}
+          html[${THEME_ATTR}="dark"] article.post.unread.read{background:var(--cudloun-kapybara-surface)!important;border-left-color:var(--cudloun-kapybara-unread-read)!important;border-right-color:var(--cudloun-kapybara-unread-read)!important}
+          html[${THEME_ATTR}="dark"] article.post.muted{opacity:1!important}
+          html[${THEME_ATTR}="dark"] article.post.muted :where(.avatar-col,.post-header){opacity:.45!important;filter:saturate(0)}
+          html[${THEME_ATTR}="dark"] article.post.unread.muted.read{background:color-mix(in srgb,var(--cudloun-kapybara-surface) 70%,transparent)!important;border-color:#9999996e!important}
 
-          html[${THEME_ATTR}="dark"] :where(.body,.markdown,.post-main,p,li,span,div):not(.cudloun-dialog *):not([class^="cudloun-"]){color:inherit}
-          html[${THEME_ATTR}="dark"] :where(.meta,.reply-ref,time,small,label):not(.cudloun-dialog *):not([class^="cudloun-"]){color:var(--cudloun-kapybara-muted)!important}
-          html[${THEME_ATTR}="dark"] :where(a,.author,.reply-action,button.date):not(.cudloun-dialog *):not([class^="cudloun-"]){color:var(--cudloun-kapybara-accent)!important}
-          html[${THEME_ATTR}="dark"] :where(a):not(.cudloun-dialog *){text-decoration-color:color-mix(in srgb,var(--cudloun-kapybara-accent) 60%,transparent)!important}
+          /* Dynamic old-format posts arrive as .code divs, not native pre/code. */
+          html[${THEME_ATTR}="dark"] article.post .body > .code{display:block;padding:10px 12px;overflow-x:auto;white-space:pre-wrap!important;tab-size:4;background:#111!important;color:#ddd!important;border:1px solid #444!important;font:13px/1.45 ui-monospace,Consolas,monospace}
+          html[${THEME_ATTR}="dark"] article.post :where(pre,.markdown-code){display:block;padding:10px 12px;overflow-x:auto;white-space:pre-wrap!important;tab-size:4;background:#111!important;color:#ddd!important;border:1px solid #444!important}
+          html[${THEME_ATTR}="dark"] :where(.meta,.reply-ref,time,small,label,.muted-inline-excerpt){color:var(--cudloun-kapybara-muted)!important}
+          html[${THEME_ATTR}="dark"] :where(a,.author,.reply-action,button.date){color:var(--cudloun-kapybara-accent)!important}
+          html[${THEME_ATTR}="dark"] :where(a,.reply-action,button):hover{color:#ffcc33!important;text-decoration-color:currentColor!important}
+          html[${THEME_ATTR}="dark"] :where(.row,li > a.row){border-color:transparent!important}
+          html[${THEME_ATTR}="dark"] :where(.row,li > a.row):hover{background:#151515!important;border-color:#444!important}
 
-          html[${THEME_ATTR}="dark"] :where(button,input,textarea,select):not(.cudloun-dialog *):not([class^="cudloun-"]){background:var(--cudloun-kapybara-surface-2)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
-          html[${THEME_ATTR}="dark"] :where(button):not(.cudloun-dialog *):not([class^="cudloun-"]):hover{background:var(--cudloun-kapybara-accent-soft)!important}
-          html[${THEME_ATTR}="dark"] input::placeholder,
-          html[${THEME_ATTR}="dark"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}
-
-          html[${THEME_ATTR}="dark"] .avatar,
-          html[${THEME_ATTR}="dark"] .avatar img,
-          html[${THEME_ATTR}="dark"] .avatar-button img,
-          html[${THEME_ATTR}="dark"] .avatar-shell img{background:transparent!important;border-color:transparent!important}
+          html[${THEME_ATTR}="dark"] :where(button,input,textarea,select,.composer,.composer-entry,section.new-post-composer){background:var(--cudloun-kapybara-surface)!important;color:var(--cudloun-kapybara-text)!important;border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] :where(input,textarea,.composer){background:#111!important}
+          html[${THEME_ATTR}="dark"] :where(button):hover{background:var(--cudloun-kapybara-accent-soft)!important}
+          html[${THEME_ATTR}="dark"] input::placeholder,html[${THEME_ATTR}="dark"] textarea::placeholder{color:var(--cudloun-kapybara-muted)!important}
+          html[${THEME_ATTR}="dark"] :where(.avatar,.avatar-button){border-radius:0!important;border-color:#123!important;box-shadow:0 0 0 1px #666!important}
+          html[${THEME_ATTR}="dark"] :where(.spoiler){border-color:#666!important}
+          html[${THEME_ATTR}="dark"] :where(.spoiler.revealed){background:#323232!important}
+          html[${THEME_ATTR}="dark"] :where(.reply-preview){background:#181d21f5!important;border:3px solid #497e8d5e!important}
+          html[${THEME_ATTR}="dark"] :where(.🐟-button--primary,.entry-prispet){background:var(--cudloun-kapybara-accent)!important;color:#000!important;border-color:var(--cudloun-kapybara-accent)!important}
+          html[${THEME_ATTR}="dark"] :where(.🐟-button--primary,.entry-prispet):hover{background:#ffcc33!important;border-color:#ffcc33!important}
+          html[${THEME_ATTR}="dark"] :where(.🐟-button--primary,.entry-prispet):disabled{background:#323232!important;color:#aaa!important;border-color:#666!important}
           html[${THEME_ATTR}="dark"] :where(img,video,canvas):not(.cudloun-mascot){color-scheme:normal}
-          html[${THEME_ATTR}="dark"] :where(hr){border-color:var(--cudloun-kapybara-line)!important}
+          html[${THEME_ATTR}="dark"] hr{border-color:var(--cudloun-kapybara-line)!important}
+
+          /* Mobile: retain the treatment without squeezing headers or overlapping posts. */
+          @media (max-width:640px){
+            html[${THEME_ATTR}="dark"] article.post .post-header{min-height:unset!important;padding:6px 0!important}
+            html[${THEME_ATTR}="dark"] article.post .body{margin-top:10px!important}
+            html[${THEME_ATTR}="dark"] article.post.unread{border-left-width:4px!important;border-right-width:1px!important;border-bottom-left-radius:10px!important}
+            html[${THEME_ATTR}="dark"] :where(.composer-entry,section.new-post-composer){margin-inline:0!important}
+            html[${THEME_ATTR}="dark"] article.post .body > .code{padding:8px 10px;font-size:12px}
+            html[${THEME_ATTR}="dark"] article.post :where(pre,.markdown-code){padding:8px 10px}
+          }
         `;
         document.head.appendChild(style);
       }
@@ -3445,53 +3468,37 @@
       function makeCheckboxRow(ctx, labelText, key, fallback) {
         const label = document.createElement("label");
         label.className = "cudloun-setting-row";
-
         const text = document.createElement("span");
         text.className = "cudloun-setting-text";
         text.textContent = labelText;
-
         const input = document.createElement("input");
         input.type = "checkbox";
-        input.checked = ctx.storage.get(key, fallback) !== false;
-        input.addEventListener("change", () => {
-          ctx.storage.set(key, input.checked);
-          apply(ctx);
-        });
-
-        label.appendChild(text);
-        label.appendChild(input);
+        input.checked = ctx.storage.get(key, fallback) === true;
+        input.addEventListener("change", () => { ctx.storage.set(key, input.checked); apply(ctx); });
+        label.append(text, input);
         return label;
       }
 
       function makeColorRow(ctx, labelText, key, fallback) {
         const label = document.createElement("label");
         label.className = "cudloun-setting-row";
-
         const text = document.createElement("span");
         text.className = "cudloun-setting-text";
         text.textContent = labelText;
-
         const input = document.createElement("input");
         input.type = "color";
         input.value = validColor(ctx.storage.get(key, fallback), fallback);
-        input.addEventListener("input", () => {
-          ctx.storage.set(key, input.value);
-          apply(ctx);
-        });
-
-        label.appendChild(text);
-        label.appendChild(input);
+        input.addEventListener("input", () => { ctx.storage.set(key, input.value); apply(ctx); });
+        label.append(text, input);
         return label;
       }
 
       function makeSelectRow(ctx, labelText, key, options) {
         const label = document.createElement("label");
         label.className = "cudloun-setting-row";
-
         const text = document.createElement("span");
         text.className = "cudloun-setting-text";
         text.textContent = labelText;
-
         const select = document.createElement("select");
         select.className = "cudloun-select";
         const current = ctx.storage.get(key, DEFAULTS[key]);
@@ -3502,13 +3509,8 @@
           option.selected = value === current;
           select.appendChild(option);
         });
-        select.addEventListener("change", () => {
-          ctx.storage.set(key, select.value);
-          apply(ctx);
-        });
-
-        label.appendChild(text);
-        label.appendChild(select);
+        select.addEventListener("change", () => { ctx.storage.set(key, select.value); apply(ctx); });
+        label.append(text, select);
         return label;
       }
 
@@ -3518,12 +3520,8 @@
       }
 
       function hexToRgba(hex, alpha) {
-        const clean = validColor(hex, DEFAULTS.accent).slice(1);
-        const value = Number.parseInt(clean, 16);
-        const red = (value >> 16) & 255;
-        const green = (value >> 8) & 255;
-        const blue = value & 255;
-        return `rgba(${red},${green},${blue},${alpha})`;
+        const value = Number.parseInt(validColor(hex, DEFAULTS.accent).slice(1), 16);
+        return `rgba(${(value >> 16) & 255},${(value >> 8) & 255},${value & 255},${alpha})`;
       }
     })();
 
