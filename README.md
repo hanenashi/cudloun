@@ -43,12 +43,28 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
   divider, and avatar-display controls as a default-disabled module.
 - `modules/post-fonts.js` owns the compact post font family and size control.
 - `modules/opuc/` contains the experimental OPUc-for-Kapybara integration.
+- `modules/opu-originals.js` is a separate opt-in reader-side module that
+  expands OPU thumbnail images to their original files in board posts.
 
 The installable seed uses `@require` so CSP-strict frontends such as Kapybara do not block startup. Source modules stay separate in `modules/`; run this after source changes:
 
 ```text
 node scripts/build-bundle.js
 ```
+
+## Version 0.6.33 TL;DR
+
+- Kapyguts 0.6.4 maps the live Topics, Present users, and Favorites surfaces,
+  including topic cards/club filters, profile triggers, unread/activity views,
+  and pin controls. It also exposes board search and actions launchers.
+- The old `/test/fonts` and `/test/posts` routes currently show Kapybara's
+  not-found page; their existing helpers remain only for legacy compatibility.
+- Added opt-in **OPU Originals** for Pebble's request: replace exact OPU
+  `/thumbs/` image sources with originals inline, while preserving links and
+  restoring thumbnails when disabled or when an original fails to load.
+- The hub now keeps Settoun, Post Fonts, and OPU Originals under **Current**;
+  six older opt-in modules live in a collapsed **Dusty Room**. They remain
+  default-off, while previously saved enablement choices are preserved.
 
 ## Version 0.6.32 TL;DR
 
@@ -74,6 +90,10 @@ separate userscript or repository. Its architecture, implementation phases, and
 test criteria are in [`modules/opuc/README.md`](modules/opuc/README.md).
 The Firefox Greasemonkey compatibility investigation and final manager-specific
 transport decision are documented in [`grease.md`](grease.md).
+
+OPU Originals is independent of the OPUc uploader. Its reader-side scope,
+safety boundaries, and Pebble discussion are in
+[`modules/opu-originals.md`](modules/opu-originals.md).
 
 ## Kapyguts
 

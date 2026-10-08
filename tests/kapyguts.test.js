@@ -55,7 +55,7 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.3");
+  assert.equal(kapyguts.version, "0.6.4");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
 });
@@ -128,6 +128,8 @@ test("Kapyguts maps current top-level Kapybara routes and stable live controls",
   assert.equal(loadModule("", "/new-boards").route().type, "new-boards");
   assert.equal(loadModule("", "/fav").route().type, "favorites");
   assert.equal(loadModule("", "/messages").route().type, "messages");
+  assert.equal(loadModule("", "/topics/8").route().type, "topics");
+  assert.equal(loadModule("", "/active-users").route().type, "active-users");
 
   const kapyguts = loadModule();
   assert.equal(kapyguts.selectors.pageHeader, "header:has(a[aria-label='Okoun home'], .logo)");
@@ -166,6 +168,56 @@ test("Kapyguts describes the current home navigation and club rows", () => {
   assert.deepEqual(Array.from(parts.tabs), tabs);
   assert.deepEqual(Array.from(parts.boardRows), boardRows);
   assert.equal(parts.mobileBottomNav, mobileBottomNav);
+});
+
+test("Kapyguts maps topic discovery, present users, and Favorites controls", () => {
+  const kapyguts = loadModule();
+  const topicsSection = node();
+  const card = node();
+  const cardLink = node();
+  const topicBoardsSection = node();
+  const topicFilter = node();
+  const topicBoardRow = node();
+  const activeUsersSection = node();
+  const activeUserRow = node();
+  const profileButton = node();
+  const favoritesPage = node();
+  const unreadSwitch = node();
+  const viewGroup = node();
+  const viewLink = node();
+  const favoriteRow = node();
+  const pinButton = node();
+  const scope = node({
+    one: {
+      [kapyguts.selectors.topicsSection]: topicsSection,
+      [kapyguts.selectors.topicBoardsSection]: topicBoardsSection,
+      [kapyguts.selectors.topicBoardFilter]: topicFilter,
+      [kapyguts.selectors.activeUsersSection]: activeUsersSection,
+      [kapyguts.selectors.favoritesPage]: favoritesPage,
+      [kapyguts.selectors.favoritesUnreadSwitch]: unreadSwitch,
+      [kapyguts.selectors.favoritesViewGroup]: viewGroup,
+    },
+    many: {
+      [kapyguts.selectors.topicCard]: [card],
+      [kapyguts.selectors.topicCardLink]: [cardLink],
+      [kapyguts.selectors.topicBoardRow]: [topicBoardRow],
+      [kapyguts.selectors.activeUserRow]: [activeUserRow],
+      [kapyguts.selectors.activeUserProfileButton]: [profileButton],
+      [kapyguts.selectors.favoritesViewLink]: [viewLink],
+      [kapyguts.selectors.favoriteBoardRow]: [favoriteRow],
+      [kapyguts.selectors.favoritesPinButton]: [pinButton],
+    },
+  });
+
+  assert.equal(kapyguts.topicsParts(scope).ready, true);
+  assert.deepEqual(Array.from(kapyguts.topicsParts(scope).cardLinks), [cardLink]);
+  assert.equal(kapyguts.topicsParts(scope).boardFilter, topicFilter);
+  assert.deepEqual(Array.from(kapyguts.topicsParts(scope).boardRows), [topicBoardRow]);
+  assert.equal(kapyguts.activeUsersParts(scope).ready, true);
+  assert.deepEqual(Array.from(kapyguts.activeUsersParts(scope).profileButtons), [profileButton]);
+  assert.equal(kapyguts.favoritesParts(scope).ready, true);
+  assert.equal(kapyguts.favoritesParts(scope).unreadSwitch, unreadSwitch);
+  assert.deepEqual(Array.from(kapyguts.favoritesParts(scope).pinButtons), [pinButton]);
 });
 
 test("Kapyguts describes current Vzkazník panes and message cards", () => {

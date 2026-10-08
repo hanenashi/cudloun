@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.3";
+  const VERSION = "0.6.4";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
@@ -16,6 +16,15 @@
     homeBoardsSection: "section.boards-section",
     homeBoardList: "section.boards-section ul.list",
     homeBoardRow: "section.boards-section a.row[href^='/boards/']",
+    topicsSection: "section.topics",
+    topicCard: "section.topics article.topic-card",
+    topicCardLink: "section.topics article.topic-card a.card-link[href^='/topics/']",
+    topicBoardsSection: "section.topic-boards",
+    topicBoardFilter: "section.topic-boards nav[aria-label='Filtr klubů']",
+    topicBoardRow: "section.topic-boards ul.list a.row[href^='/boards/']",
+    activeUsersSection: "section.active-users",
+    activeUserRow: "section.active-users li",
+    activeUserProfileButton: "section.active-users button.avatar-trigger[aria-label^='Profil uživatele']",
     loginLink: "a[href^='/login']",
     directLoginLink: "a[href='/login']",
     loginUsername: "input[autocomplete='username']",
@@ -34,6 +43,8 @@
     boardTitleRow: ".board-header .title-row",
     boardTitleLink: ".board-header .title-link",
     boardTitleActions: ".board-header .title-row .title-actions",
+    boardSearchButton: "header.board-header button[aria-label='Hledat v klubu']",
+    boardActionsButton: "header.board-header button[aria-label='Další akce']",
     boardNewPostButton: "button.entry-placeholder, button.new-post.mobile",
     boardImageToggle: "button.images-toggle[aria-pressed]",
     boardViewToggle: "button[role='radio'][data-toggle-group-item]",
@@ -52,10 +63,17 @@
     replyMeta: ".reply-ref",
     body: ".body",
     markdown: ".markdown",
+    postImage: "article.post .body img[src]",
+    postImageWrapper: "article.post .body .okimg-sized",
     actions: ".actions",
     replyButton: ".reply-action",
     postMenuButton: "button[aria-label='menu']",
     favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
+    favoritesPage: "section.favorites-page",
+    favoritesUnreadSwitch: "section.favorites-page a.filter[role='switch']",
+    favoritesViewGroup: "section.favorites-page [role='group'][aria-label='Zobrazení oblíbených klubů']",
+    favoritesViewLink: "section.favorites-page [role='group'][aria-label='Zobrazení oblíbených klubů'] a[href^='/fav/']",
+    favoritesPinButton: "section.favorites-page button.pin-icon[aria-label]",
     messagesPage: "section.messages-page",
     messagesShell: ".messages-shell",
     conversationList: ".conversation-list",
@@ -159,6 +177,8 @@
       "Klasický Okoun ukládá blok kódu jako div.code; pro zachování řádků použijte white-space: pre-wrap.",
     ]),
     rule("post Markdown body", "article.post .body .markdown", "article.post .body .markdown"),
+    rule("post image", SELECTORS.postImage, SELECTORS.postImage),
+    rule("post image wrapper", SELECTORS.postImageWrapper, SELECTORS.postImageWrapper),
     rule("post reply metadata", `article.post ${SELECTORS.replyMeta}`, `article.post ${SELECTORS.replyMeta}`),
     rule("post reply button", `article.post ${SELECTORS.replyButton}`, `article.post ${SELECTORS.replyButton}`),
     rule("post menu button", `article.post ${SELECTORS.postMenuButton}`, `article.post ${SELECTORS.postMenuButton}`),
@@ -193,6 +213,8 @@
     rule("new-post composer", SELECTORS.newPostComposer, SELECTORS.newPostComposer),
     rule("reply composer", SELECTORS.replyComposer, SELECTORS.replyComposer),
     rule("board header actions", SELECTORS.boardTitleActions, SELECTORS.boardTitleActions),
+    rule("board search button", SELECTORS.boardSearchButton, SELECTORS.boardSearchButton),
+    rule("board actions button", SELECTORS.boardActionsButton, SELECTORS.boardActionsButton),
     rule("board title link", SELECTORS.boardTitleLink, SELECTORS.boardTitleLink),
     rule("board title row", SELECTORS.boardTitleRow, SELECTORS.boardTitleRow),
     rule("board header", SELECTORS.boardHeader, SELECTORS.boardHeader),
@@ -212,6 +234,15 @@
     rule("home boards section", SELECTORS.homeBoardsSection, SELECTORS.homeBoardsSection),
     rule("home navigation tab", SELECTORS.homeTab, SELECTORS.homeTab),
     rule("home navigation", SELECTORS.homeNavigation, SELECTORS.homeNavigation),
+    rule("topic card link", SELECTORS.topicCardLink, SELECTORS.topicCardLink),
+    rule("topic card", SELECTORS.topicCard, SELECTORS.topicCard),
+    rule("topics section", SELECTORS.topicsSection, SELECTORS.topicsSection),
+    rule("topic board filter", SELECTORS.topicBoardFilter, SELECTORS.topicBoardFilter),
+    rule("topic board row", SELECTORS.topicBoardRow, SELECTORS.topicBoardRow),
+    rule("topic boards section", SELECTORS.topicBoardsSection, SELECTORS.topicBoardsSection),
+    rule("active user profile button", SELECTORS.activeUserProfileButton, SELECTORS.activeUserProfileButton),
+    rule("active user row", SELECTORS.activeUserRow, SELECTORS.activeUserRow),
+    rule("active users section", SELECTORS.activeUsersSection, SELECTORS.activeUsersSection),
     rule("primary navigation", SELECTORS.primaryNavigation, SELECTORS.primaryNavigation),
     rule("site menu login", SELECTORS.siteMenuLoginLink, SELECTORS.siteMenuLoginLink),
     rule("site menu", SELECTORS.siteMenu, SELECTORS.siteMenu),
@@ -219,6 +250,10 @@
     rule("login username", SELECTORS.loginUsername, SELECTORS.loginUsername),
     rule("login password", SELECTORS.loginPassword, SELECTORS.loginPassword),
     rule("Favorites board row", SELECTORS.favoriteBoardRow, SELECTORS.favoriteBoardRow),
+    rule("Favorites unread filter", SELECTORS.favoritesUnreadSwitch, SELECTORS.favoritesUnreadSwitch),
+    rule("Favorites view link", SELECTORS.favoritesViewLink, SELECTORS.favoritesViewLink),
+    rule("Favorites pin button", SELECTORS.favoritesPinButton, SELECTORS.favoritesPinButton),
+    rule("Favorites page", SELECTORS.favoritesPage, SELECTORS.favoritesPage),
     rule("selected conversation", SELECTORS.selectedMessageItem, SELECTORS.selectedMessageItem),
     rule("conversation item", SELECTORS.messageItem, SELECTORS.messageItem),
     rule("conversation back button", SELECTORS.conversationBackButton, SELECTORS.conversationBackButton),
@@ -251,6 +286,9 @@
     pageHeader,
     pageHeaderParts,
     homeParts,
+    topicsParts,
+    activeUsersParts,
+    favoritesParts,
     accessParts,
     avatarMenuParts,
     boardHeaderParts,
@@ -403,6 +441,43 @@
     };
   }
 
+  function topicsParts(scope = document) {
+    const section = scope.querySelector(SELECTORS.topicsSection);
+    const boardsSection = scope.querySelector(SELECTORS.topicBoardsSection);
+    return {
+      section,
+      cards: Array.from(scope.querySelectorAll(SELECTORS.topicCard)),
+      cardLinks: Array.from(scope.querySelectorAll(SELECTORS.topicCardLink)),
+      boardsSection,
+      boardFilter: scope.querySelector(SELECTORS.topicBoardFilter),
+      boardRows: Array.from(scope.querySelectorAll(SELECTORS.topicBoardRow)),
+      ready: !!(section || boardsSection),
+    };
+  }
+
+  function activeUsersParts(scope = document) {
+    const section = scope.querySelector(SELECTORS.activeUsersSection);
+    return {
+      section,
+      rows: Array.from(scope.querySelectorAll(SELECTORS.activeUserRow)),
+      profileButtons: Array.from(scope.querySelectorAll(SELECTORS.activeUserProfileButton)),
+      ready: !!section,
+    };
+  }
+
+  function favoritesParts(scope = document) {
+    const page = scope.querySelector(SELECTORS.favoritesPage);
+    return {
+      page,
+      unreadSwitch: scope.querySelector(SELECTORS.favoritesUnreadSwitch),
+      viewGroup: scope.querySelector(SELECTORS.favoritesViewGroup),
+      viewLinks: Array.from(scope.querySelectorAll(SELECTORS.favoritesViewLink)),
+      boardRows: Array.from(scope.querySelectorAll(SELECTORS.favoriteBoardRow)),
+      pinButtons: Array.from(scope.querySelectorAll(SELECTORS.favoritesPinButton)),
+      ready: !!page,
+    };
+  }
+
   function accessParts(scope = document) {
     const loginLinks = Array.from(scope.querySelectorAll(SELECTORS.loginLink));
     const directLoginLink = scope.querySelector(SELECTORS.siteMenuLoginLink) ||
@@ -466,6 +541,8 @@
       titleRow,
       titleLink,
       actions,
+      searchButton: scope.querySelector(SELECTORS.boardSearchButton),
+      actionsButton: scope.querySelector(SELECTORS.boardActionsButton),
       newPostButton: scope.querySelector(SELECTORS.boardNewPostButton),
       imageToggle: scope.querySelector(SELECTORS.boardImageToggle),
       viewToggles: Array.from(scope.querySelectorAll(SELECTORS.boardViewToggle)),
@@ -632,6 +709,7 @@
     const replyMeta = post.querySelector(SELECTORS.replyMeta);
     const body = post.querySelector(SELECTORS.body);
     const markdown = post.querySelector(SELECTORS.markdown);
+    const images = Array.from(post.querySelectorAll(`${SELECTORS.body} img[src]`));
     const actions = post.querySelector(SELECTORS.actions);
     const reply = post.querySelector(SELECTORS.replyButton);
     const postMenuButton = post.querySelector(SELECTORS.postMenuButton);
@@ -651,6 +729,7 @@
       replyMeta,
       body,
       markdown,
+      images,
       actions,
       reply,
       postMenuButton,

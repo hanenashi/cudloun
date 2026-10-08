@@ -54,6 +54,9 @@ It exposes:
 - `pageHeader()`
 - `pageHeaderParts()`
 - `homeParts()`
+- `topicsParts()`
+- `activeUsersParts()`
+- `favoritesParts()`
 - `accessParts()`
 - `avatarMenuParts()`
 - `boardHeaderParts()`
@@ -160,6 +163,40 @@ active tab, board section/list/rows, mobile navigation, and a compact `ready`
 flag. On the inspected active-clubs screen it found four tabs and twenty club
 rows.
 
+## Discovery And Favorites (2026-10-08)
+
+The other home tabs are live on both desktop and 390px layouts:
+
+```text
+/new-boards          newly created clubs
+/topics              topic cards and subtopic chips
+/topics/:id          clubs within a topic, with club filters
+/active-users        currently present users and profile triggers
+```
+
+Use `topicsParts()` for `section.topics article.topic-card`, each overlay
+`a.card-link[href^="/topics/"]`, and the `section.topic-boards` detail page.
+Within a detail page, `nav[aria-label="Filtr klubů"]` has tabs for all, new,
+and deleted clubs; the club rows are scoped to `section.topic-boards ul.list`.
+`activeUsersParts()` maps `section.active-users` rows and the accessible
+`button.avatar-trigger[aria-label^="Profil uživatele"]` profile controls.
+
+Favorites currently has topic/activity sort links, an unread-only switch,
+per-club pin buttons, and a cross-link to My clubs:
+
+```text
+/fav/topics
+/fav/topics?unread
+/fav/activity
+/my/boards/topics
+```
+
+`favoritesParts()` scopes these to `section.favorites-page`. The unread
+control is a link with `role="switch"`; its presence is not its on/off state.
+The view group has `aria-label="Zobrazení oblíbených klubů"`, and pin controls
+have their own `aria-label`. Reading these nodes is safe; clicking pin or
+read-state controls changes user data and was not part of this audit.
+
 ## Board Page Lab Species
 
 Baseline page inspected on 2026-06-11:
@@ -193,6 +230,8 @@ button.date
 .reply-ref
 .body
 .markdown
+article.post .body img[src]
+article.post .body .okimg-sized
 .actions
 .reply-action
 button[aria-label="menu"]
@@ -220,10 +259,16 @@ dateButton
 replyMeta
 body
 markdown
+images
 actions
 reply
 postMenuButton
 ```
+
+`postImage` and `postImageWrapper` are the shared reader-side hooks for
+inline images. The opt-in OPU Originals module uses `postImage` to find exact
+OPU `/thumbs/` sources; `postParts(post).images` lists a post's images without
+requiring each consumer to inspect Kapybara's generated classes.
 
 Kapybara post links use stable anchors:
 
@@ -290,7 +335,12 @@ nav.pager[aria-label="Stránkování příspěvků"]
 ```
 
 `boardHeaderParts()` includes these as `newPostButton`, `imageToggle`,
-`viewToggles`, and `pagers` in addition to the header fields.
+`viewToggles`, and `pagers` in addition to the header fields. It also exposes
+`searchButton` (`Hledat v klubu`) and `actionsButton` (`Další akce`). Opening
+the latter is read-only: the current menu offers the classic-site link, club
+administration, deletion marking, blocked-user display, and read-state
+actions. On mobile it is a dialog around a role menu; do not depend on the
+desktop-only popover shell.
 
 ## Viewport Edge Stripes
 
@@ -319,6 +369,10 @@ the `kapybara` board. Kapybara itself labels this menu item `[test]` and Koles
 described its location as very temporary, so keep all dependencies behind the
 Kapyguts helpers below.
 
+On 2026-10-08, direct visits to `/test/fonts` and `/test/posts` rendered
+Kapybara's not-found page. Treat the mappings below as historical until a
+replacement is observed; do not route users there.
+
 Responsive account-menu entry points:
 
 ```text
@@ -327,8 +381,11 @@ mobile:  nav[aria-label="Spodní navigace"] button.user-item[aria-haspopup]
 link:    a[role="menuitem"][href="/test/fonts"]
 ```
 
-Desktop opens a menu with `data-dropdown-menu-content`; mobile opens
+In the 2026-07-20 snapshot, desktop opened a menu with
+`data-dropdown-menu-content` and mobile opened
 `[role="dialog"][aria-label="uživatelské menu"]` containing a role menu.
+On 2026-10-08 both triggers were present, but automated clicks exposed no
+menu; that interaction needs manual confirmation before relying on it.
 `avatarMenuParts()` normalizes both into `trigger`, `menu`, `items`,
 `fontSettingsLink`, and `open`.
 

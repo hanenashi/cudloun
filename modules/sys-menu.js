@@ -20,6 +20,7 @@
   let hubPosition = null;
   let hubCollapsed = false;
   let hubSelectedId = null;
+  let dustyRoomOpen = false;
 
   root.ui = {
     start,
@@ -404,7 +405,11 @@
     const backdrop = document.querySelector(`.${BACKDROP_CLASS}`);
     if (!backdrop) return;
 
+    const previousList = backdrop.querySelector(".cudloun-module-list");
+    const listScroll = previousList ? { top: previousList.scrollTop, left: previousList.scrollLeft } : null;
+
     const selectedModule = root.modules.find((module) => module.id === selectedId) || root.modules[0];
+    if (selectedModule && moduleCategory(selectedModule) === "dusty-room") dustyRoomOpen = true;
     const mode = selectedId === "debug" ? "debug" : "module";
     hubSelectedId = mode === "debug" ? "debug" : selectedModule?.id;
     backdrop.innerHTML = "";
@@ -420,6 +425,11 @@
     if (!hubCollapsed) dialog.appendChild(renderBody(mode, selectedModule));
     backdrop.appendChild(dialog);
     applyHubPosition(dialog);
+    const nextList = dialog.querySelector(".cudloun-module-list");
+    if (nextList && listScroll) {
+      nextList.scrollTop = listScroll.top;
+      nextList.scrollLeft = listScroll.left;
+    }
   }
 
   function renderMascot() {
@@ -571,9 +581,33 @@
 
     const list = document.createElement("div");
     list.className = "cudloun-module-list";
-    root.modules.forEach((module) => {
+    const currentModules = root.modules.filter((module) => moduleCategory(module) === "current");
+    const dustyModules = root.modules.filter((module) => moduleCategory(module) === "dusty-room");
+    const heading = document.createElement("div");
+    heading.className = "cudloun-module-group-label";
+    heading.textContent = "Current";
+    list.appendChild(heading);
+    currentModules.forEach((module) => {
       list.appendChild(renderModuleListItem(module, mode === "module" ? selectedModule?.id : null));
     });
+    if (dustyModules.length) {
+      const toggle = document.createElement("button");
+      toggle.className = "cudloun-module-group-toggle";
+      toggle.type = "button";
+      toggle.setAttribute("aria-expanded", String(dustyRoomOpen));
+      const activeCount = dustyModules.filter((module) => root.storage.isModuleEnabled(module.id)).length;
+      toggle.textContent = `${dustyRoomOpen ? "▾" : "▸"} Dusty Room (${dustyModules.length})${activeCount ? ` · ${activeCount} active` : ""}`;
+      toggle.addEventListener("click", () => {
+        dustyRoomOpen = !dustyRoomOpen;
+        const nextSelected = !dustyRoomOpen && selectedModule && moduleCategory(selectedModule) === "dusty-room"
+          ? currentModules[0]?.id : hubSelectedId;
+        renderHub(nextSelected);
+      });
+      list.appendChild(toggle);
+      if (dustyRoomOpen) dustyModules.forEach((module) => {
+        list.appendChild(renderModuleListItem(module, mode === "module" ? selectedModule?.id : null));
+      });
+    }
     list.appendChild(renderDebugListItem(mode === "debug"));
 
     const details = document.createElement("div");
@@ -583,6 +617,11 @@
     body.appendChild(list);
     body.appendChild(details);
     return body;
+  }
+
+  function moduleCategory(module) {
+    const item = root.manifest?.modules?.find((entry) => entry.id === module.id);
+    return item?.category === "dusty-room" ? "dusty-room" : "current";
   }
 
   function renderModuleListItem(module, selectedModuleId) {
@@ -895,6 +934,9 @@
       .cudloun-restore-fullscreen button:hover{background:#eef2f7}
       .cudloun-body{min-height:390px;display:grid;grid-template-columns:minmax(190px,250px) 1fr;overflow:hidden}
       .cudloun-module-list{overflow:auto;padding:12px;border-right:1px solid rgba(79,102,134,.18);background:#edf2f7}
+      .cudloun-module-group-label{margin:4px 10px 8px;color:#697586;font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+      .cudloun-module-group-toggle{appearance:none;width:100%;min-height:40px;margin:8px 0;padding:9px 10px;border:1px solid rgba(79,102,134,.2);border-radius:6px;background:#e5eaf0;color:#344054;cursor:pointer;font:700 .85rem/1.2 inherit;text-align:left}
+      .cudloun-module-group-toggle:hover{background:#dce4ed}
       .cudloun-module-row{appearance:none;width:100%;min-height:42px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:0 0 8px;padding:9px 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:#243041;cursor:pointer;font:inherit;text-align:left}
       .cudloun-module-row[data-selected=true],.cudloun-module-row:hover{border-color:rgba(76,111,166,.24);background:#fff}
       .cudloun-module-row-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
@@ -966,7 +1008,9 @@
       .cudloun-log-entry[data-level=warn]{color:#ffd18a}
       .cudloun-log-entry[data-level=debug]{color:#9fd0ff}
       .cudloun-log-entry[data-level=trace]{color:#d8c4ff}
-      @media (max-width:680px){.cudloun-backdrop{align-items:center;justify-content:center;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:calc(100vw - 16px);height:auto;max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-dialog[data-collapsed=true]{width:min(390px,calc(100vw - 16px))}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;max-height:calc(100dvh - 84px);display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-feedback{margin:14px 0;padding:10px}.cudloun-feedback-messages{max-height:220px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
+      @media (max-width:680px){.cudloun-backdrop{align-items:center;justify-content:center;padding:8px;background:rgba(26,32,44,.25)}.cudloun-dialog{width:calc(100vw - 16px);height:auto;max-height:calc(100dvh - 16px);border-radius:10px;overflow:hidden}.cudloun-dialog[data-collapsed=true]{width:min(390px,calc(100vw - 16px))}.cudloun-mascot{left:-36px;top:10px;width:58px;max-width:18vw;transform:none;opacity:.95}.cudloun-head{position:sticky;top:0;z-index:3;gap:10px;padding:12px 12px 10px 42px}.cudloun-title{font-size:1rem}.cudloun-subtitle{font-size:.68rem;line-height:1.25}.cudloun-body{min-height:0;max-height:calc(100dvh - 84px);display:flex;flex-direction:column;overflow:hidden}.cudloun-module-list{display:flex;gap:8px;min-height:56px;max-height:96px;overflow-x:auto;overflow-y:hidden;padding:8px;border-right:0;border-bottom:1px solid rgba(79,102,134,.18)}.cudloun-module-group-label{display:none}.cudloun-module-group-toggle{flex:0 0 auto;width:auto;min-width:130px;min-height:40px;margin:0;padding:8px 10px;white-space:nowrap}.cudloun-module-row{flex:0 0 auto;width:auto;min-width:118px;min-height:40px;margin:0;padding:8px 9px;background:#f8fafc;border-color:rgba(79,102,134,.16)}.cudloun-module-row-text{font-size:.84rem}.cudloun-module-details{flex:1;min-height:0;overflow:auto;padding:16px 12px 24px}.cudloun-module-title{font-size:1.18rem}.cudloun-container-card{padding:10px}.cudloun-container-actions{gap:7px}.cudloun-feedback{margin:14px 0;padding:10px}.cudloun-button{padding:8px 10px;font-size:.84rem}.cudloun-code-box{font-size:11px}.cudloun-log-box{max-height:52vh;font-size:11px}}
+      @media (max-width:680px){.cudloun-feedback-messages{max-height:220px}}
+      @media (max-width:680px){.cudloun-module-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(40px,auto);align-content:start;min-height:96px;max-height:140px;overflow-x:hidden;overflow-y:auto}.cudloun-module-row,.cudloun-module-group-toggle{width:100%;min-width:0}.cudloun-module-group-toggle{white-space:normal}}
     `;
     document.head.appendChild(style);
   }

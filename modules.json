@@ -1,5 +1,5 @@
 {
-  "version": "0.6.32",
+  "version": "0.6.33",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-kapyguts", "file": "modules/sys-kapyguts.js", "required": true },
@@ -7,13 +7,14 @@
     { "id": "sys-menu", "file": "modules/sys-menu.js", "required": true }
   ],
   "modules": [
-    { "id": "settoun", "file": "modules/settoun.js", "defaultEnabled": true },
-    { "id": "first-unread", "file": "modules/first-unread.js", "defaultEnabled": false },
-    { "id": "kapybara-theme", "file": "modules/kapybara-theme.js", "defaultEnabled": false },
-    { "id": "thread-lane", "file": "modules/thread-lane.js", "defaultEnabled": false },
-    { "id": "classic-look", "file": "modules/classic-look.js", "defaultEnabled": false },
-    { "id": "post-tweaks", "file": "modules/post-tweaks.js", "defaultEnabled": false },
-    { "id": "post-fonts", "file": "modules/post-fonts.js", "defaultEnabled": false },
+    { "id": "settoun", "file": "modules/settoun.js", "category": "current", "defaultEnabled": true },
+    { "id": "first-unread", "file": "modules/first-unread.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "kapybara-theme", "file": "modules/kapybara-theme.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "thread-lane", "file": "modules/thread-lane.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "classic-look", "file": "modules/classic-look.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "post-tweaks", "file": "modules/post-tweaks.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "post-fonts", "file": "modules/post-fonts.js", "category": "current", "defaultEnabled": false },
+    { "id": "opu-originals", "file": "modules/opu-originals.js", "category": "current", "defaultEnabled": false },
     {
       "id": "opuc",
       "files": [
@@ -26,6 +27,7 @@
         "modules/opuc/ui.js",
         "modules/opuc/index.js"
       ],
+      "category": "dusty-room",
       "defaultEnabled": false
     }
   ]
