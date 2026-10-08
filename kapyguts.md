@@ -119,7 +119,7 @@ and a hamburger-triggered bottom sheet, while the direct form remains stable:
 mobile trigger: button[aria-label="Otevřít menu"]
 mobile sheet:   [role="dialog"][aria-label="menu"]
 sheet login:    [role="dialog"][aria-label="menu"] a[href="/login"]
-bottom login:   nav.mobile-bottom-nav[aria-label="Spodní navigace"] a[href^="/login"]
+bottom login:   nav[aria-label="Spodní navigace"] a[href^="/login"]
 direct route:   /login
 ```
 
@@ -261,8 +261,14 @@ board header:        header.board-header
 board title row:     .board-header .title-row
 board title link:    .board-header .title-link
 board actions:       .board-header .title-row .title-actions
-mobile bottom nav:   nav.mobile-bottom-nav[aria-label="Spodní navigace"]
+mobile bottom nav:   nav[aria-label="Spodní navigace"]
 ```
+
+On 2026-10-08 the live mobile nav used `.bar` instead of the older
+`.mobile-bottom-nav` class. Its accessible label and `button.user-item` remained
+stable. Home, club, Favorites, and Vzkazník layouts were rechecked at desktop
+and 390px widths; native new-post and reply composers still matched their
+Kapyguts selectors.
 
 On desktop, the global page header is sticky at `top: 0` while the board header
 scrolls away. At mobile width, the global page header scrolls away and the
@@ -317,7 +323,7 @@ Responsive account-menu entry points:
 
 ```text
 desktop: button.avatar-button[aria-label="Uživatelské menu"][aria-haspopup="menu"]
-mobile:  nav.mobile-bottom-nav[aria-label="Spodní navigace"] button.user-item[aria-haspopup]
+mobile:  nav[aria-label="Spodní navigace"] button.user-item[aria-haspopup]
 link:    a[role="menuitem"][href="/test/fonts"]
 ```
 

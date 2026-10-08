@@ -50,6 +50,14 @@ The installable seed uses `@require` so CSP-strict frontends such as Kapybara do
 node scripts/build-bundle.js
 ```
 
+## Version 0.6.32 TL;DR
+
+- Rechecked Kapyguts against live desktop and mobile Kapybara home, club, Favorites,
+  and Vzkazník layouts. Mobile bottom navigation now uses its stable accessible
+  label instead of the removed `mobile-bottom-nav` class.
+- Updated Classic Look's mobile navigation typography selector to follow the
+  same current markup. Board new-post and reply composers still resolve.
+
 ## Version 0.6.31 TL;DR
 
 - Reworked the opt-in Kapybara Theme around Lucifer’s `Temná strana Síly`

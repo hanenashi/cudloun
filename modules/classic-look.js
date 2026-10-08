@@ -84,8 +84,8 @@
         background:none!important;
         background-image:none!important;
       }
-      html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav.mobile-bottom-nav,section.new-post-composer,section.reply-composer),
-      html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav.mobile-bottom-nav,section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){
+      html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav[aria-label="Spodní navigace"],section.new-post-composer,section.reply-composer),
+      html[${THEME_ATTR}="true"] :where(.🐟-header,header.board-header,nav[aria-label="Spodní navigace"],section.new-post-composer,section.reply-composer) :where(button,input,select,textarea):not(.cudloun-post-fonts-control *){
         font-family:${TOKENS.fontFamily}!important;
       }
 

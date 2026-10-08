@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.2";
+  const VERSION = "0.6.3";
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
@@ -23,9 +23,9 @@
     siteMenuTrigger: "button[aria-label='Otevřít menu']",
     siteMenu: "[role='dialog'][aria-label='menu']",
     siteMenuLoginLink: "[role='dialog'][aria-label='menu'] a[href='/login']",
-    mobileLoginLink: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] a[href^='/login']",
+    mobileLoginLink: "nav[aria-label='Spodní navigace'] a[href^='/login']",
     desktopAvatarMenuTrigger: "button.avatar-button[aria-label='Uživatelské menu'][aria-haspopup='menu']",
-    mobileAvatarMenuTrigger: "nav.mobile-bottom-nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]",
+    mobileAvatarMenuTrigger: "nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]",
     dropdownMenu: "[role='menu'][data-dropdown-menu-content]",
     dropdownMenuItem: "[role='menuitem'][data-dropdown-menu-item]",
     nativeFontSettingsLink: "a[role='menuitem'][href='/test/fonts']",
@@ -38,7 +38,7 @@
     boardImageToggle: "button.images-toggle[aria-pressed]",
     boardViewToggle: "button[role='radio'][data-toggle-group-item]",
     boardPager: "nav.pager[aria-label='Stránkování příspěvků']",
-    mobileBottomNav: "nav.mobile-bottom-nav[aria-label='Spodní navigace']",
+    mobileBottomNav: "nav[aria-label='Spodní navigace']",
     boardPost: "article.post",
     unreadPost: "article.post[data-unread]",
     avatarColumn: ".avatar-col",

@@ -55,7 +55,7 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.2");
+  assert.equal(kapyguts.version, "0.6.3");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
 });
@@ -77,7 +77,7 @@ test("Kapyguts normalizes Kapybara's current mobile sign-in surfaces", () => {
     },
     many: {
       "a[href^='/login']": [hiddenDesktopLogin, mobileMessages, mobileLogin, sheetLogin],
-      "nav.mobile-bottom-nav[aria-label='Spodní navigace'] a[href^='/login']": [mobileMessages, mobileLogin],
+      "nav[aria-label='Spodní navigace'] a[href^='/login']": [mobileMessages, mobileLogin],
     },
   });
 
@@ -86,6 +86,8 @@ test("Kapyguts normalizes Kapybara's current mobile sign-in surfaces", () => {
   assert.equal(parts.loginAvailable, true);
   assert.equal(parts.directLoginLink, sheetLogin);
   assert.equal(parts.mobileLoginLink, mobileLogin);
+  assert.equal(kapyguts.selectors.mobileAvatarMenuTrigger,
+    "nav[aria-label='Spodní navigace'] button.user-item[aria-haspopup]");
   assert.equal(parts.siteMenuTrigger, trigger);
   assert.equal(parts.siteMenu, menu);
 });
@@ -149,7 +151,7 @@ test("Kapyguts describes the current home navigation and club rows", () => {
       "nav[aria-label='Domovská navigace'] a[aria-current='page']": activeTab,
       "section.boards-section": boardsSection,
       "section.boards-section ul.list": boardList,
-      "nav.mobile-bottom-nav[aria-label='Spodní navigace']": mobileBottomNav,
+      "nav[aria-label='Spodní navigace']": mobileBottomNav,
     },
     many: {
       "nav[aria-label='Domovská navigace'] a[href]": tabs,
@@ -163,6 +165,7 @@ test("Kapyguts describes the current home navigation and club rows", () => {
   assert.equal(parts.activeTab, activeTab);
   assert.deepEqual(Array.from(parts.tabs), tabs);
   assert.deepEqual(Array.from(parts.boardRows), boardRows);
+  assert.equal(parts.mobileBottomNav, mobileBottomNav);
 });
 
 test("Kapyguts describes current Vzkazník panes and message cards", () => {
