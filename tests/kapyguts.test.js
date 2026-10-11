@@ -32,7 +32,7 @@ function loadModule(search = "?k=chatk_colit", pathname = "/test/fonts") {
       href: `https://kapybara.okoun.cz${pathname}${search}`,
     },
     getComputedStyle(element) {
-      return { backgroundImage: element.backgroundImage || "none" };
+      return element.themeStyle || { backgroundImage: element.backgroundImage || "none" };
     },
   };
   const context = { window, document, URLSearchParams, console };
@@ -55,7 +55,7 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
 
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.4");
+  assert.equal(kapyguts.version, "0.6.5");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
 });
@@ -401,6 +401,31 @@ test("Kapyguts owns the viewport edge-stripe painter", () => {
   assert.equal(parts.viewportStripes, stripes);
   assert.equal(parts.stripesActive, true);
   assert.match(parts.stripeBackground, /linear-gradient/);
+});
+
+test("Kapyguts discovers live color tokens even when their prefix is misencoded", () => {
+  const kapyguts = loadModule();
+  const prefix = "--ðŸŸ-";
+  const values = {
+    [`${prefix}page-bg`]: "#e5eeff",
+    [`${prefix}primary`]: "#b85f00",
+    [`${prefix}unread-bg`]: "#fff",
+  };
+  const element = node({ attrs: { "data-theme": "traditional" } });
+  element.themeStyle = {
+    *[Symbol.iterator]() { yield* Object.keys(values); },
+    getPropertyValue(name) { return values[name] || ""; },
+  };
+
+  const state = kapyguts.colorThemeState({ documentElement: element });
+  assert.equal(state.ready, true);
+  assert.equal(state.nativeScheme, "traditional");
+  assert.equal(state.tokenPrefix, prefix);
+  assert.equal(state.propertyNames.primary, `${prefix}primary`);
+  assert.equal(state.tokens.primary, "#b85f00");
+  assert.equal(state.tokens["unread-bg"], "#fff");
+  assert.equal(state.tokens.stripe, "");
+  assert.deepEqual(Object.keys(state.tokens), Array.from(kapyguts.colorTokenKeys));
 });
 
 test("Kapyguts maps native font controls without relying on layout order", () => {

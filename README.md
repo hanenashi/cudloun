@@ -36,6 +36,8 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/kapybara-theme.js` owns the experimental Kapybara dark theme, whose
   default `Temná strana Síly` preset is adapted from Lucifer’s published skin
   with responsive and dynamic-post compatibility refinements.
+- `modules/color-schemes.js` is the opt-in color switcher with Native,
+  Traditional, Light, and Dark modes plus a primary-color tuner.
 - `modules/thread-lane.js` owns the experimental mobile reply-thread side lane.
 - `modules/classic-look.js` brings classic Okoun's reading rhythm to Kapybara
   posts without replacing the new frontend controls.
@@ -53,6 +55,25 @@ The installable seed uses `@require` so CSP-strict frontends such as Kapybara do
 ```text
 node scripts/build-bundle.js
 ```
+
+## Version 0.6.36 TL;DR
+
+- Added opt-in **Color Schemes** with one-click Native/reset, three preserved
+  Kapybara palettes, custom primary color, contrast feedback, and automatic
+  detection of the live site's CSS-variable prefix.
+- Archived the temporary [Okoun barvy palette data](okoun-barvy-data.json)
+  (75 named variants and three base schemes, captured 2026-10-12). The runtime
+  uses only the compact base set for now.
+- The new switcher pauses while legacy Kapybara Theme is active; it never
+  changes Kapybara's saved native theme.
+
+## Version 0.6.35 TL;DR
+
+- Kapyguts can inspect Kapybara's active color scheme and palette tokens,
+  including the live site's differently encoded CSS-variable prefix. See
+  [color scheme field notes](kapyguts.md#color-schemes-and-palette-prototype-2026-10-11).
+- A Cudloun palette switcher is [scoped](color-schemes.md); no colors are
+  changed by this version.
 
 ## Version 0.6.34 TL;DR
 

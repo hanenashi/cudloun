@@ -3,7 +3,11 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.4";
+  const VERSION = "0.6.5";
+  const COLOR_TOKEN_KEYS = [
+    "page-bg", "bg", "header-bg", "bg-paper", "primary", "primary-text",
+    "primary-contrast", "text-primary", "info", "unread-bg", "stripe",
+  ];
   const SELECTORS = {
     viewportStripes: ".🐟-stripes",
     pageHeader: "header:has(a[aria-label='Okoun home'], .logo)",
@@ -268,6 +272,7 @@
     version: VERSION,
     selectors: SELECTORS,
     text: TEXT,
+    colorTokenKeys: COLOR_TOKEN_KEYS,
     isKapybara,
     route,
     currentUser,
@@ -283,6 +288,7 @@
     firstUnreadPost,
     postParts,
     pageChromeParts,
+    colorThemeState,
     pageHeader,
     pageHeaderParts,
     homeParts,
@@ -404,6 +410,37 @@
       viewportStripes,
       stripeBackground,
       stripesActive: !!viewportStripes && stripeBackground !== "none",
+    };
+  }
+
+  // The palette preview and live Kapybara currently expose differently encoded
+  // CSS-variable prefixes. Discover the effective prefix from computed styles.
+  function colorThemeState(scope = document) {
+    const element = scope.documentElement || scope;
+    const style = window.getComputedStyle(element);
+    const properties = typeof style?.[Symbol.iterator] === "function" ? Array.from(style) : [];
+    const pageBackground = properties.find((name) => (
+      name.startsWith("--") && name.endsWith("-page-bg") &&
+      style.getPropertyValue(name).trim() &&
+      style.getPropertyValue(`${name.slice(0, -"page-bg".length)}primary`).trim()
+    ));
+    const tokenPrefix = pageBackground?.slice(0, -"page-bg".length) ||
+      ["--🐟-", "--c-"].find((prefix) => style?.getPropertyValue?.(`${prefix}page-bg`)?.trim()) || "";
+    const tokens = {};
+    const propertyNames = {};
+    if (tokenPrefix) {
+      COLOR_TOKEN_KEYS.forEach((key) => {
+        const property = `${tokenPrefix}${key}`;
+        propertyNames[key] = property;
+        tokens[key] = style.getPropertyValue(property).trim();
+      });
+    }
+    return {
+      nativeScheme: element.getAttribute?.("data-theme") || "",
+      tokenPrefix,
+      propertyNames,
+      tokens,
+      ready: !!(tokens["page-bg"] && tokens.primary),
     };
   }
 
@@ -906,6 +943,7 @@
         stripeBackground: pageChrome.stripeBackground,
         stripesActive: pageChrome.stripesActive,
       },
+      colorTheme: colorThemeState(),
       home: {
         ready: home.ready,
         tabs: home.tabs.length,

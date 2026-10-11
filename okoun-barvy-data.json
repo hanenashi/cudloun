@@ -1,0 +1,3197 @@
+{
+  "schemaVersion": 1,
+  "source": "https://media.okoun.cz/tmp/okoun-barvy/index.html",
+  "captured": "2026-10-12",
+  "base": {
+    "light": {
+      "text-primary": "#000000",
+      "text-secondary": "#666666",
+      "timestamp": "#666666",
+      "text-heading": "#000000",
+      "post-action-text": "#666666",
+      "post-action-rule": "#a8c4e0",
+      "post-action-rule-unread": "#a8c4e0",
+      "bg": "#ffffff",
+      "page-bg": "#ffffff",
+      "bg-paper": "#f8f8f8",
+      "header-bg": "#f8f8f8",
+      "primary-contrast": "#ffffff",
+      "divider": "#a8c4e0",
+      "border": "rgba(0, 0, 0, 0.12)",
+      "border-input": "rgba(0, 0, 0, 0.23)",
+      "shadow-base": "#000000",
+      "header-border": "color-mix(in srgb, var(--c-shadow-base) 5%, transparent)",
+      "primary": "#a85a00",
+      "primary-light": "#d4892a",
+      "primary-dark": "#8f4e00",
+      "skeleton": "color-mix(in srgb, var(--c-primary) 10%, transparent)",
+      "error": "#d32f2f",
+      "info": "#003ea0",
+      "error-contrast": "#ffffff",
+      "action-hover": "#f0f0f0",
+      "unread-bg": "#dceaf8",
+      "hover-regular": "#f0f0f0",
+      "visited-link": "#7c2d8e",
+      "highlight": "#a8d0f0",
+      "stripe": "#5a9feb",
+      "new-badge-bg": "#eaf2fe",
+      "new-badge-text": "#0d3c75"
+    },
+    "traditional": {
+      "text-primary": "#000000",
+      "text-secondary": "#666666",
+      "timestamp": "#666666",
+      "text-heading": "#000000",
+      "post-action-text": "#666666",
+      "post-action-rule": "#CCCCCC",
+      "post-action-rule-unread": "#CCCCCC",
+      "bg": "#E5EEFF",
+      "page-bg": "#E5EEFF",
+      "bg-paper": "#FFFFFF",
+      "header-bg": "#EFF4FF",
+      "primary-contrast": "#FFFFFF",
+      "divider": "#CCCCCC",
+      "border": "#CCCCCC",
+      "border-input": "#80AAFF",
+      "shadow-base": "#000000",
+      "primary": "#B85F00",
+      "primary-light": "#FFC180",
+      "primary-dark": "#FF6600",
+      "error": "#BD3759",
+      "info": "#003399",
+      "error-contrast": "#ffffff",
+      "action-hover": "#f0f0f0",
+      "unread-bg": "#FFFFFF",
+      "hover-regular": "#EFF4FF",
+      "visited-link": "#993366",
+      "highlight": "#FFF0DF",
+      "stripe": "#80AAFF",
+      "new-badge-bg": "#EFF4FF",
+      "new-badge-text": "#003399"
+    },
+    "dark": {
+      "text-primary": "#ffffff",
+      "text-secondary": "#b0b0b0",
+      "timestamp": "#b0b0b0",
+      "text-heading": "#ffffff",
+      "post-action-text": "#b0b0b0",
+      "post-action-rule": "rgba(255, 255, 255, 0.12)",
+      "post-action-rule-unread": "rgba(255, 255, 255, 0.12)",
+      "bg": "#121212",
+      "page-bg": "#121212",
+      "bg-paper": "#1e1e1e",
+      "header-bg": "#1e1e1e",
+      "primary-contrast": "#000000",
+      "divider": "rgba(255, 255, 255, 0.12)",
+      "border": "rgba(255, 255, 255, 0.12)",
+      "border-input": "rgba(255, 255, 255, 0.23)",
+      "shadow-base": "#000000",
+      "primary": "#d4892a",
+      "primary-light": "#e8a850",
+      "primary-dark": "#a85a00",
+      "error": "#ef5350",
+      "info": "#64b5f6",
+      "error-contrast": "rgba(0, 0, 0, 0.87)",
+      "action-hover": "rgba(255, 255, 255, 0.08)",
+      "unread-bg": "#1e3a50",
+      "hover-regular": "#2a2a2a",
+      "visited-link": "#cfa0d8",
+      "highlight": "rgba(212, 137, 42, 0.25)",
+      "stripe": "#293f59",
+      "new-badge-bg": "rgba(100, 181, 246, 0.18)",
+      "new-badge-text": "#bbdefb"
+    }
+  },
+  "variants": [
+    {
+      "round": "Kolo 1 · hnědá vs. cihla",
+      "key": "v0",
+      "label": "V0 · Současná hnědá (dnes)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 1 · hnědá vs. cihla",
+      "key": "v1",
+      "label": "V1 · Sytá oranžová — pixy hsl(21 100% 44%)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 1 · hnědá vs. cihla",
+      "key": "v2",
+      "label": "V2 · Cihlová — pixy #CC3D00",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 1 · hnědá vs. cihla",
+      "key": "v3",
+      "label": "V3 · Tmavá cihla",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 1 · hnědá vs. cihla",
+      "key": "v4",
+      "label": "V4 · Terakota (tlumená cihla)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v5",
+      "label": "V5 · Legacy přesně (#B85F00 ze skin.css)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v6",
+      "label": "V6 · Anthropic (Crail / Claude coral)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v7",
+      "label": "V7 · Strava (#FC4C02 přesně)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v8",
+      "label": "V8 · Do žluta (jantar / okr)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v9",
+      "label": "V9 · Rumělka (split-komplement k modré)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v10",
+      "label": "V10 · Malinová (triáda k modré)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 2 · inspirace a pryč od hnědé",
+      "key": "v11",
+      "label": "V11 · Požární schodiště u kolese v práci",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 3 · změnit pozadí?",
+      "key": "va",
+      "label": "A · Tmavé záhlaví (navy) + rybí oranžová",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 3 · změnit pozadí?",
+      "key": "vb",
+      "label": "B · Rybí výplň + cihlový text",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 3 · změnit pozadí?",
+      "key": "vd",
+      "label": "D · Krémové pozadí, dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 3 · změnit pozadí?",
+      "key": "ve",
+      "label": "E · Pixyho cihla + petrolejová modrá",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "r0-p0",
+      "label": "Dnešní modrá (tradiční) + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "r0-p2",
+      "label": "Dnešní modrá (tradiční) + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "r0-p4",
+      "label": "Dnešní modrá (tradiční) + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y1-p0",
+      "label": "2007 žlutá, jemná + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y1-p2",
+      "label": "2007 žlutá, jemná + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y1-p4",
+      "label": "2007 žlutá, jemná + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y2-p0",
+      "label": "2007 žlutá, jemnější + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y2-p2",
+      "label": "2007 žlutá, jemnější + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "y2-p4",
+      "label": "2007 žlutá, jemnější + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "cr-p0",
+      "label": "Krém + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "cr-p2",
+      "label": "Krém + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "cr-p4",
+      "label": "Krém + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "tg-p0",
+      "label": "Teplá šedá (papír) + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "tg-p2",
+      "label": "Teplá šedá (papír) + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "tg-p4",
+      "label": "Teplá šedá (papír) + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "ng-p0",
+      "label": "Neutrální šedá + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "ng-p2",
+      "label": "Neutrální šedá + pixyho cihla",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 4 · světlá pozadí bez modré",
+      "key": "ng-p4",
+      "label": "Neutrální šedá + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-tg",
+      "label": "Tonální tlačítka · grafit",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-tg",
+      "label": "Tonální tlačítka · grafit",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-tg",
+      "label": "Tonální tlačítka · grafit",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-ts",
+      "label": "Tonální tlačítka · břidlicová",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-ts",
+      "label": "Tonální tlačítka · břidlicová",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-ts",
+      "label": "Tonální tlačítka · břidlicová",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-og",
+      "label": "Obrysová tlačítka · grafit",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-og",
+      "label": "Obrysová tlačítka · grafit",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-og",
+      "label": "Obrysová tlačítka · grafit",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-os",
+      "label": "Obrysová tlačítka · břidlicová",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-os",
+      "label": "Obrysová tlačítka · břidlicová",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-os",
+      "label": "Obrysová tlačítka · břidlicová",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-ag",
+      "label": "Grafit + jen hlavní tlačítko terakotové",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-ag",
+      "label": "Grafit + jen hlavní tlačítko terakotové",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-ag",
+      "label": "Grafit + jen hlavní tlačítko terakotové",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7tg-tt",
+      "label": "Tonální tlačítka · terakota",
+      "sub": "Teplá šedá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7y2-tt",
+      "label": "Tonální tlačítka · terakota",
+      "sub": "Jemnější žlutá",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 7 · světlejší tlačítka",
+      "key": "r7w-tt",
+      "label": "Tonální tlačítka · terakota",
+      "sub": "Bílá (světlé schéma)",
+      "schemes": [
+        "light"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b0-br",
+      "label": "Dnešní modrá + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b0-te",
+      "label": "Dnešní modrá + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b0-ga",
+      "label": "Dnešní modrá + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b1-br",
+      "label": "Ledová (k azurové) + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b1-te",
+      "label": "Ledová (k azurové) + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b1-ga",
+      "label": "Ledová (k azurové) + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b2-br",
+      "label": "Šedomodrá + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b2-te",
+      "label": "Šedomodrá + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b2-ga",
+      "label": "Šedomodrá + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b3-br",
+      "label": "Mlhová petrolejová + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b3-te",
+      "label": "Mlhová petrolejová + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b3-ga",
+      "label": "Mlhová petrolejová + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b4-br",
+      "label": "Bledší modrá + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b4-te",
+      "label": "Bledší modrá + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b4-ga",
+      "label": "Bledší modrá + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b5-br",
+      "label": "Ocelová + dnešní hnědá",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b5-te",
+      "label": "Ocelová + terakota",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 8 · jiné světle modré",
+      "key": "r8b5-ga",
+      "label": "Ocelová + grafit + akcent",
+      "sub": "",
+      "schemes": [
+        "traditional"
+      ]
+    },
+    {
+      "round": "Kolo 9 · monochrom",
+      "key": "m1",
+      "label": "Čistý monochrom (bez barvy, i odkazy černé)",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 9 · monochrom",
+      "key": "m2",
+      "label": "Monochrom + modré odkazy a nepřečtené",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 9 · monochrom",
+      "key": "m3",
+      "label": "Monochrom + rybí logo",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 9 · monochrom",
+      "key": "m4",
+      "label": "Monochrom + barevné jen hlavní tlačítko",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "round": "Kolo 9 · monochrom",
+      "key": "m5",
+      "label": "Monochrom + teplé zvýraznění nepřečtených",
+      "sub": "",
+      "schemes": [
+        "traditional",
+        "light",
+        "dark"
+      ]
+    }
+  ],
+  "tokens": {
+    "v1": {
+      "light": {
+        "primary": "#E04F00",
+        "primary-light": "#FF813D",
+        "primary-dark": "#BC4200"
+      },
+      "traditional": {
+        "primary": "#E04F00",
+        "primary-light": "#FFAC80",
+        "primary-dark": "#FF5A00",
+        "highlight": "#FBEAE0"
+      },
+      "dark": {
+        "primary": "#FF7429",
+        "primary-light": "#FF955C",
+        "primary-dark": "#C24400",
+        "highlight": "rgba(255, 116, 41, 0.25)"
+      }
+    },
+    "v2": {
+      "light": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200"
+      },
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FFA680",
+        "primary-dark": "#EB4600",
+        "highlight": "#F9E8E0"
+      },
+      "dark": {
+        "primary": "#FF773D",
+        "primary-light": "#FF9B70",
+        "primary-dark": "#D64000",
+        "highlight": "rgba(255, 119, 61, 0.25)"
+      }
+    },
+    "v3": {
+      "light": {
+        "primary": "#AC3415",
+        "primary-light": "#EC5731",
+        "primary-dark": "#8C2A11"
+      },
+      "traditional": {
+        "primary": "#A83215",
+        "primary-light": "#FF9980",
+        "primary-dark": "#DC2B00",
+        "highlight": "#F5E6E3"
+      },
+      "dark": {
+        "primary": "#F27C5F",
+        "primary-light": "#F6A38E",
+        "primary-dark": "#D93912",
+        "highlight": "rgba(242, 124, 95, 0.25)"
+      }
+    },
+    "v4": {
+      "light": {
+        "primary": "#A54827",
+        "primary-light": "#DB724C",
+        "primary-dark": "#883B20"
+      },
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#FFA280",
+        "primary-dark": "#E63E00",
+        "highlight": "#F4E9E5"
+      },
+      "dark": {
+        "primary": "#E38563",
+        "primary-light": "#EBA78E",
+        "primary-dark": "#BE4B22",
+        "highlight": "rgba(227, 133, 99, 0.25)"
+      }
+    },
+    "v5": {
+      "light": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00"
+      },
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FFC180",
+        "primary-dark": "#D76F00",
+        "highlight": "#F6ECE0"
+      },
+      "dark": {
+        "primary": "#B85F00",
+        "primary-light": "#EB7900",
+        "primary-dark": "#522A00",
+        "highlight": "rgba(184, 95, 0, 0.25)"
+      }
+    },
+    "v6": {
+      "light": {
+        "primary": "#C15F3C",
+        "primary-light": "#DC967D",
+        "primary-dark": "#A65234"
+      },
+      "traditional": {
+        "primary": "#C15F3C",
+        "primary-light": "#FFA180",
+        "primary-dark": "#FF581D",
+        "highlight": "#F8ECE8"
+      },
+      "dark": {
+        "primary": "#D97757",
+        "primary-light": "#E29981",
+        "primary-dark": "#A54525",
+        "highlight": "rgba(217, 119, 87, 0.25)"
+      }
+    },
+    "v7": {
+      "light": {
+        "primary": "#FC4C02",
+        "primary-light": "#FF8B5B",
+        "primary-dark": "#D94102"
+      },
+      "traditional": {
+        "primary": "#FC4C02",
+        "primary-light": "#FFA580",
+        "primary-dark": "#FF601E",
+        "highlight": "#FFEAE1"
+      },
+      "dark": {
+        "primary": "#FC4C02",
+        "primary-light": "#FD6F34",
+        "primary-dark": "#972D01",
+        "highlight": "rgba(252, 76, 2, 0.25)"
+      }
+    },
+    "v8": {
+      "light": {
+        "primary": "#9E6400",
+        "primary-light": "#FA9E00",
+        "primary-dark": "#7A4D00"
+      },
+      "traditional": {
+        "primary": "#945E00",
+        "primary-light": "#FFD080",
+        "primary-dark": "#B37100",
+        "highlight": "#F2ECE0"
+      },
+      "dark": {
+        "primary": "#FFB21A",
+        "primary-light": "#FFC34D",
+        "primary-dark": "#B37700",
+        "highlight": "rgba(255, 178, 26, 0.25)"
+      }
+    },
+    "v9": {
+      "light": {
+        "primary": "#C32B13",
+        "primary-light": "#F25840",
+        "primary-dark": "#A22410"
+      },
+      "traditional": {
+        "primary": "#BA2912",
+        "primary-light": "#FF9180",
+        "primary-dark": "#EB2000",
+        "highlight": "#F7E5E3"
+      },
+      "dark": {
+        "primary": "#F66F5A",
+        "primary-light": "#F9998A",
+        "primary-dark": "#DE280C",
+        "highlight": "rgba(246, 111, 90, 0.25)"
+      }
+    },
+    "v10": {
+      "light": {
+        "primary": "#AD1F53",
+        "primary-light": "#E4447F",
+        "primary-dark": "#8F1A44"
+      },
+      "traditional": {
+        "primary": "#A51D4F",
+        "primary-light": "#FF80AE",
+        "primary-dark": "#E10053",
+        "highlight": "#F4E4EA"
+      },
+      "dark": {
+        "primary": "#F17EA8",
+        "primary-light": "#F6ACC7",
+        "primary-dark": "#E7226A",
+        "highlight": "rgba(241, 126, 168, 0.25)"
+      }
+    },
+    "v11": {
+      "light": {
+        "primary": "#BA6038",
+        "primary-light": "#DB9373",
+        "primary-dark": "#9F5230"
+      },
+      "traditional": {
+        "primary": "#BA6038",
+        "primary-light": "#FFA780",
+        "primary-dark": "#FF5B12",
+        "highlight": "#F7ECE7"
+      },
+      "dark": {
+        "primary": "#DA8862",
+        "primary-light": "#E4A78B",
+        "primary-dark": "#AD5329",
+        "highlight": "rgba(218, 136, 98, 0.25)"
+      }
+    },
+    "vb": {
+      "light": {
+        "primary": "#FF8200",
+        "primary-light": "#FFB566",
+        "primary-dark": "#E87500",
+        "primary-contrast": "#000000",
+        "primary-text": "#C63410"
+      },
+      "traditional": {
+        "primary": "#FF8200",
+        "primary-light": "#FFB566",
+        "primary-dark": "#E87500",
+        "primary-contrast": "#000000",
+        "primary-text": "#C63410"
+      },
+      "dark": {
+        "primary": "#FF8200",
+        "primary-light": "#FF9B33",
+        "primary-dark": "#994E00",
+        "primary-text": "#FF8200",
+        "primary-contrast": "#000000"
+      }
+    },
+    "va": {
+      "light": {
+        "primary": "#FF8200",
+        "primary-light": "#FFB566",
+        "primary-dark": "#E87500",
+        "primary-contrast": "#000000",
+        "primary-text": "#C63410"
+      },
+      "traditional": {
+        "primary": "#FF8200",
+        "primary-light": "#FFB566",
+        "primary-dark": "#E87500",
+        "primary-contrast": "#000000",
+        "primary-text": "#C63410"
+      },
+      "dark": {
+        "primary": "#FF8200",
+        "primary-light": "#FF9B33",
+        "primary-dark": "#994E00",
+        "primary-text": "#FF8200",
+        "primary-contrast": "#000000"
+      }
+    },
+    "vd": {
+      "light": {
+        "bg": "#FBF6EE",
+        "page-bg": "#FBF6EE",
+        "bg-paper": "#F3EBDD",
+        "header-bg": "#F3EBDD",
+        "action-hover": "#F1E7D6",
+        "hover-regular": "#F1E7D6"
+      },
+      "traditional": {
+        "bg": "#F6EDDD",
+        "page-bg": "#F6EDDD",
+        "header-bg": "#FBF5EA",
+        "hover-regular": "#FBF5EA",
+        "bg-paper": "#FBF5EA"
+      }
+    },
+    "ve": {
+      "light": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "post-action-rule": "#A8D2E0",
+        "post-action-rule-unread": "#A8D2E0",
+        "divider": "#A8D2E0",
+        "info": "#004968",
+        "unread-bg": "#DCF1F8",
+        "highlight": "#A8E1F0",
+        "stripe": "#5AC6EB",
+        "new-badge-bg": "#EAF8FE",
+        "new-badge-text": "#094155"
+      },
+      "traditional": {
+        "primary": "#BD3800",
+        "primary-light": "#FF5E1A",
+        "primary-dark": "#992D00",
+        "bg": "#E5F7FF",
+        "page-bg": "#E5F7FF",
+        "header-bg": "#EFFAFF",
+        "border-input": "#80D6FF",
+        "info": "#004566",
+        "hover-regular": "#EFFAFF",
+        "stripe": "#80D6FF",
+        "new-badge-bg": "#EFFAFF",
+        "new-badge-text": "#004566"
+      },
+      "dark": {
+        "primary": "#FF773D",
+        "primary-light": "#FF9B70",
+        "primary-dark": "#D64000",
+        "info": "#64D7F6",
+        "unread-bg": "#1E4550",
+        "stripe": "#294C59",
+        "new-badge-bg": "rgba(100, 215, 246, 0.18)",
+        "new-badge-text": "#BBEDFB"
+      }
+    },
+    "r0-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00"
+      }
+    },
+    "r0-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200"
+      }
+    },
+    "r0-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F"
+      }
+    },
+    "y1-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#FFFDE5",
+        "page-bg": "#FFFDE5",
+        "header-bg": "#FFFEEF",
+        "hover-regular": "#FFFEEF",
+        "border-input": "#B6B6AA",
+        "stripe": "#D6D5C4"
+      }
+    },
+    "y1-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "bg": "#FFFDE5",
+        "page-bg": "#FFFDE5",
+        "header-bg": "#FFFEEF",
+        "hover-regular": "#FFFEEF",
+        "border-input": "#B6B6AA",
+        "stripe": "#D6D5C4"
+      }
+    },
+    "y1-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#FFFDE5",
+        "page-bg": "#FFFDE5",
+        "header-bg": "#FFFEEF",
+        "hover-regular": "#FFFEEF",
+        "border-input": "#B6B6AA",
+        "stripe": "#D6D5C4"
+      }
+    },
+    "y2-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "y2-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "y2-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "cr-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#F8F1E4",
+        "page-bg": "#F8F1E4",
+        "header-bg": "#FBF7EF",
+        "hover-regular": "#FBF7EF",
+        "border-input": "#B3B0A9",
+        "stripe": "#D1CCC3"
+      }
+    },
+    "cr-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "bg": "#F8F1E4",
+        "page-bg": "#F8F1E4",
+        "header-bg": "#FBF7EF",
+        "hover-regular": "#FBF7EF",
+        "border-input": "#B3B0A9",
+        "stripe": "#D1CCC3"
+      }
+    },
+    "cr-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#F8F1E4",
+        "page-bg": "#F8F1E4",
+        "header-bg": "#FBF7EF",
+        "hover-regular": "#FBF7EF",
+        "border-input": "#B3B0A9",
+        "stripe": "#D1CCC3"
+      }
+    },
+    "tg-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "tg-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "tg-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "ng-p0": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#EEEEEE",
+        "page-bg": "#EEEEEE",
+        "header-bg": "#F5F5F5",
+        "hover-regular": "#F5F5F5",
+        "border-input": "#AEAEAE",
+        "stripe": "#CACACA"
+      }
+    },
+    "ng-p2": {
+      "traditional": {
+        "primary": "#CC3D00",
+        "primary-light": "#FF6929",
+        "primary-dark": "#A83200",
+        "bg": "#EEEEEE",
+        "page-bg": "#EEEEEE",
+        "header-bg": "#F5F5F5",
+        "hover-regular": "#F5F5F5",
+        "border-input": "#AEAEAE",
+        "stripe": "#CACACA"
+      }
+    },
+    "ng-p4": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#EEEEEE",
+        "page-bg": "#EEEEEE",
+        "header-bg": "#F5F5F5",
+        "hover-regular": "#F5F5F5",
+        "border-input": "#AEAEAE",
+        "stripe": "#CACACA"
+      }
+    },
+    "r7tg-tg": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-tg": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-tg": {
+      "light": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A"
+      }
+    },
+    "r7tg-ts": {
+      "traditional": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-ts": {
+      "traditional": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-ts": {
+      "light": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45"
+      }
+    },
+    "r7tg-og": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-og": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-og": {
+      "light": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A"
+      }
+    },
+    "r7tg-os": {
+      "traditional": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-os": {
+      "traditional": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-os": {
+      "light": {
+        "primary": "#3F515A",
+        "primary-light": "#5F8496",
+        "primary-dark": "#303E45"
+      }
+    },
+    "r7tg-ag": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-ag": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-ag": {
+      "light": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A"
+      }
+    },
+    "r7tg-tt": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#F1EFEA",
+        "page-bg": "#F1EFEA",
+        "header-bg": "#F7F5F2",
+        "hover-regular": "#F7F5F2",
+        "border-input": "#B0AEAC",
+        "stripe": "#CCCBC7"
+      }
+    },
+    "r7y2-tt": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#FCFBF3",
+        "page-bg": "#FCFBF3",
+        "header-bg": "#FDFDF8",
+        "hover-regular": "#FDFDF8",
+        "border-input": "#B5B4B0",
+        "stripe": "#D4D4CE"
+      }
+    },
+    "r7w-tt": {
+      "light": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F"
+      }
+    },
+    "r8b0-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00"
+      }
+    },
+    "r8b0-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F"
+      }
+    },
+    "r8b0-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A"
+      }
+    },
+    "r8b1-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#EDF5F8",
+        "page-bg": "#EDF5F8",
+        "header-bg": "#F4F9FB",
+        "hover-regular": "#F4F9FB",
+        "new-badge-bg": "#F4F9FB",
+        "border-input": "#86CEE9",
+        "stripe": "#98D5EC"
+      }
+    },
+    "r8b1-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#EDF5F8",
+        "page-bg": "#EDF5F8",
+        "header-bg": "#F4F9FB",
+        "hover-regular": "#F4F9FB",
+        "new-badge-bg": "#F4F9FB",
+        "border-input": "#86CEE9",
+        "stripe": "#98D5EC"
+      }
+    },
+    "r8b1-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#EDF5F8",
+        "page-bg": "#EDF5F8",
+        "header-bg": "#F4F9FB",
+        "hover-regular": "#F4F9FB",
+        "new-badge-bg": "#F4F9FB",
+        "border-input": "#86CEE9",
+        "stripe": "#98D5EC"
+      }
+    },
+    "r8b2-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#ECEFF4",
+        "page-bg": "#ECEFF4",
+        "header-bg": "#F4F5F8",
+        "hover-regular": "#F4F5F8",
+        "new-badge-bg": "#F4F5F8",
+        "border-input": "#93AEDC",
+        "stripe": "#A2BAE1"
+      }
+    },
+    "r8b2-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#ECEFF4",
+        "page-bg": "#ECEFF4",
+        "header-bg": "#F4F5F8",
+        "hover-regular": "#F4F5F8",
+        "new-badge-bg": "#F4F5F8",
+        "border-input": "#93AEDC",
+        "stripe": "#A2BAE1"
+      }
+    },
+    "r8b2-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#ECEFF4",
+        "page-bg": "#ECEFF4",
+        "header-bg": "#F4F5F8",
+        "hover-regular": "#F4F5F8",
+        "new-badge-bg": "#F4F5F8",
+        "border-input": "#93AEDC",
+        "stripe": "#A2BAE1"
+      }
+    },
+    "r8b3-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#E8F1F2",
+        "page-bg": "#E8F1F2",
+        "header-bg": "#F1F7F7",
+        "hover-regular": "#F1F7F7",
+        "new-badge-bg": "#F1F7F7",
+        "border-input": "#92D6DD",
+        "stripe": "#A2DCE2"
+      }
+    },
+    "r8b3-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#E8F1F2",
+        "page-bg": "#E8F1F2",
+        "header-bg": "#F1F7F7",
+        "hover-regular": "#F1F7F7",
+        "new-badge-bg": "#F1F7F7",
+        "border-input": "#92D6DD",
+        "stripe": "#A2DCE2"
+      }
+    },
+    "r8b3-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#E8F1F2",
+        "page-bg": "#E8F1F2",
+        "header-bg": "#F1F7F7",
+        "hover-regular": "#F1F7F7",
+        "new-badge-bg": "#F1F7F7",
+        "border-input": "#92D6DD",
+        "stripe": "#A2DCE2"
+      }
+    },
+    "r8b4-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#F3F7FC",
+        "page-bg": "#F3F7FC",
+        "header-bg": "#F8FAFD",
+        "hover-regular": "#F8FAFD",
+        "new-badge-bg": "#F8FAFD",
+        "border-input": "#7BB1F4",
+        "stripe": "#8EBCF6"
+      }
+    },
+    "r8b4-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#F3F7FC",
+        "page-bg": "#F3F7FC",
+        "header-bg": "#F8FAFD",
+        "hover-regular": "#F8FAFD",
+        "new-badge-bg": "#F8FAFD",
+        "border-input": "#7BB1F4",
+        "stripe": "#8EBCF6"
+      }
+    },
+    "r8b4-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#F3F7FC",
+        "page-bg": "#F3F7FC",
+        "header-bg": "#F8FAFD",
+        "hover-regular": "#F8FAFD",
+        "new-badge-bg": "#F8FAFD",
+        "border-input": "#7BB1F4",
+        "stripe": "#8EBCF6"
+      }
+    },
+    "r8b5-br": {
+      "traditional": {
+        "primary": "#B85F00",
+        "primary-light": "#FF8E15",
+        "primary-dark": "#944D00",
+        "bg": "#E4E9EC",
+        "page-bg": "#E4E9EC",
+        "header-bg": "#EFF2F4",
+        "hover-regular": "#EFF2F4",
+        "new-badge-bg": "#EFF2F4",
+        "border-input": "#99BFD6",
+        "stripe": "#A8C8DC"
+      }
+    },
+    "r8b5-te": {
+      "traditional": {
+        "primary": "#A14726",
+        "primary-light": "#DB6F48",
+        "primary-dark": "#843A1F",
+        "bg": "#E4E9EC",
+        "page-bg": "#E4E9EC",
+        "header-bg": "#EFF2F4",
+        "hover-regular": "#EFF2F4",
+        "new-badge-bg": "#EFF2F4",
+        "border-input": "#99BFD6",
+        "stripe": "#A8C8DC"
+      }
+    },
+    "r8b5-ga": {
+      "traditional": {
+        "primary": "#45403A",
+        "primary-light": "#7C6F5E",
+        "primary-dark": "#322E2A",
+        "bg": "#E4E9EC",
+        "page-bg": "#E4E9EC",
+        "header-bg": "#EFF2F4",
+        "hover-regular": "#EFF2F4",
+        "new-badge-bg": "#EFF2F4",
+        "border-input": "#99BFD6",
+        "stripe": "#A8C8DC"
+      }
+    },
+    "m1": {
+      "traditional": {
+        "bg": "#ECECEC",
+        "page-bg": "#ECECEC",
+        "bg-paper": "#FFFFFF",
+        "header-bg": "#F5F5F5",
+        "canvas-dim": "#ECECEC",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#595959",
+        "timestamp": "#5E5E5E",
+        "post-action-text": "#5E5E5E",
+        "primary": "#262626",
+        "primary-text": "#262626",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#CCCCCC",
+        "border": "#CCCCCC",
+        "border-input": "#B3B3B3",
+        "stripe": "#B3B3B3",
+        "hover-regular": "#F5F5F5",
+        "action-hover": "#E6E6E6",
+        "unread-bg": "#FFFFFF",
+        "post-action-rule": "#CCCCCC",
+        "post-action-rule-unread": "#CCCCCC",
+        "new-badge-bg": "#F5F5F5",
+        "new-badge-text": "#262626",
+        "highlight": "#E0E0E0",
+        "anchor": "#F5F5F5",
+        "anchor-ring": "#262626",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "warning": "#7A5C00",
+        "warning-dark": "#5C4500",
+        "warning-bg": "#F5EFD9",
+        "info": "#1A1A1A",
+        "info-bg": "#F5F5F5",
+        "info-text": "#1A1A1A",
+        "visited-link": "#666666"
+      },
+      "light": {
+        "bg": "#FFFFFF",
+        "page-bg": "#FFFFFF",
+        "bg-paper": "#F7F7F7",
+        "header-bg": "#F7F7F7",
+        "canvas-dim": "#F2F2F2",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#5E5E5E",
+        "timestamp": "#666666",
+        "post-action-text": "#666666",
+        "primary": "#2B2B2B",
+        "primary-text": "#2B2B2B",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#D9D9D9",
+        "border": "rgba(0, 0, 0, 0.12)",
+        "border-input": "#C4C4C4",
+        "stripe": "#BDBDBD",
+        "hover-regular": "#F0F0F0",
+        "action-hover": "#F0F0F0",
+        "unread-bg": "#E6E6E6",
+        "post-action-rule": "#DDDDDD",
+        "post-action-rule-unread": "#CFCFCF",
+        "new-badge-bg": "#EDEDED",
+        "new-badge-text": "#2B2B2B",
+        "highlight": "#E3E3E3",
+        "anchor": "#EFEFEF",
+        "anchor-ring": "#2B2B2B",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "info": "#1A1A1A",
+        "info-bg": "#F2F2F2",
+        "info-text": "#1A1A1A",
+        "visited-link": "#6E6E6E"
+      },
+      "dark": {
+        "bg": "#121212",
+        "page-bg": "#121212",
+        "bg-paper": "#1C1C1C",
+        "header-bg": "#1C1C1C",
+        "canvas-dim": "#121212",
+        "text-primary": "#EDEDED",
+        "text-heading": "#EDEDED",
+        "text-secondary": "#A3A3A3",
+        "timestamp": "#9A9A9A",
+        "post-action-text": "#9A9A9A",
+        "primary": "#D6D6D6",
+        "primary-text": "#E6E6E6",
+        "primary-contrast": "#111111",
+        "primary-dark": "#A8A8A8",
+        "primary-light": "#F2F2F2",
+        "divider": "#333333",
+        "border": "rgba(255, 255, 255, 0.12)",
+        "border-input": "#4A4A4A",
+        "stripe": "#2E2E2E",
+        "hover-regular": "#242424",
+        "action-hover": "#242424",
+        "unread-bg": "#2A2A2A",
+        "post-action-rule": "#333333",
+        "post-action-rule-unread": "#3D3D3D",
+        "new-badge-bg": "#2A2A2A",
+        "new-badge-text": "#EDEDED",
+        "highlight": "#2E2E2E",
+        "anchor": "rgba(255, 255, 255, 0.06)",
+        "anchor-ring": "#D6D6D6",
+        "anchor-flash": "rgba(255, 255, 255, 0.18)",
+        "info": "#E6E6E6",
+        "info-bg": "#1C1C1C",
+        "info-text": "#E6E6E6",
+        "visited-link": "#9A9A9A"
+      }
+    },
+    "m2": {
+      "traditional": {
+        "bg": "#E9EDF3",
+        "page-bg": "#E9EDF3",
+        "bg-paper": "#FFFFFF",
+        "header-bg": "#F5F5F5",
+        "canvas-dim": "#E9EDF3",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#595959",
+        "timestamp": "#5E5E5E",
+        "post-action-text": "#5E5E5E",
+        "primary": "#262626",
+        "primary-text": "#262626",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#CCCCCC",
+        "border": "#CCCCCC",
+        "border-input": "#B3B3B3",
+        "stripe": "#B3B3B3",
+        "hover-regular": "#F5F5F5",
+        "action-hover": "#E6E6E6",
+        "unread-bg": "#FFFFFF",
+        "post-action-rule": "#CCCCCC",
+        "post-action-rule-unread": "#CCCCCC",
+        "new-badge-bg": "#EFF4FF",
+        "new-badge-text": "#003399",
+        "highlight": "#E0E0E0",
+        "anchor": "#F5F5F5",
+        "anchor-ring": "#262626",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "warning": "#7A5C00",
+        "warning-dark": "#5C4500",
+        "warning-bg": "#F5EFD9",
+        "info": "#003399",
+        "info-bg": "#F5F5F5",
+        "info-text": "#1A1A1A",
+        "visited-link": "#993366"
+      },
+      "light": {
+        "bg": "#FFFFFF",
+        "page-bg": "#FFFFFF",
+        "bg-paper": "#F7F7F7",
+        "header-bg": "#F7F7F7",
+        "canvas-dim": "#F2F2F2",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#5E5E5E",
+        "timestamp": "#666666",
+        "post-action-text": "#666666",
+        "primary": "#2B2B2B",
+        "primary-text": "#2B2B2B",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#D9D9D9",
+        "border": "rgba(0, 0, 0, 0.12)",
+        "border-input": "#C4C4C4",
+        "stripe": "#BDBDBD",
+        "hover-regular": "#F0F0F0",
+        "action-hover": "#F0F0F0",
+        "unread-bg": "#DCEAF8",
+        "post-action-rule": "#DDDDDD",
+        "post-action-rule-unread": "#CFCFCF",
+        "new-badge-bg": "#EAF2FE",
+        "new-badge-text": "#0D3C75",
+        "highlight": "#E3E3E3",
+        "anchor": "#EFEFEF",
+        "anchor-ring": "#2B2B2B",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "info": "#003EA0",
+        "info-bg": "#F2F2F2",
+        "info-text": "rgb(20, 40, 71)",
+        "visited-link": "#7C2D8E"
+      },
+      "dark": {
+        "bg": "#121212",
+        "page-bg": "#121212",
+        "bg-paper": "#1C1C1C",
+        "header-bg": "#1C1C1C",
+        "canvas-dim": "#121212",
+        "text-primary": "#EDEDED",
+        "text-heading": "#EDEDED",
+        "text-secondary": "#A3A3A3",
+        "timestamp": "#9A9A9A",
+        "post-action-text": "#9A9A9A",
+        "primary": "#D6D6D6",
+        "primary-text": "#E6E6E6",
+        "primary-contrast": "#111111",
+        "primary-dark": "#A8A8A8",
+        "primary-light": "#F2F2F2",
+        "divider": "#333333",
+        "border": "rgba(255, 255, 255, 0.12)",
+        "border-input": "#4A4A4A",
+        "stripe": "#2E2E2E",
+        "hover-regular": "#242424",
+        "action-hover": "#242424",
+        "unread-bg": "#1E3A50",
+        "post-action-rule": "#333333",
+        "post-action-rule-unread": "#3D3D3D",
+        "new-badge-bg": "rgba(100, 181, 246, 0.18)",
+        "new-badge-text": "#BBDEFB",
+        "highlight": "#2E2E2E",
+        "anchor": "rgba(255, 255, 255, 0.06)",
+        "anchor-ring": "#D6D6D6",
+        "anchor-flash": "rgba(255, 255, 255, 0.18)",
+        "info": "#64B5F6",
+        "info-bg": "#1C1C1C",
+        "info-text": "#E6E6E6",
+        "visited-link": "#CE93D8"
+      }
+    },
+    "m3": {
+      "traditional": {
+        "bg": "#ECECEC",
+        "page-bg": "#ECECEC",
+        "bg-paper": "#FFFFFF",
+        "header-bg": "#F5F5F5",
+        "canvas-dim": "#ECECEC",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#595959",
+        "timestamp": "#5E5E5E",
+        "post-action-text": "#5E5E5E",
+        "primary": "#262626",
+        "primary-text": "#262626",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#CCCCCC",
+        "border": "#CCCCCC",
+        "border-input": "#B3B3B3",
+        "stripe": "#B3B3B3",
+        "hover-regular": "#F5F5F5",
+        "action-hover": "#E6E6E6",
+        "unread-bg": "#FFFFFF",
+        "post-action-rule": "#CCCCCC",
+        "post-action-rule-unread": "#CCCCCC",
+        "new-badge-bg": "#F5F5F5",
+        "new-badge-text": "#262626",
+        "highlight": "#E0E0E0",
+        "anchor": "#F5F5F5",
+        "anchor-ring": "#262626",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "warning": "#7A5C00",
+        "warning-dark": "#5C4500",
+        "warning-bg": "#F5EFD9",
+        "info": "#1A1A1A",
+        "info-bg": "#F5F5F5",
+        "info-text": "#1A1A1A",
+        "visited-link": "#666666"
+      },
+      "light": {
+        "bg": "#FFFFFF",
+        "page-bg": "#FFFFFF",
+        "bg-paper": "#F7F7F7",
+        "header-bg": "#F7F7F7",
+        "canvas-dim": "#F2F2F2",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#5E5E5E",
+        "timestamp": "#666666",
+        "post-action-text": "#666666",
+        "primary": "#2B2B2B",
+        "primary-text": "#2B2B2B",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#D9D9D9",
+        "border": "rgba(0, 0, 0, 0.12)",
+        "border-input": "#C4C4C4",
+        "stripe": "#BDBDBD",
+        "hover-regular": "#F0F0F0",
+        "action-hover": "#F0F0F0",
+        "unread-bg": "#E6E6E6",
+        "post-action-rule": "#DDDDDD",
+        "post-action-rule-unread": "#CFCFCF",
+        "new-badge-bg": "#EDEDED",
+        "new-badge-text": "#2B2B2B",
+        "highlight": "#E3E3E3",
+        "anchor": "#EFEFEF",
+        "anchor-ring": "#2B2B2B",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "info": "#1A1A1A",
+        "info-bg": "#F2F2F2",
+        "info-text": "#1A1A1A",
+        "visited-link": "#6E6E6E"
+      },
+      "dark": {
+        "bg": "#121212",
+        "page-bg": "#121212",
+        "bg-paper": "#1C1C1C",
+        "header-bg": "#1C1C1C",
+        "canvas-dim": "#121212",
+        "text-primary": "#EDEDED",
+        "text-heading": "#EDEDED",
+        "text-secondary": "#A3A3A3",
+        "timestamp": "#9A9A9A",
+        "post-action-text": "#9A9A9A",
+        "primary": "#D6D6D6",
+        "primary-text": "#E6E6E6",
+        "primary-contrast": "#111111",
+        "primary-dark": "#A8A8A8",
+        "primary-light": "#F2F2F2",
+        "divider": "#333333",
+        "border": "rgba(255, 255, 255, 0.12)",
+        "border-input": "#4A4A4A",
+        "stripe": "#2E2E2E",
+        "hover-regular": "#242424",
+        "action-hover": "#242424",
+        "unread-bg": "#2A2A2A",
+        "post-action-rule": "#333333",
+        "post-action-rule-unread": "#3D3D3D",
+        "new-badge-bg": "#2A2A2A",
+        "new-badge-text": "#EDEDED",
+        "highlight": "#2E2E2E",
+        "anchor": "rgba(255, 255, 255, 0.06)",
+        "anchor-ring": "#D6D6D6",
+        "anchor-flash": "rgba(255, 255, 255, 0.18)",
+        "info": "#E6E6E6",
+        "info-bg": "#1C1C1C",
+        "info-text": "#E6E6E6",
+        "visited-link": "#9A9A9A"
+      }
+    },
+    "m4": {
+      "traditional": {
+        "bg": "#ECECEC",
+        "page-bg": "#ECECEC",
+        "bg-paper": "#FFFFFF",
+        "header-bg": "#F5F5F5",
+        "canvas-dim": "#ECECEC",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#595959",
+        "timestamp": "#5E5E5E",
+        "post-action-text": "#5E5E5E",
+        "primary": "#262626",
+        "primary-text": "#262626",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#CCCCCC",
+        "border": "#CCCCCC",
+        "border-input": "#B3B3B3",
+        "stripe": "#B3B3B3",
+        "hover-regular": "#F5F5F5",
+        "action-hover": "#E6E6E6",
+        "unread-bg": "#FFFFFF",
+        "post-action-rule": "#CCCCCC",
+        "post-action-rule-unread": "#CCCCCC",
+        "new-badge-bg": "#F5F5F5",
+        "new-badge-text": "#262626",
+        "highlight": "#E0E0E0",
+        "anchor": "#F5F5F5",
+        "anchor-ring": "#262626",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "warning": "#7A5C00",
+        "warning-dark": "#5C4500",
+        "warning-bg": "#F5EFD9",
+        "info": "#1A1A1A",
+        "info-bg": "#F5F5F5",
+        "info-text": "#1A1A1A",
+        "visited-link": "#666666"
+      },
+      "light": {
+        "bg": "#FFFFFF",
+        "page-bg": "#FFFFFF",
+        "bg-paper": "#F7F7F7",
+        "header-bg": "#F7F7F7",
+        "canvas-dim": "#F2F2F2",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#5E5E5E",
+        "timestamp": "#666666",
+        "post-action-text": "#666666",
+        "primary": "#2B2B2B",
+        "primary-text": "#2B2B2B",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#D9D9D9",
+        "border": "rgba(0, 0, 0, 0.12)",
+        "border-input": "#C4C4C4",
+        "stripe": "#BDBDBD",
+        "hover-regular": "#F0F0F0",
+        "action-hover": "#F0F0F0",
+        "unread-bg": "#E6E6E6",
+        "post-action-rule": "#DDDDDD",
+        "post-action-rule-unread": "#CFCFCF",
+        "new-badge-bg": "#EDEDED",
+        "new-badge-text": "#2B2B2B",
+        "highlight": "#E3E3E3",
+        "anchor": "#EFEFEF",
+        "anchor-ring": "#2B2B2B",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "info": "#1A1A1A",
+        "info-bg": "#F2F2F2",
+        "info-text": "#1A1A1A",
+        "visited-link": "#6E6E6E"
+      },
+      "dark": {
+        "bg": "#121212",
+        "page-bg": "#121212",
+        "bg-paper": "#1C1C1C",
+        "header-bg": "#1C1C1C",
+        "canvas-dim": "#121212",
+        "text-primary": "#EDEDED",
+        "text-heading": "#EDEDED",
+        "text-secondary": "#A3A3A3",
+        "timestamp": "#9A9A9A",
+        "post-action-text": "#9A9A9A",
+        "primary": "#D6D6D6",
+        "primary-text": "#E6E6E6",
+        "primary-contrast": "#111111",
+        "primary-dark": "#A8A8A8",
+        "primary-light": "#F2F2F2",
+        "divider": "#333333",
+        "border": "rgba(255, 255, 255, 0.12)",
+        "border-input": "#4A4A4A",
+        "stripe": "#2E2E2E",
+        "hover-regular": "#242424",
+        "action-hover": "#242424",
+        "unread-bg": "#2A2A2A",
+        "post-action-rule": "#333333",
+        "post-action-rule-unread": "#3D3D3D",
+        "new-badge-bg": "#2A2A2A",
+        "new-badge-text": "#EDEDED",
+        "highlight": "#2E2E2E",
+        "anchor": "rgba(255, 255, 255, 0.06)",
+        "anchor-ring": "#D6D6D6",
+        "anchor-flash": "rgba(255, 255, 255, 0.18)",
+        "info": "#E6E6E6",
+        "info-bg": "#1C1C1C",
+        "info-text": "#E6E6E6",
+        "visited-link": "#9A9A9A"
+      }
+    },
+    "m5": {
+      "traditional": {
+        "bg": "#ECEAE8",
+        "page-bg": "#ECEAE8",
+        "bg-paper": "#FFFFFF",
+        "header-bg": "#F5F5F5",
+        "canvas-dim": "#ECECEC",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#595959",
+        "timestamp": "#5E5E5E",
+        "post-action-text": "#5E5E5E",
+        "primary": "#262626",
+        "primary-text": "#262626",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#CCCCCC",
+        "border": "#CCCCCC",
+        "border-input": "#B3B3B3",
+        "stripe": "#B3B3B3",
+        "hover-regular": "#F5F5F5",
+        "action-hover": "#E6E6E6",
+        "unread-bg": "#FFF4EE",
+        "post-action-rule": "#CCCCCC",
+        "post-action-rule-unread": "#CCCCCC",
+        "new-badge-bg": "#F5F5F5",
+        "new-badge-text": "#262626",
+        "highlight": "#E0E0E0",
+        "anchor": "#F5F5F5",
+        "anchor-ring": "#262626",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "warning": "#7A5C00",
+        "warning-dark": "#5C4500",
+        "warning-bg": "#F5EFD9",
+        "info": "#1A1A1A",
+        "info-bg": "#F5F5F5",
+        "info-text": "#1A1A1A",
+        "visited-link": "#666666"
+      },
+      "light": {
+        "bg": "#FFFFFF",
+        "page-bg": "#FFFFFF",
+        "bg-paper": "#F7F7F7",
+        "header-bg": "#F7F7F7",
+        "canvas-dim": "#F2F2F2",
+        "text-primary": "#111111",
+        "text-heading": "#111111",
+        "text-secondary": "#5E5E5E",
+        "timestamp": "#666666",
+        "post-action-text": "#666666",
+        "primary": "#2B2B2B",
+        "primary-text": "#2B2B2B",
+        "primary-contrast": "#FFFFFF",
+        "primary-dark": "#111111",
+        "primary-light": "#8A8A8A",
+        "divider": "#D9D9D9",
+        "border": "rgba(0, 0, 0, 0.12)",
+        "border-input": "#C4C4C4",
+        "stripe": "#BDBDBD",
+        "hover-regular": "#F0F0F0",
+        "action-hover": "#F0F0F0",
+        "unread-bg": "#F2D6C8",
+        "post-action-rule": "#DDDDDD",
+        "post-action-rule-unread": "#CFCFCF",
+        "new-badge-bg": "#EDEDED",
+        "new-badge-text": "#2B2B2B",
+        "highlight": "#E3E3E3",
+        "anchor": "#EFEFEF",
+        "anchor-ring": "#2B2B2B",
+        "anchor-flash": "rgba(0, 0, 0, 0.16)",
+        "info": "#1A1A1A",
+        "info-bg": "#F2F2F2",
+        "info-text": "#1A1A1A",
+        "visited-link": "#6E6E6E"
+      },
+      "dark": {
+        "bg": "#121212",
+        "page-bg": "#121212",
+        "bg-paper": "#1C1C1C",
+        "header-bg": "#1C1C1C",
+        "canvas-dim": "#121212",
+        "text-primary": "#EDEDED",
+        "text-heading": "#EDEDED",
+        "text-secondary": "#A3A3A3",
+        "timestamp": "#9A9A9A",
+        "post-action-text": "#9A9A9A",
+        "primary": "#D6D6D6",
+        "primary-text": "#E6E6E6",
+        "primary-contrast": "#111111",
+        "primary-dark": "#A8A8A8",
+        "primary-light": "#F2F2F2",
+        "divider": "#333333",
+        "border": "rgba(255, 255, 255, 0.12)",
+        "border-input": "#4A4A4A",
+        "stripe": "#2E2E2E",
+        "hover-regular": "#242424",
+        "action-hover": "#242424",
+        "unread-bg": "#3A2820",
+        "post-action-rule": "#333333",
+        "post-action-rule-unread": "#3D3D3D",
+        "new-badge-bg": "#2A2A2A",
+        "new-badge-text": "#EDEDED",
+        "highlight": "#2E2E2E",
+        "anchor": "rgba(255, 255, 255, 0.06)",
+        "anchor-ring": "#D6D6D6",
+        "anchor-flash": "rgba(255, 255, 255, 0.18)",
+        "info": "#E6E6E6",
+        "info-bg": "#1C1C1C",
+        "info-text": "#E6E6E6",
+        "visited-link": "#9A9A9A"
+      }
+    }
+  },
+  "chrome": {
+    "va": {
+      "light": {
+        "header-bg": "#0D2B5E",
+        "bg": "#0D2B5E",
+        "bg-paper": "#1B3D75",
+        "text-primary": "#FFFFFF",
+        "text-secondary": "#C9D4EA",
+        "border": "rgba(255, 255, 255, 0.22)",
+        "border-input": "rgba(255, 255, 255, 0.35)",
+        "divider": "#2E4E86",
+        "action-hover": "rgba(255, 255, 255, 0.08)",
+        "header-border": "rgba(0, 0, 0, 0.25)",
+        "primary": "#FF8200",
+        "primary-text": "#FF8200",
+        "primary-contrast": "#000000",
+        "highlight": "#1B3D75",
+        "shadow-base": "#000000"
+      },
+      "traditional": {
+        "header-bg": "#0D2B5E",
+        "bg": "#0D2B5E",
+        "bg-paper": "#1B3D75",
+        "text-primary": "#FFFFFF",
+        "text-secondary": "#C9D4EA",
+        "border": "rgba(255, 255, 255, 0.22)",
+        "border-input": "rgba(255, 255, 255, 0.35)",
+        "divider": "#2E4E86",
+        "action-hover": "rgba(255, 255, 255, 0.08)",
+        "header-border": "rgba(0, 0, 0, 0.25)",
+        "primary": "#FF8200",
+        "primary-text": "#FF8200",
+        "primary-contrast": "#000000",
+        "highlight": "#1B3D75",
+        "shadow-base": "#000000"
+      }
+    }
+  },
+  "logo": {
+    "r7tg-tg": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-tg": {
+      "traditional": "#FF8200"
+    },
+    "r7w-tg": {
+      "light": "#FF8200"
+    },
+    "r7tg-ts": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-ts": {
+      "traditional": "#FF8200"
+    },
+    "r7w-ts": {
+      "light": "#FF8200"
+    },
+    "r7tg-og": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-og": {
+      "traditional": "#FF8200"
+    },
+    "r7w-og": {
+      "light": "#FF8200"
+    },
+    "r7tg-os": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-os": {
+      "traditional": "#FF8200"
+    },
+    "r7w-os": {
+      "light": "#FF8200"
+    },
+    "r7tg-ag": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-ag": {
+      "traditional": "#FF8200"
+    },
+    "r7w-ag": {
+      "light": "#FF8200"
+    },
+    "r7tg-tt": {
+      "traditional": "#FF8200"
+    },
+    "r7y2-tt": {
+      "traditional": "#FF8200"
+    },
+    "r7w-tt": {
+      "light": "#FF8200"
+    },
+    "r8b0-ga": {
+      "traditional": "#FF8200"
+    },
+    "r8b1-ga": {
+      "traditional": "#FF8200"
+    },
+    "r8b2-ga": {
+      "traditional": "#FF8200"
+    },
+    "r8b3-ga": {
+      "traditional": "#FF8200"
+    },
+    "r8b4-ga": {
+      "traditional": "#FF8200"
+    },
+    "r8b5-ga": {
+      "traditional": "#FF8200"
+    }
+  },
+  "btn": {
+    "r7tg-tg": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7y2-tg": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7w-tg": {
+      "light": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7tg-ts": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7y2-ts": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7w-ts": {
+      "light": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7tg-og": {
+      "traditional": {
+        "style": "outlined"
+      }
+    },
+    "r7y2-og": {
+      "traditional": {
+        "style": "outlined"
+      }
+    },
+    "r7w-og": {
+      "light": {
+        "style": "outlined"
+      }
+    },
+    "r7tg-os": {
+      "traditional": {
+        "style": "outlined"
+      }
+    },
+    "r7y2-os": {
+      "traditional": {
+        "style": "outlined"
+      }
+    },
+    "r7w-os": {
+      "light": {
+        "style": "outlined"
+      }
+    },
+    "r7tg-ag": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r7y2-ag": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r7w-ag": {
+      "light": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r7tg-tt": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7y2-tt": {
+      "traditional": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r7w-tt": {
+      "light": {
+        "style": "tonal",
+        "pct": 14
+      }
+    },
+    "r8b0-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r8b1-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r8b2-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r8b3-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r8b4-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    },
+    "r8b5-ga": {
+      "traditional": {
+        "style": "accent",
+        "color": "#A14726"
+      }
+    }
+  },
+  "inline": {
+    "m1": {
+      "traditional": {
+        "t": {
+          "bg": "#ECECEC",
+          "page-bg": "#ECECEC",
+          "bg-paper": "#FFFFFF",
+          "header-bg": "#F5F5F5",
+          "canvas-dim": "#ECECEC",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#595959",
+          "timestamp": "#5E5E5E",
+          "post-action-text": "#5E5E5E",
+          "primary": "#262626",
+          "primary-text": "#262626",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#CCCCCC",
+          "border": "#CCCCCC",
+          "border-input": "#B3B3B3",
+          "stripe": "#B3B3B3",
+          "hover-regular": "#F5F5F5",
+          "action-hover": "#E6E6E6",
+          "unread-bg": "#FFFFFF",
+          "post-action-rule": "#CCCCCC",
+          "post-action-rule-unread": "#CCCCCC",
+          "new-badge-bg": "#F5F5F5",
+          "new-badge-text": "#262626",
+          "highlight": "#E0E0E0",
+          "anchor": "#F5F5F5",
+          "anchor-ring": "#262626",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "warning": "#7A5C00",
+          "warning-dark": "#5C4500",
+          "warning-bg": "#F5EFD9",
+          "info": "#1A1A1A",
+          "info-bg": "#F5F5F5",
+          "info-text": "#1A1A1A",
+          "visited-link": "#666666"
+        }
+      },
+      "light": {
+        "t": {
+          "bg": "#FFFFFF",
+          "page-bg": "#FFFFFF",
+          "bg-paper": "#F7F7F7",
+          "header-bg": "#F7F7F7",
+          "canvas-dim": "#F2F2F2",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#5E5E5E",
+          "timestamp": "#666666",
+          "post-action-text": "#666666",
+          "primary": "#2B2B2B",
+          "primary-text": "#2B2B2B",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#D9D9D9",
+          "border": "rgba(0, 0, 0, 0.12)",
+          "border-input": "#C4C4C4",
+          "stripe": "#BDBDBD",
+          "hover-regular": "#F0F0F0",
+          "action-hover": "#F0F0F0",
+          "unread-bg": "#E6E6E6",
+          "post-action-rule": "#DDDDDD",
+          "post-action-rule-unread": "#CFCFCF",
+          "new-badge-bg": "#EDEDED",
+          "new-badge-text": "#2B2B2B",
+          "highlight": "#E3E3E3",
+          "anchor": "#EFEFEF",
+          "anchor-ring": "#2B2B2B",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "info": "#1A1A1A",
+          "info-bg": "#F2F2F2",
+          "info-text": "#1A1A1A",
+          "visited-link": "#6E6E6E"
+        }
+      },
+      "dark": {
+        "t": {
+          "bg": "#121212",
+          "page-bg": "#121212",
+          "bg-paper": "#1C1C1C",
+          "header-bg": "#1C1C1C",
+          "canvas-dim": "#121212",
+          "text-primary": "#EDEDED",
+          "text-heading": "#EDEDED",
+          "text-secondary": "#A3A3A3",
+          "timestamp": "#9A9A9A",
+          "post-action-text": "#9A9A9A",
+          "primary": "#D6D6D6",
+          "primary-text": "#E6E6E6",
+          "primary-contrast": "#111111",
+          "primary-dark": "#A8A8A8",
+          "primary-light": "#F2F2F2",
+          "divider": "#333333",
+          "border": "rgba(255, 255, 255, 0.12)",
+          "border-input": "#4A4A4A",
+          "stripe": "#2E2E2E",
+          "hover-regular": "#242424",
+          "action-hover": "#242424",
+          "unread-bg": "#2A2A2A",
+          "post-action-rule": "#333333",
+          "post-action-rule-unread": "#3D3D3D",
+          "new-badge-bg": "#2A2A2A",
+          "new-badge-text": "#EDEDED",
+          "highlight": "#2E2E2E",
+          "anchor": "rgba(255, 255, 255, 0.06)",
+          "anchor-ring": "#D6D6D6",
+          "anchor-flash": "rgba(255, 255, 255, 0.18)",
+          "info": "#E6E6E6",
+          "info-bg": "#1C1C1C",
+          "info-text": "#E6E6E6",
+          "visited-link": "#9A9A9A"
+        }
+      }
+    },
+    "m2": {
+      "traditional": {
+        "t": {
+          "bg": "#E9EDF3",
+          "page-bg": "#E9EDF3",
+          "bg-paper": "#FFFFFF",
+          "header-bg": "#F5F5F5",
+          "canvas-dim": "#E9EDF3",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#595959",
+          "timestamp": "#5E5E5E",
+          "post-action-text": "#5E5E5E",
+          "primary": "#262626",
+          "primary-text": "#262626",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#CCCCCC",
+          "border": "#CCCCCC",
+          "border-input": "#B3B3B3",
+          "stripe": "#B3B3B3",
+          "hover-regular": "#F5F5F5",
+          "action-hover": "#E6E6E6",
+          "unread-bg": "#FFFFFF",
+          "post-action-rule": "#CCCCCC",
+          "post-action-rule-unread": "#CCCCCC",
+          "new-badge-bg": "#EFF4FF",
+          "new-badge-text": "#003399",
+          "highlight": "#E0E0E0",
+          "anchor": "#F5F5F5",
+          "anchor-ring": "#262626",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "warning": "#7A5C00",
+          "warning-dark": "#5C4500",
+          "warning-bg": "#F5EFD9",
+          "info": "#003399",
+          "info-bg": "#F5F5F5",
+          "info-text": "#1A1A1A",
+          "visited-link": "#993366"
+        }
+      },
+      "light": {
+        "t": {
+          "bg": "#FFFFFF",
+          "page-bg": "#FFFFFF",
+          "bg-paper": "#F7F7F7",
+          "header-bg": "#F7F7F7",
+          "canvas-dim": "#F2F2F2",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#5E5E5E",
+          "timestamp": "#666666",
+          "post-action-text": "#666666",
+          "primary": "#2B2B2B",
+          "primary-text": "#2B2B2B",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#D9D9D9",
+          "border": "rgba(0, 0, 0, 0.12)",
+          "border-input": "#C4C4C4",
+          "stripe": "#BDBDBD",
+          "hover-regular": "#F0F0F0",
+          "action-hover": "#F0F0F0",
+          "unread-bg": "#DCEAF8",
+          "post-action-rule": "#DDDDDD",
+          "post-action-rule-unread": "#CFCFCF",
+          "new-badge-bg": "#EAF2FE",
+          "new-badge-text": "#0D3C75",
+          "highlight": "#E3E3E3",
+          "anchor": "#EFEFEF",
+          "anchor-ring": "#2B2B2B",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "info": "#003EA0",
+          "info-bg": "#F2F2F2",
+          "info-text": "rgb(20, 40, 71)",
+          "visited-link": "#7C2D8E"
+        }
+      },
+      "dark": {
+        "t": {
+          "bg": "#121212",
+          "page-bg": "#121212",
+          "bg-paper": "#1C1C1C",
+          "header-bg": "#1C1C1C",
+          "canvas-dim": "#121212",
+          "text-primary": "#EDEDED",
+          "text-heading": "#EDEDED",
+          "text-secondary": "#A3A3A3",
+          "timestamp": "#9A9A9A",
+          "post-action-text": "#9A9A9A",
+          "primary": "#D6D6D6",
+          "primary-text": "#E6E6E6",
+          "primary-contrast": "#111111",
+          "primary-dark": "#A8A8A8",
+          "primary-light": "#F2F2F2",
+          "divider": "#333333",
+          "border": "rgba(255, 255, 255, 0.12)",
+          "border-input": "#4A4A4A",
+          "stripe": "#2E2E2E",
+          "hover-regular": "#242424",
+          "action-hover": "#242424",
+          "unread-bg": "#1E3A50",
+          "post-action-rule": "#333333",
+          "post-action-rule-unread": "#3D3D3D",
+          "new-badge-bg": "rgba(100, 181, 246, 0.18)",
+          "new-badge-text": "#BBDEFB",
+          "highlight": "#2E2E2E",
+          "anchor": "rgba(255, 255, 255, 0.06)",
+          "anchor-ring": "#D6D6D6",
+          "anchor-flash": "rgba(255, 255, 255, 0.18)",
+          "info": "#64B5F6",
+          "info-bg": "#1C1C1C",
+          "info-text": "#E6E6E6",
+          "visited-link": "#CE93D8"
+        }
+      }
+    },
+    "m3": {
+      "traditional": {
+        "t": {
+          "bg": "#ECECEC",
+          "page-bg": "#ECECEC",
+          "bg-paper": "#FFFFFF",
+          "header-bg": "#F5F5F5",
+          "canvas-dim": "#ECECEC",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#595959",
+          "timestamp": "#5E5E5E",
+          "post-action-text": "#5E5E5E",
+          "primary": "#262626",
+          "primary-text": "#262626",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#CCCCCC",
+          "border": "#CCCCCC",
+          "border-input": "#B3B3B3",
+          "stripe": "#B3B3B3",
+          "hover-regular": "#F5F5F5",
+          "action-hover": "#E6E6E6",
+          "unread-bg": "#FFFFFF",
+          "post-action-rule": "#CCCCCC",
+          "post-action-rule-unread": "#CCCCCC",
+          "new-badge-bg": "#F5F5F5",
+          "new-badge-text": "#262626",
+          "highlight": "#E0E0E0",
+          "anchor": "#F5F5F5",
+          "anchor-ring": "#262626",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "warning": "#7A5C00",
+          "warning-dark": "#5C4500",
+          "warning-bg": "#F5EFD9",
+          "info": "#1A1A1A",
+          "info-bg": "#F5F5F5",
+          "info-text": "#1A1A1A",
+          "visited-link": "#666666"
+        }
+      },
+      "light": {
+        "t": {
+          "bg": "#FFFFFF",
+          "page-bg": "#FFFFFF",
+          "bg-paper": "#F7F7F7",
+          "header-bg": "#F7F7F7",
+          "canvas-dim": "#F2F2F2",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#5E5E5E",
+          "timestamp": "#666666",
+          "post-action-text": "#666666",
+          "primary": "#2B2B2B",
+          "primary-text": "#2B2B2B",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#D9D9D9",
+          "border": "rgba(0, 0, 0, 0.12)",
+          "border-input": "#C4C4C4",
+          "stripe": "#BDBDBD",
+          "hover-regular": "#F0F0F0",
+          "action-hover": "#F0F0F0",
+          "unread-bg": "#E6E6E6",
+          "post-action-rule": "#DDDDDD",
+          "post-action-rule-unread": "#CFCFCF",
+          "new-badge-bg": "#EDEDED",
+          "new-badge-text": "#2B2B2B",
+          "highlight": "#E3E3E3",
+          "anchor": "#EFEFEF",
+          "anchor-ring": "#2B2B2B",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "info": "#1A1A1A",
+          "info-bg": "#F2F2F2",
+          "info-text": "#1A1A1A",
+          "visited-link": "#6E6E6E"
+        }
+      },
+      "dark": {
+        "t": {
+          "bg": "#121212",
+          "page-bg": "#121212",
+          "bg-paper": "#1C1C1C",
+          "header-bg": "#1C1C1C",
+          "canvas-dim": "#121212",
+          "text-primary": "#EDEDED",
+          "text-heading": "#EDEDED",
+          "text-secondary": "#A3A3A3",
+          "timestamp": "#9A9A9A",
+          "post-action-text": "#9A9A9A",
+          "primary": "#D6D6D6",
+          "primary-text": "#E6E6E6",
+          "primary-contrast": "#111111",
+          "primary-dark": "#A8A8A8",
+          "primary-light": "#F2F2F2",
+          "divider": "#333333",
+          "border": "rgba(255, 255, 255, 0.12)",
+          "border-input": "#4A4A4A",
+          "stripe": "#2E2E2E",
+          "hover-regular": "#242424",
+          "action-hover": "#242424",
+          "unread-bg": "#2A2A2A",
+          "post-action-rule": "#333333",
+          "post-action-rule-unread": "#3D3D3D",
+          "new-badge-bg": "#2A2A2A",
+          "new-badge-text": "#EDEDED",
+          "highlight": "#2E2E2E",
+          "anchor": "rgba(255, 255, 255, 0.06)",
+          "anchor-ring": "#D6D6D6",
+          "anchor-flash": "rgba(255, 255, 255, 0.18)",
+          "info": "#E6E6E6",
+          "info-bg": "#1C1C1C",
+          "info-text": "#E6E6E6",
+          "visited-link": "#9A9A9A"
+        }
+      }
+    },
+    "m4": {
+      "traditional": {
+        "t": {
+          "bg": "#ECECEC",
+          "page-bg": "#ECECEC",
+          "bg-paper": "#FFFFFF",
+          "header-bg": "#F5F5F5",
+          "canvas-dim": "#ECECEC",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#595959",
+          "timestamp": "#5E5E5E",
+          "post-action-text": "#5E5E5E",
+          "primary": "#262626",
+          "primary-text": "#262626",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#CCCCCC",
+          "border": "#CCCCCC",
+          "border-input": "#B3B3B3",
+          "stripe": "#B3B3B3",
+          "hover-regular": "#F5F5F5",
+          "action-hover": "#E6E6E6",
+          "unread-bg": "#FFFFFF",
+          "post-action-rule": "#CCCCCC",
+          "post-action-rule-unread": "#CCCCCC",
+          "new-badge-bg": "#F5F5F5",
+          "new-badge-text": "#262626",
+          "highlight": "#E0E0E0",
+          "anchor": "#F5F5F5",
+          "anchor-ring": "#262626",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "warning": "#7A5C00",
+          "warning-dark": "#5C4500",
+          "warning-bg": "#F5EFD9",
+          "info": "#1A1A1A",
+          "info-bg": "#F5F5F5",
+          "info-text": "#1A1A1A",
+          "visited-link": "#666666"
+        }
+      },
+      "light": {
+        "t": {
+          "bg": "#FFFFFF",
+          "page-bg": "#FFFFFF",
+          "bg-paper": "#F7F7F7",
+          "header-bg": "#F7F7F7",
+          "canvas-dim": "#F2F2F2",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#5E5E5E",
+          "timestamp": "#666666",
+          "post-action-text": "#666666",
+          "primary": "#2B2B2B",
+          "primary-text": "#2B2B2B",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#D9D9D9",
+          "border": "rgba(0, 0, 0, 0.12)",
+          "border-input": "#C4C4C4",
+          "stripe": "#BDBDBD",
+          "hover-regular": "#F0F0F0",
+          "action-hover": "#F0F0F0",
+          "unread-bg": "#E6E6E6",
+          "post-action-rule": "#DDDDDD",
+          "post-action-rule-unread": "#CFCFCF",
+          "new-badge-bg": "#EDEDED",
+          "new-badge-text": "#2B2B2B",
+          "highlight": "#E3E3E3",
+          "anchor": "#EFEFEF",
+          "anchor-ring": "#2B2B2B",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "info": "#1A1A1A",
+          "info-bg": "#F2F2F2",
+          "info-text": "#1A1A1A",
+          "visited-link": "#6E6E6E"
+        }
+      },
+      "dark": {
+        "t": {
+          "bg": "#121212",
+          "page-bg": "#121212",
+          "bg-paper": "#1C1C1C",
+          "header-bg": "#1C1C1C",
+          "canvas-dim": "#121212",
+          "text-primary": "#EDEDED",
+          "text-heading": "#EDEDED",
+          "text-secondary": "#A3A3A3",
+          "timestamp": "#9A9A9A",
+          "post-action-text": "#9A9A9A",
+          "primary": "#D6D6D6",
+          "primary-text": "#E6E6E6",
+          "primary-contrast": "#111111",
+          "primary-dark": "#A8A8A8",
+          "primary-light": "#F2F2F2",
+          "divider": "#333333",
+          "border": "rgba(255, 255, 255, 0.12)",
+          "border-input": "#4A4A4A",
+          "stripe": "#2E2E2E",
+          "hover-regular": "#242424",
+          "action-hover": "#242424",
+          "unread-bg": "#2A2A2A",
+          "post-action-rule": "#333333",
+          "post-action-rule-unread": "#3D3D3D",
+          "new-badge-bg": "#2A2A2A",
+          "new-badge-text": "#EDEDED",
+          "highlight": "#2E2E2E",
+          "anchor": "rgba(255, 255, 255, 0.06)",
+          "anchor-ring": "#D6D6D6",
+          "anchor-flash": "rgba(255, 255, 255, 0.18)",
+          "info": "#E6E6E6",
+          "info-bg": "#1C1C1C",
+          "info-text": "#E6E6E6",
+          "visited-link": "#9A9A9A"
+        }
+      }
+    },
+    "m5": {
+      "traditional": {
+        "t": {
+          "bg": "#ECEAE8",
+          "page-bg": "#ECEAE8",
+          "bg-paper": "#FFFFFF",
+          "header-bg": "#F5F5F5",
+          "canvas-dim": "#ECECEC",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#595959",
+          "timestamp": "#5E5E5E",
+          "post-action-text": "#5E5E5E",
+          "primary": "#262626",
+          "primary-text": "#262626",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#CCCCCC",
+          "border": "#CCCCCC",
+          "border-input": "#B3B3B3",
+          "stripe": "#B3B3B3",
+          "hover-regular": "#F5F5F5",
+          "action-hover": "#E6E6E6",
+          "unread-bg": "#FFF4EE",
+          "post-action-rule": "#CCCCCC",
+          "post-action-rule-unread": "#CCCCCC",
+          "new-badge-bg": "#F5F5F5",
+          "new-badge-text": "#262626",
+          "highlight": "#E0E0E0",
+          "anchor": "#F5F5F5",
+          "anchor-ring": "#262626",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "warning": "#7A5C00",
+          "warning-dark": "#5C4500",
+          "warning-bg": "#F5EFD9",
+          "info": "#1A1A1A",
+          "info-bg": "#F5F5F5",
+          "info-text": "#1A1A1A",
+          "visited-link": "#666666"
+        }
+      },
+      "light": {
+        "t": {
+          "bg": "#FFFFFF",
+          "page-bg": "#FFFFFF",
+          "bg-paper": "#F7F7F7",
+          "header-bg": "#F7F7F7",
+          "canvas-dim": "#F2F2F2",
+          "text-primary": "#111111",
+          "text-heading": "#111111",
+          "text-secondary": "#5E5E5E",
+          "timestamp": "#666666",
+          "post-action-text": "#666666",
+          "primary": "#2B2B2B",
+          "primary-text": "#2B2B2B",
+          "primary-contrast": "#FFFFFF",
+          "primary-dark": "#111111",
+          "primary-light": "#8A8A8A",
+          "divider": "#D9D9D9",
+          "border": "rgba(0, 0, 0, 0.12)",
+          "border-input": "#C4C4C4",
+          "stripe": "#BDBDBD",
+          "hover-regular": "#F0F0F0",
+          "action-hover": "#F0F0F0",
+          "unread-bg": "#F2D6C8",
+          "post-action-rule": "#DDDDDD",
+          "post-action-rule-unread": "#CFCFCF",
+          "new-badge-bg": "#EDEDED",
+          "new-badge-text": "#2B2B2B",
+          "highlight": "#E3E3E3",
+          "anchor": "#EFEFEF",
+          "anchor-ring": "#2B2B2B",
+          "anchor-flash": "rgba(0, 0, 0, 0.16)",
+          "info": "#1A1A1A",
+          "info-bg": "#F2F2F2",
+          "info-text": "#1A1A1A",
+          "visited-link": "#6E6E6E"
+        }
+      },
+      "dark": {
+        "t": {
+          "bg": "#121212",
+          "page-bg": "#121212",
+          "bg-paper": "#1C1C1C",
+          "header-bg": "#1C1C1C",
+          "canvas-dim": "#121212",
+          "text-primary": "#EDEDED",
+          "text-heading": "#EDEDED",
+          "text-secondary": "#A3A3A3",
+          "timestamp": "#9A9A9A",
+          "post-action-text": "#9A9A9A",
+          "primary": "#D6D6D6",
+          "primary-text": "#E6E6E6",
+          "primary-contrast": "#111111",
+          "primary-dark": "#A8A8A8",
+          "primary-light": "#F2F2F2",
+          "divider": "#333333",
+          "border": "rgba(255, 255, 255, 0.12)",
+          "border-input": "#4A4A4A",
+          "stripe": "#2E2E2E",
+          "hover-regular": "#242424",
+          "action-hover": "#242424",
+          "unread-bg": "#3A2820",
+          "post-action-rule": "#333333",
+          "post-action-rule-unread": "#3D3D3D",
+          "new-badge-bg": "#2A2A2A",
+          "new-badge-text": "#EDEDED",
+          "highlight": "#2E2E2E",
+          "anchor": "rgba(255, 255, 255, 0.06)",
+          "anchor-ring": "#D6D6D6",
+          "anchor-flash": "rgba(255, 255, 255, 0.18)",
+          "info": "#E6E6E6",
+          "info-bg": "#1C1C1C",
+          "info-text": "#E6E6E6",
+          "visited-link": "#9A9A9A"
+        }
+      }
+    }
+  }
+}

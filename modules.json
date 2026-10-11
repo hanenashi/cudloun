@@ -1,5 +1,5 @@
 {
-  "version": "0.6.34",
+  "version": "0.6.36",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-kapyguts", "file": "modules/sys-kapyguts.js", "required": true },
@@ -10,6 +10,7 @@
     { "id": "settoun", "file": "modules/settoun.js", "category": "current", "defaultEnabled": true },
     { "id": "first-unread", "file": "modules/first-unread.js", "category": "dusty-room", "defaultEnabled": false },
     { "id": "kapybara-theme", "file": "modules/kapybara-theme.js", "category": "dusty-room", "defaultEnabled": false },
+    { "id": "color-schemes", "files": ["modules/color-schemes-data.js", "modules/color-schemes.js"], "category": "current", "defaultEnabled": false },
     { "id": "thread-lane", "file": "modules/thread-lane.js", "category": "dusty-room", "defaultEnabled": false },
     { "id": "classic-look", "file": "modules/classic-look.js", "category": "dusty-room", "defaultEnabled": false },
     { "id": "post-tweaks", "file": "modules/post-tweaks.js", "category": "dusty-room", "defaultEnabled": false },

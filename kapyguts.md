@@ -51,6 +51,7 @@ It exposes:
 - `firstUnreadPost()`
 - `postParts(post)`
 - `pageChromeParts()`
+- `colorThemeState()`
 - `pageHeader()`
 - `pageHeaderParts()`
 - `homeParts()`
@@ -361,6 +362,44 @@ Kapyguts owns this exceptional emoji-prefixed hook as
 `viewportStripes`, `stripeBackground`, and `stripesActive` instead of repeating
 the selector in feature modules. `inspect()` exposes the same facts under
 `pageChrome`.
+
+## Color Schemes and Palette Prototype (2026-10-11)
+
+Koles's temporary [Okoun barvy palette prototype](https://media.okoun.cz/tmp/okoun-barvy/index.html)
+uses real Kapybara HTML/CSS snapshots of the home and club pages. It previews
+mobile (400 px) and desktop, with `traditional`, `light`, and `dark` base schemes.
+The tool offers older named variants, a primary-color tuner, swapped backgrounds,
+button treatments, logo and edge-stripe options, a contrast readout, and a
+custom editor. Variant links use hash parameters (`#v=...`, `#k=...`, or a
+base64-encoded `#c=...`). Saved custom variants live in that page's
+`localStorage`, so they will not automatically transfer to Kapybara or Cudloun.
+The page added Kolo 11 link-color experiments by 2026-10-12. Its 75 named
+variant records and base palettes are archived in `okoun-barvy-data.json`;
+the generated Kolo 10/11 tuner combinations are not in that data object.
+
+The preview applies `data-theme` to its snapshot root and overrides CSS custom
+properties for colors including `page-bg`, `bg`, `header-bg`, `bg-paper`,
+`primary`, `primary-text`, `primary-contrast`, `text-primary`, `info`,
+`unread-bg`, and `stripe`. Button styles need additional CSS. On the live
+`/boards/testis` page, `data-theme="traditional"` and those computed colors
+were present, but the effective CSS variable prefix was **misencoded**
+(`--ðŸŸ-`) rather than the preview's `--🐟-`. Treat both as observations,
+not a promise that Kapybara will keep either spelling.
+
+Kapyguts now exposes `colorThemeState()` (also `inspect().colorTheme`). It
+reads the native scheme, discovers the effective prefix from the computed
+`page-bg` property, and returns `tokens` and `propertyNames` for the keys
+above. It does not change Kapybara's theme:
+
+```js
+const { nativeScheme, tokenPrefix, tokens, propertyNames } =
+  Cudloun.kapyguts.colorThemeState();
+```
+
+For a Cudloun switcher, use this read-only result to detect compatibility
+before applying any override. Avoid hard-coding either prefix. Keep a way to
+return to Kapybara's native scheme, and do not run the palette switcher at the
+same time as the older `kapybara-theme` skin.
 
 ## Native Font Settings (Temporary Experiment)
 
