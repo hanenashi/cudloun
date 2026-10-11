@@ -343,6 +343,53 @@ administration, deletion marking, blocked-user display, and read-state
 actions. On mobile it is a dialog around a role menu; do not depend on the
 desktop-only popover shell.
 
+## Inline Video Cues (2026-10-09)
+
+On `/boards/testis`, Kapybara appended a play control after OPU `.mp4` links in
+Markdown, HTML, and custom-label posts. The shared hook is:
+
+```text
+button.okoun-play-cue[data-cue-provider="video"]
+```
+
+The button has no child nodes. `data-cue-src` contains the MP4 URL and
+`data-cue-id` is a cue identifier, not an icon URL. In the inspected page the
+same video cue ID appeared on all three corresponding links.
+
+Those three test posts include text beside the link and initially have no
+`.okoun-embed` or `<video>`. Older post `1074763322` in `/boards/kapybara`
+currently has a visible `.okoun-embed.okoun-embed--video` preview card, while
+still having no `<video>` until activation. Its cue has `data-cue-open="true"`.
+Thus an expanded preview does not imply that the video file has already loaded
+or started playing.
+
+Do not infer from that older example that a standalone MP4 URL creates a card.
+On 2026-10-09, the user posted several fresh URL-only variants through
+Kapybara's Lexical editor and reported that none rendered an embed card. The
+trigger for the old card remains unverified: it may involve saved embed data,
+an authoring choice, or behavior that changed after that post was created.
+Compare a fresh post's stored/rendered structure with the old one before
+designing a Cudloun option around this distinction.
+
+The play glyph is drawn by CSS, not downloaded as a separate image. Kapybara's
+`.okoun-play-cue::before` pseudo-element uses `background: currentColor` with a
+CSS `mask` set to an encoded `data:image/svg+xml,...` URI. `::after` enlarges
+the hit area. When `data-cue-open="true"`, the mask switches from the play
+triangle to an X. No external icon resource appeared in the page's resource
+list.
+
+To retrieve the actual inline icon value in DevTools, select a play button and
+run:
+
+```js
+getComputedStyle($0, "::before").maskImage
+```
+
+This returns a `url("data:image/svg+xml,...")` value that can be reused as a
+CSS mask. It is not a hosted image URL; keeping the button and styling its
+pseudo-element is the simplest way to retain Kapybara's current icon and
+color behavior.
+
 ## Viewport Edge Stripes
 
 Observed on desktop on 2026-07-22 in the `kapybara` board:
@@ -507,6 +554,16 @@ button[aria-label="Vložit obrázek"]
 button.mode-toggle[aria-pressed]
 code[data-language="markdown"]
 ```
+
+Posting probe on 2026-10-09: `/boards/testis` loaded with five posts and the
+visible text `Napsat příspěvek…` / `PŘISPĚT`, but the gateway's exact
+`button.entry-placeholder` selector found no launcher. This failed before any
+submit click. The precise replacement element could not be captured because
+subsequent headless and GNOME headed visits reached Cloudflare's `Just a
+moment...` security verification. Reinspect the launcher in a normally
+accessible session before updating `boardNewPostButton` or the gateway poster;
+the 2026-07-17 selector above is historical, not a verified current posting
+path. No standalone-video test post was submitted in this probe.
 
 The composer is dynamic and uses a Lexical editor, not a textarea. Its `<>`
 mode is also Lexical: Markdown source lives in a
