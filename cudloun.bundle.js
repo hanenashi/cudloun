@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "0.6.33";
+  const VERSION = "0.6.34";
   const RAW_MAIN_URL = "https://raw.githubusercontent.com/hanenashi/cudloun/main/";
   const CACHE_BUST = String(Date.now());
   const embeddedText = new Map();
@@ -435,7 +435,7 @@
     return;
   }
 
-  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.33\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"first-unread\",\n      \"file\": \"modules/first-unread.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-tweaks\",\n      \"file\": \"modules/post-tweaks.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opu-originals\",\n      \"file\": \"modules/opu-originals.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
+  embeddedText.set("modules.json", "{\n  \"version\": \"0.6.34\",\n  \"system\": [\n    {\n      \"id\": \"sys-logger\",\n      \"file\": \"modules/sys-logger.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-kapyguts\",\n      \"file\": \"modules/sys-kapyguts.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-feedback\",\n      \"file\": \"modules/sys-feedback.js\",\n      \"required\": true\n    },\n    {\n      \"id\": \"sys-menu\",\n      \"file\": \"modules/sys-menu.js\",\n      \"required\": true\n    }\n  ],\n  \"modules\": [\n    {\n      \"id\": \"settoun\",\n      \"file\": \"modules/settoun.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": true\n    },\n    {\n      \"id\": \"first-unread\",\n      \"file\": \"modules/first-unread.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"kapybara-theme\",\n      \"file\": \"modules/kapybara-theme.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"thread-lane\",\n      \"file\": \"modules/thread-lane.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"classic-look\",\n      \"file\": \"modules/classic-look.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-tweaks\",\n      \"file\": \"modules/post-tweaks.js\",\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"post-fonts\",\n      \"file\": \"modules/post-fonts.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opu-originals\",\n      \"file\": \"modules/opu-originals.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"media-cards\",\n      \"file\": \"modules/media-cards.js\",\n      \"category\": \"current\",\n      \"defaultEnabled\": false\n    },\n    {\n      \"id\": \"opuc\",\n      \"files\": [\n        \"modules/opuc/popup-bridge.js\",\n        \"modules/opuc/client.js\",\n        \"modules/opuc/image-pipeline.js\",\n        \"modules/opuc/kapybara-adapter.js\",\n        \"modules/opuc/queue.js\",\n        \"modules/opuc/styles.js\",\n        \"modules/opuc/ui.js\",\n        \"modules/opuc/index.js\"\n      ],\n      \"category\": \"dusty-room\",\n      \"defaultEnabled\": false\n    }\n  ]\n}");
   embeddedText.set("containers.json", "{\n  \"containers\": []\n}");
 
   embeddedText.set("modules/sys-logger.js", "// Cudloun logger control helpers.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const levels = [\"off\", \"error\", \"warn\", \"info\", \"debug\", \"trace\"];\n\n  root.logger = {\n    levels,\n    recent(limit) {\n      const count = Number(limit) || 120;\n      return root.log.entries.slice(-count);\n    },\n    clear() {\n      root.log.entries.length = 0;\n      root.log.info(\"logger\", \"log buffer cleared\");\n    },\n    setLevel(level) {\n      root.log.setLevel(level);\n      root.log.info(\"logger\", \"level set\", level);\n      if (root.ui && typeof root.ui.renderHub === \"function\") {\n        root.ui.renderHub(\"debug\");\n      }\n    },\n  };\n\n  root.log.info(\"logger\", \"ready\", `level=${root.log.level()}`);\n})();\n");
@@ -5513,6 +5513,95 @@
           }
         `;
         (document.head || document.documentElement).appendChild(style);
+      }
+    })();
+
+  });
+
+  embeddedText.set("modules/media-cards.js", "// Collapse Kapybara's automatic video/social preview cards to their native link cues.\n(function () {\n  \"use strict\";\n\n  const root = window.Cudloun;\n  const VERSION = \"0.1.0\";\n  const PROVIDERS = new Set([\"video\", \"youtube\", \"x\", \"twitter\", \"tweet\"]);\n  const CARD_CLASSES = /(?:^|\\s)okoun-embed--(?:video|youtube|x|twitter|tweet)(?:\\s|$)/;\n  const collapsed = new Set();\n  let observer = null;\n  let timer = 0;\n\n  root.mediaCards = {\n    version: VERSION,\n    status: () => ({ active: !!observer, collapsed: collapsed.size }),\n  };\n\n  root.registerModule({\n    id: \"media-cards\",\n    name: \"Compact Media Links\",\n    description: \"Start video, YouTube and X posts as links with Kapybara's play/open cue, not large preview cards.\",\n    version: VERSION,\n    defaultEnabled: false,\n    start(ctx) {\n      if (!root.kapyguts?.isKapybara?.()) return null;\n      stop();\n      observer = new MutationObserver(schedule);\n      observer.observe(document.body || document.documentElement, { childList: true, subtree: true });\n      window.addEventListener(\"popstate\", schedule);\n      scan();\n      ctx.log.info(\"Compact Media Links ready\");\n      return stop;\n    },\n    renderHelp() {\n      return [\n        \"On Kapybara club posts, collapse automatic video, YouTube, and X/Twitter preview cards to their original links and native play/open cues.\",\n        \"Click the cue to show a card when you want it. The module does not block playback, change posts, or affect other embed providers.\",\n        \"Disabling the module restores cards it collapsed when their posts are still on screen.\",\n      ];\n    },\n  });\n\n  function stop() {\n    observer?.disconnect();\n    observer = null;\n    window.clearTimeout(timer);\n    timer = 0;\n    window.removeEventListener(\"popstate\", schedule);\n    for (const cue of collapsed) {\n      if (cue.isConnected && cue.getAttribute(\"data-cue-open\") === \"false\") cue.click();\n    }\n    collapsed.clear();\n  }\n\n  function schedule() {\n    if (!observer || timer) return;\n    timer = window.setTimeout(() => {\n      timer = 0;\n      scan();\n    }, 0);\n  }\n\n  function scan() {\n    for (const cue of collapsed) {\n      if (!cue.isConnected) collapsed.delete(cue);\n    }\n    if (root.kapyguts?.route?.().type !== \"board\") return;\n    for (const card of document.querySelectorAll(\"article.post .body .okoun-embed\")) {\n      const provider = card.getAttribute(\"data-embed-provider\")?.toLowerCase();\n      if (!PROVIDERS.has(provider) && !CARD_CLASSES.test(card.className)) continue;\n      const id = card.getAttribute(\"data-embed-id\");\n      const previous = card.previousElementSibling;\n      if (!previous || !id) continue;\n      const cues = previous.querySelectorAll(\"button.okoun-play-cue[data-cue-id]\");\n      for (const cue of cues) {\n        if (cue.getAttribute(\"data-cue-id\") !== id || collapsed.has(cue)) continue;\n        if (cue.getAttribute(\"data-cue-open\") !== \"true\") continue;\n        collapsed.add(cue);\n        cue.click();\n        break;\n      }\n    }\n  }\n})();\n");
+  embeddedScripts.set("modules/media-cards.js", function () {
+    // Collapse Kapybara's automatic video/social preview cards to their native link cues.
+    (function () {
+      "use strict";
+
+      const root = window.Cudloun;
+      const VERSION = "0.1.0";
+      const PROVIDERS = new Set(["video", "youtube", "x", "twitter", "tweet"]);
+      const CARD_CLASSES = /(?:^|\s)okoun-embed--(?:video|youtube|x|twitter|tweet)(?:\s|$)/;
+      const collapsed = new Set();
+      let observer = null;
+      let timer = 0;
+
+      root.mediaCards = {
+        version: VERSION,
+        status: () => ({ active: !!observer, collapsed: collapsed.size }),
+      };
+
+      root.registerModule({
+        id: "media-cards",
+        name: "Compact Media Links",
+        description: "Start video, YouTube and X posts as links with Kapybara's play/open cue, not large preview cards.",
+        version: VERSION,
+        defaultEnabled: false,
+        start(ctx) {
+          if (!root.kapyguts?.isKapybara?.()) return null;
+          stop();
+          observer = new MutationObserver(schedule);
+          observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+          window.addEventListener("popstate", schedule);
+          scan();
+          ctx.log.info("Compact Media Links ready");
+          return stop;
+        },
+        renderHelp() {
+          return [
+            "On Kapybara club posts, collapse automatic video, YouTube, and X/Twitter preview cards to their original links and native play/open cues.",
+            "Click the cue to show a card when you want it. The module does not block playback, change posts, or affect other embed providers.",
+            "Disabling the module restores cards it collapsed when their posts are still on screen.",
+          ];
+        },
+      });
+
+      function stop() {
+        observer?.disconnect();
+        observer = null;
+        window.clearTimeout(timer);
+        timer = 0;
+        window.removeEventListener("popstate", schedule);
+        for (const cue of collapsed) {
+          if (cue.isConnected && cue.getAttribute("data-cue-open") === "false") cue.click();
+        }
+        collapsed.clear();
+      }
+
+      function schedule() {
+        if (!observer || timer) return;
+        timer = window.setTimeout(() => {
+          timer = 0;
+          scan();
+        }, 0);
+      }
+
+      function scan() {
+        for (const cue of collapsed) {
+          if (!cue.isConnected) collapsed.delete(cue);
+        }
+        if (root.kapyguts?.route?.().type !== "board") return;
+        for (const card of document.querySelectorAll("article.post .body .okoun-embed")) {
+          const provider = card.getAttribute("data-embed-provider")?.toLowerCase();
+          if (!PROVIDERS.has(provider) && !CARD_CLASSES.test(card.className)) continue;
+          const id = card.getAttribute("data-embed-id");
+          const previous = card.previousElementSibling;
+          if (!previous || !id) continue;
+          const cues = previous.querySelectorAll("button.okoun-play-cue[data-cue-id]");
+          for (const cue of cues) {
+            if (cue.getAttribute("data-cue-id") !== id || collapsed.has(cue)) continue;
+            if (cue.getAttribute("data-cue-open") !== "true") continue;
+            collapsed.add(cue);
+            cue.click();
+            break;
+          }
+        }
       }
     })();
 

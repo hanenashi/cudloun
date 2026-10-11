@@ -10,7 +10,7 @@ test("the hub keeps only current modules outside Dusty Room", () => {
   const current = manifest.modules.filter((module) => module.category === "current").map((module) => module.id);
   const dusty = manifest.modules.filter((module) => module.category === "dusty-room").map((module) => module.id);
 
-  assert.deepEqual(current, ["settoun", "post-fonts", "opu-originals"]);
+  assert.deepEqual(current, ["settoun", "post-fonts", "opu-originals", "media-cards"]);
   assert.deepEqual(dusty, [
     "first-unread", "kapybara-theme", "thread-lane", "classic-look", "post-tweaks", "opuc",
   ]);

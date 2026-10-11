@@ -1,5 +1,5 @@
 {
-  "version": "0.6.33",
+  "version": "0.6.34",
   "system": [
     { "id": "sys-logger", "file": "modules/sys-logger.js", "required": true },
     { "id": "sys-kapyguts", "file": "modules/sys-kapyguts.js", "required": true },
@@ -15,6 +15,7 @@
     { "id": "post-tweaks", "file": "modules/post-tweaks.js", "category": "dusty-room", "defaultEnabled": false },
     { "id": "post-fonts", "file": "modules/post-fonts.js", "category": "current", "defaultEnabled": false },
     { "id": "opu-originals", "file": "modules/opu-originals.js", "category": "current", "defaultEnabled": false },
+    { "id": "media-cards", "file": "modules/media-cards.js", "category": "current", "defaultEnabled": false },
     {
       "id": "opuc",
       "files": [

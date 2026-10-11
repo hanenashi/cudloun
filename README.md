@@ -45,12 +45,20 @@ Use those tags for the last Babeta-compatible code, docs, modules, and container
 - `modules/opuc/` contains the experimental OPUc-for-Kapybara integration.
 - `modules/opu-originals.js` is a separate opt-in reader-side module that
   expands OPU thumbnail images to their original files in board posts.
+- `modules/media-cards.js` is an opt-in reader-side module that collapses
+  direct-video, YouTube, and X/Twitter preview cards to native link cues.
 
 The installable seed uses `@require` so CSP-strict frontends such as Kapybara do not block startup. Source modules stay separate in `modules/`; run this after source changes:
 
 ```text
 node scripts/build-bundle.js
 ```
+
+## Version 0.6.34 TL;DR
+
+- Added default-off **Compact Media Links** to collapse automatic direct-video,
+  YouTube, and X/Twitter cards via Kapybara's own link cue. Clicking the cue
+  still opens the card; other providers remain untouched.
 
 ## Version 0.6.33 TL;DR
 
@@ -94,6 +102,9 @@ transport decision are documented in [`grease.md`](grease.md).
 OPU Originals is independent of the OPUc uploader. Its reader-side scope,
 safety boundaries, and Pebble discussion are in
 [`modules/opu-originals.md`](modules/opu-originals.md).
+
+Compact Media Links is also independent of OPUc. Its behavior and limits are
+in [`modules/media-cards.md`](modules/media-cards.md).
 
 ## Kapyguts
 
