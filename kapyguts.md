@@ -200,6 +200,36 @@ read-state controls changes user data and was not part of this audit.
 
 ## Board Page Lab Species
 
+### Desktop recheck: 2026-11-17
+
+The running gateway successfully opened `nepotrebny_pokus` (48 rendered
+posts). `article.post[data-post-id][data-thread-id]`, the
+`button.entry-placeholder` launcher, view radios, and labeled pagers still
+match. This resolves the historical launcher uncertainty below for this
+board and desktop session; the composer itself was not opened in this audit.
+
+`boardHeaderParts()` now also exposes:
+
+```text
+searchInput:   input[type='search'][aria-label='Hledat v klubu']
+authorFilter:  input[type='search'][aria-label='Filtrovat podle uživatele']
+topicPath:     header.board-header nav[aria-label='Téma']
+topicApproval: header.board-header .topic-path .pending-approval
+detailsToggle: header.board-header [role='button'][aria-controls='board-details']
+favoriteButton: header.board-header button[aria-pressed][aria-label='Odebrat z oblíbených']
+```
+
+The favorite hook also accepts `Přidat do oblíbených` for the opposite state;
+only the selected state was observed here. The topic path displayed
+`čeká na schválení`. The moderator/details toggle had `aria-expanded="false"`.
+Read these attributes for state; clicking favorite controls changes account data.
+
+Desktop club search is an inline search combobox, so a missing header
+`searchButton` does not mean search is unavailable. `imageToggle` now has the
+accessible label `S obrázky nebo videi`, and `aria-pressed` records its state.
+View radios use `aria-checked` (Chronologicky, Vlákna, Galerie). Mobile behavior
+and expanded menus were not rechecked in this pass.
+
 Baseline page inspected on 2026-06-11:
 
 ```text
@@ -242,6 +272,25 @@ Kapybara's current unread state is semantic: unread articles carry the empty
 `data-unread` attribute. `unreadPosts()` returns them in rendered DOM order and
 `firstUnreadPost()` returns the first one or `null`. The optional First Unread
 module consumes only these helpers and never changes the marker itself.
+
+Cross-account recheck on 2026-11-17: Blaznik posted test `1074829990` through
+classic Okoun; Blasnik's Kapybara reader immediately rendered it with
+`unread edge-unread threaded root-level`, `data-unread=""` and
+`data-counted-unread=""`. Thus the current Kapyguts unread selector remains
+valid in threaded board view. The additional counted marker's lifecycle was
+not established; do not substitute it for `data-unread`. This verifies another
+account's fresh post rather than inferring unread behavior from one's own post.
+
+Reverse-direction count probe: user1 (Blasnik) posted `1074829996` through
+Kapybara; an independent user2 (Blaznik) Kapybara session saw the home-page
+club row change from 51 posts/no unread badge to `1 nový` (`+1` compact),
+out of 52 posts. Merely loading the club and leaving after two seconds kept
+the badge. Scrolling that article into view and waiting six seconds removed
+both `data-unread` and `data-counted-unread`; the next home visit showed 52
+posts with no unread badge. This confirms a viewport-sensitive read lifecycle
+in this session; six seconds is the test wait, not a measured native threshold.
+The club was absent from user2's Favorites, so this count was measured on the
+home row. Home club links included `?r=...`; avoid exact-href matching.
 
 `postParts(post)` returns:
 
@@ -287,6 +336,40 @@ data-thread-id="1074607385"
 
 ## Board Post Shape
 
+### Views and nested threads (2026-11-17)
+
+Live desktop checks in `nepotrebny_pokus` switched Chronologicky → Vlákna →
+Galerie and used the gallery's `Zpět na seznam příspěvků` radio to return.
+Chronological and threaded lists both contained 49 articles. Threaded mode
+keeps the board URL and groups root/reply posts in `.threads section.thread`;
+single-post groups carry `.single`. Articles gain `.threaded`; roots have
+`.root-level`. View radios expose `data-value` and `aria-checked`.
+
+Gallery navigates to `?view=gallery`, with `.gallery-grid a.gallery-cell`
+instead of articles. Revisiting the bare board URL in this session retained
+gallery until its return control was clicked. Do not assume zero articles
+means the board failed to load.
+
+A reply's `a.thread-link` opens `/boards/:board/t/:rootId`, optionally with
+`?p=:postId#article-:postId`. This is a separate `main.thread-page[aria-label='Vlákno']`;
+it lacks the board's view radios. Compact `.board-thread-sections a.row-activate`
+links navigate to other discussions under “Nejnovější diskuse” and “Starší vlákna”.
+The targeted post had `.highlighted-post`. Parent references still use `/c/:id#p:id`.
+
+Thread `1074686378` exposed nested rows with `data-row-kind` values `root`,
+`post`, `readFold`, and `manualFold`. `data-row-depth` was -1 for the root,
+0 for direct replies, and 1 for nested replies; `data-row-parent` was `root`
+or a parent post ID. Automatic read folds summarize counts/authors. Clicking
+`button.branch-toggle[aria-expanded]` expands one level and may expose a deeper
+read fold; collapsing the branch produces a `manualFold` summary instead.
+The `button.summary` surface is also present, but was not separately clicked.
+Only rendered posts count toward `allPosts()`; folded replies can be absent.
+
+Use `threadParts()` for these groups, rows, branch toggles, summaries, navigation
+links, post thread links, and gallery cells. `route().threadId` distinguishes
+the thread detail while preserving `route().type === 'board'` compatibility.
+These observations are desktop-only; mobile threading was not checked.
+
 Kapybara board posts:
 
 ```text
@@ -296,6 +379,30 @@ data-thread-id
 ```
 
 ## Persistent And Board Headers
+
+### Post menus and mobile navigation recheck (2026-11-17)
+
+`postParts(post).postMenuButton` still resolves `button[aria-label='menu']`.
+Desktop opened a role menu; at 390×844 the same trigger opened
+`[role='dialog'][aria-label='menu příspěvku']` containing `[role='menu']`.
+Observed actions included save, copy direct link, mark oldest new, delete,
+and report. The other-user mobile example additionally offered mute-user and
+block-user actions. Treat the item list as permission/account dependent;
+no account-changing menu action was clicked. `visiblePostMenus()` already
+recognizes these containers; nested sheet/menu results can overlap.
+
+`postParts(post).dismissButton` now maps `button[aria-label='Skrýt příspěvek']`.
+The × was present on the other-user mobile post with `aria-pressed='false'`,
+but absent on the inspected own desktop post. Do not assume every post has
+one or confuse it with delete. Its click/persistence behavior remains untested.
+
+The mobile nav still uses `nav[aria-label='Spodní navigace']` (class `.bar`).
+Its computed corner radius was `999px`, position `absolute`, and bottom inset
+8px, within a fixed `.mobile-bottom-nav` wrapper. At this viewport its box
+was 351×52px, x=12, y=784. `mobileNavigationParts()` exposes the nav, fixed
+shell, links, user button and computed radius/position; style the nav for pill
+corners, and the shell for viewport positioning. The measurements belong to
+this session's layout/preferences, not a guaranteed fixed size.
 
 Rechecked on desktop on 2026-08-04 in `nepotrebny_pokus`:
 
@@ -539,6 +646,26 @@ read or overwrite that storage from Kapyguts; Cudloun's Post Tweaks module owns
 an independent copy so it remains useful after the native experiment vanishes.
 
 ## New Post and Reply Composers
+
+Rechecked the native new-post composer on 2026-11-17 in `nepotrebny_pokus`.
+There are now two `button.mode-toggle[aria-pressed]` controls: Markdown and
+HTML. Do not infer Markdown mode from an arbitrary pressed mode button.
+`composerParts().modeToggle` now selects the Markdown/formatted-text switch
+by its accessible label; `htmlToggle` exposes the separately labeled HTML
+button. Switching to Markdown changes its label from `Přepnout na Markdown`
+to `Přepnout na formátovaný text`; the editor still contains
+`code[data-language="markdown"]` inside the Lexical contenteditable.
+The rich toolbar includes `Další formátování` and `Nápověda k editoru`.
+The HTML button was observed, but an HTML-mode transition was not verified.
+
+Live test post `1074829952` confirmed multiline Markdown submission with
+paragraphs, bold, italic, inline code and a two-item list rendering as native
+`p`, `strong`, `em`, `code`, `ul` and `li` elements. The gateway's old
+`execCommand` insertion did not preserve the exact multiline source in this
+session. Playwright contenteditable `fill()` passed the pre-submit exact-text
+check and the rendered-post check. Restored drafts must be detected before
+filling; a test's own draft can be cleared explicitly, but unrelated drafts
+must be preserved.
 
 Observed on desktop on 2026-07-17 in `nepotrebny_pokus`:
 

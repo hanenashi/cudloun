@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.5";
+  const VERSION = "0.6.7";
   const COLOR_TOKEN_KEYS = [
     "page-bg", "bg", "header-bg", "bg-paper", "primary", "primary-text",
     "primary-contrast", "text-primary", "info", "unread-bg", "stripe",
@@ -49,11 +49,27 @@
     boardTitleActions: ".board-header .title-row .title-actions",
     boardSearchButton: "header.board-header button[aria-label='Hledat v klubu']",
     boardActionsButton: "header.board-header button[aria-label='Další akce']",
+    boardSearchInput: "input[type='search'][aria-label='Hledat v klubu']",
+    boardAuthorFilter: "input[type='search'][aria-label='Filtrovat podle uživatele']",
+    boardTopicPath: "header.board-header nav[aria-label='Téma']",
+    boardTopicApproval: "header.board-header .topic-path .pending-approval",
+    boardDetailsToggle: "header.board-header [role='button'][aria-controls='board-details']",
+    boardFavoriteButton: "header.board-header button[aria-pressed][aria-label='Odebrat z oblíbených'], header.board-header button[aria-pressed][aria-label='Přidat do oblíbených']",
     boardNewPostButton: "button.entry-placeholder, button.new-post.mobile",
     boardImageToggle: "button.images-toggle[aria-pressed]",
     boardViewToggle: "button[role='radio'][data-toggle-group-item]",
     boardPager: "nav.pager[aria-label='Stránkování příspěvků']",
+    boardThreads: ".threads section.thread",
+    postThreadLink: "article.post a.thread-link",
+    threadPage: "main.thread-page[aria-label='Vlákno']",
+    threadRow: ".thread-rows .thread-row[data-row-kind]",
+    threadBranchToggle: ".thread-row button.branch-toggle[aria-expanded]",
+    threadSummary: ".thread-row.fold-row button.summary",
+    threadNavigationLink: ".board-thread-sections a.row-activate",
+    galleryCell: ".gallery-grid a.gallery-cell",
     mobileBottomNav: "nav[aria-label='Spodní navigace']",
+    mobileBottomNavShell: ".mobile-bottom-nav:has(nav[aria-label='Spodní navigace'])",
+    mobilePostMenu: "[role='dialog'][aria-label='menu příspěvku']",
     boardPost: "article.post",
     unreadPost: "article.post[data-unread]",
     avatarColumn: ".avatar-col",
@@ -72,6 +88,7 @@
     actions: ".actions",
     replyButton: ".reply-action",
     postMenuButton: "button[aria-label='menu']",
+    postDismissButton: "button[aria-label='Skrýt příspěvek']",
     favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
     favoritesPage: "section.favorites-page",
     favoritesUnreadSwitch: "section.favorites-page a.filter[role='switch']",
@@ -110,6 +127,8 @@
     composerToolbar: "[role='toolbar'][aria-label='Formátování textu']",
     composerImageButton: "button[aria-label='Vložit obrázek']",
     composerModeToggle: "button.mode-toggle[aria-pressed]",
+    composerMarkdownToggle: "button.mode-toggle[aria-label='Přepnout na Markdown'], button.mode-toggle[aria-label='Přepnout na formátovaný text']",
+    composerHtmlToggle: "button.mode-toggle[aria-label='Přepnout na HTML']",
     composerMarkdownNode: "code[data-language='markdown']",
     composerTitleInput: "section.new-post-composer input[type='text']",
     fontSettingsPanel: ".fs-panel[role='dialog'][aria-labelledby='fs-title']",
@@ -298,6 +317,8 @@
     accessParts,
     avatarMenuParts,
     boardHeaderParts,
+    threadParts,
+    mobileNavigationParts,
     messagesParts,
     messageParts,
     fontSettingsParts,
@@ -332,6 +353,7 @@
       hash: window.location.hash,
       type: boardMatch ? "board" : routeType(path),
       boardId: boardMatch ? decodeURIComponent(boardMatch[1]) : "",
+      threadId: path.match(/^\/boards\/[^/]+\/t\/(\d+)/)?.[1] || "",
     };
   }
 
@@ -579,6 +601,12 @@
       titleLink,
       actions,
       searchButton: scope.querySelector(SELECTORS.boardSearchButton),
+      searchInput: scope.querySelector(SELECTORS.boardSearchInput),
+      authorFilter: scope.querySelector(SELECTORS.boardAuthorFilter),
+      topicPath: scope.querySelector(SELECTORS.boardTopicPath),
+      topicApproval: scope.querySelector(SELECTORS.boardTopicApproval),
+      detailsToggle: scope.querySelector(SELECTORS.boardDetailsToggle),
+      favoriteButton: scope.querySelector(SELECTORS.boardFavoriteButton),
       actionsButton: scope.querySelector(SELECTORS.boardActionsButton),
       newPostButton: scope.querySelector(SELECTORS.boardNewPostButton),
       imageToggle: scope.querySelector(SELECTORS.boardImageToggle),
@@ -586,6 +614,34 @@
       pagers: Array.from(scope.querySelectorAll(SELECTORS.boardPager)),
       mobileBottomNav: scope.querySelector(SELECTORS.mobileBottomNav),
       stickyTitle: !!titleRow && window.getComputedStyle(titleRow).position === "sticky",
+    };
+  }
+
+  function mobileNavigationParts(scope = document) {
+    const nav = scope.querySelector(SELECTORS.mobileBottomNav);
+    const shell = scope.querySelector(SELECTORS.mobileBottomNavShell);
+    const style = nav ? window.getComputedStyle(nav) : null;
+    return {
+      nav,
+      shell,
+      links: nav ? Array.from(nav.querySelectorAll("a[href]")) : [],
+      userButton: nav?.querySelector("button.user-item") || null,
+      borderRadius: style?.borderRadius || "",
+      position: style?.position || "",
+      shellPosition: shell ? window.getComputedStyle(shell).position : "",
+    };
+  }
+
+  function threadParts(scope = document) {
+    return {
+      page: scope.querySelector(SELECTORS.threadPage),
+      groups: Array.from(scope.querySelectorAll(SELECTORS.boardThreads)),
+      rows: Array.from(scope.querySelectorAll(SELECTORS.threadRow)),
+      branchToggles: Array.from(scope.querySelectorAll(SELECTORS.threadBranchToggle)),
+      summaries: Array.from(scope.querySelectorAll(SELECTORS.threadSummary)),
+      navigationLinks: Array.from(scope.querySelectorAll(SELECTORS.threadNavigationLink)),
+      postLinks: Array.from(scope.querySelectorAll(SELECTORS.postThreadLink)),
+      galleryCells: Array.from(scope.querySelectorAll(SELECTORS.galleryCell)),
     };
   }
 
@@ -770,6 +826,7 @@
       actions,
       reply,
       postMenuButton,
+      dismissButton: post.querySelector(SELECTORS.postDismissButton),
     };
   }
 
@@ -801,7 +858,8 @@
     const toolbar = section.querySelector(SELECTORS.composerToolbar);
     const imageButton = toolbar?.querySelector(SELECTORS.composerImageButton) ||
       section.querySelector(SELECTORS.composerImageButton);
-    const modeToggle = section.querySelector(SELECTORS.composerModeToggle);
+    const modeToggle = section.querySelector(SELECTORS.composerMarkdownToggle);
+    const htmlToggle = section.querySelector(SELECTORS.composerHtmlToggle);
     const markdownNode = editable?.querySelector(SELECTORS.composerMarkdownNode) || null;
 
     return {
@@ -814,6 +872,7 @@
       toolbar,
       imageButton,
       modeToggle,
+      htmlToggle,
       markdownNode,
       markdownMode: !!markdownNode || modeToggle?.getAttribute("aria-pressed") === "true",
       ready: !!(composer && editable && toolbarSlot && toolbar && imageButton),
