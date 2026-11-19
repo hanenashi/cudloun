@@ -336,6 +336,41 @@ data-thread-id="1074607385"
 
 ## Board Post Shape
 
+### Post reactions (2026-11-19)
+
+Live inspection in `nepotrebny_pokus` confirmed the reaction opener
+`article.post button[aria-label='Reagovat']` inside `.rx-group`. It exposes
+`aria-haspopup='dialog'` and `aria-expanded`. At a 390×844 viewport, a native
+click opened `[role='dialog'][aria-label='Reagovat']`, containing
+`[role='group'][aria-label='Reakce']`. The picker was a compact pill popover
+(`.🐟-popover--pill`), rather than the post menu's bottom sheet.
+
+| Glyph (`svg[data-glyph]`) | Accessible option label | Symbol |
+| --- | --- | --- |
+| `FISH` | Dát rybu | fish |
+| `PLUS1` | Bažedyťžejo | +1 |
+| `BANG` | Zaujalo mě | ! |
+| `BANG3` | Paráda | !!! |
+| `PALM` | Facepalm | facepalm |
+
+Each option is a button with `aria-pressed` (all false in the inspected
+picker). Icons are inline SVG using `currentColor`; Facepalm includes a
+generated SVG mask ID, which must not be used as a selector. These glyph
+values identify the displayed icons; do not assume they are backend API keys.
+
+`postParts(post)` exposes `reactionGroup` and `reactionButton`.
+`reactionParts(post)` additionally returns `open`, the portalled `picker`,
+and option records `{button, label, glyph, pressed}`. A picker is associated
+only with a trigger whose `aria-expanded` is true, preventing another post's
+open picker from being mistaken for this post's state. Helpers only read DOM.
+
+Desktop clicks in this session repeatedly left the trigger closed; the mobile
+picker was verified after resizing the same browser. No page errors appeared
+in that successful run. The desktop interaction issue remains unexplained.
+No reaction was added/removed in this audit, and existing aggregate badges,
+voter lists, persistence and multi-reaction rules were not verified. The
+inspected board page had no existing reaction buttons beyond the openers.
+
 ### Views and nested threads (2026-11-17)
 
 Live desktop checks in `nepotrebny_pokus` switched Chronologicky → Vlákna →

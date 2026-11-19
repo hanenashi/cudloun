@@ -53,9 +53,26 @@ function explainElement({ tag = "DIV", classes = [], attrs = {}, closest = {} } 
   };
 }
 
+test("reaction picker state belongs only to the expanded post trigger", () => {
+  const guts = loadModule();
+  const s = guts.selectors;
+  const glyph = node({ attrs: { "data-glyph": "PLUS1" } });
+  const option = node({ attrs: { "aria-label": "Bažedyťžejo", "aria-pressed": "true" }, one: { "svg[data-glyph]": glyph } });
+  const picker = node({ many: { [s.reactionOption]: [option] } });
+  const scope = node({ one: { [s.reactionPicker]: picker } });
+  const opened = node({ one: { [s.postReactionButton]: node({ attrs: { "aria-expanded": "true" } }) } });
+  const closed = node({ one: { [s.postReactionButton]: node({ attrs: { "aria-expanded": "false" } }) } });
+  const state = guts.reactionParts(opened, scope);
+  assert.equal(state.picker, picker);
+  assert.equal(state.options[0].glyph, "PLUS1");
+  assert.equal(state.options[0].pressed, true);
+  assert.equal(guts.reactionParts(closed, scope).picker, null);
+  assert.equal(guts.reactionParts(null, scope).options.length, 0);
+});
+
 test("Kapyguts recognizes the native font test route", () => {
   const kapyguts = loadModule();
-  assert.equal(kapyguts.version, "0.6.7");
+  assert.equal(kapyguts.version, "0.6.8");
   assert.equal(kapyguts.route().type, "font-settings");
   assert.equal(kapyguts.selectors.nativeFontSettingsLink, "a[role='menuitem'][href='/test/fonts']");
 });

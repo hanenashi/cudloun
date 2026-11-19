@@ -3,7 +3,7 @@
   "use strict";
 
   const root = window.Cudloun || null;
-  const VERSION = "0.6.7";
+  const VERSION = "0.6.8";
   const COLOR_TOKEN_KEYS = [
     "page-bg", "bg", "header-bg", "bg-paper", "primary", "primary-text",
     "primary-contrast", "text-primary", "info", "unread-bg", "stripe",
@@ -89,6 +89,10 @@
     replyButton: ".reply-action",
     postMenuButton: "button[aria-label='menu']",
     postDismissButton: "button[aria-label='Skrýt příspěvek']",
+    postReactionGroup: ".rx-group",
+    postReactionButton: "button[aria-label='Reagovat']",
+    reactionPicker: "[role='dialog'][aria-label='Reagovat']",
+    reactionOption: "[role='group'][aria-label='Reakce'] button[aria-pressed]",
     favoriteBoardRow: ".favorites-page a[href^='/boards/'], .favorites-page a[href*='/boards/']",
     favoritesPage: "section.favorites-page",
     favoritesUnreadSwitch: "section.favorites-page a.filter[role='switch']",
@@ -306,6 +310,7 @@
     unreadPosts,
     firstUnreadPost,
     postParts,
+    reactionParts,
     pageChromeParts,
     colorThemeState,
     pageHeader,
@@ -788,6 +793,22 @@
     };
   }
 
+  function reactionParts(post, scope = document) {
+    const group = post?.querySelector(SELECTORS.postReactionGroup) || null;
+    const trigger = post?.querySelector(SELECTORS.postReactionButton) || null;
+    // Pickers are portalled outside the post. Do not associate a closed
+    // post's trigger with another post's open picker.
+    const open = trigger?.getAttribute("aria-expanded") === "true";
+    const picker = open ? scope.querySelector(SELECTORS.reactionPicker) : null;
+    const options = picker ? Array.from(picker.querySelectorAll(SELECTORS.reactionOption)).map((button) => ({
+      button,
+      label: button.getAttribute("aria-label") || "",
+      glyph: button.querySelector("svg[data-glyph]")?.getAttribute("data-glyph") || "",
+      pressed: button.getAttribute("aria-pressed") === "true",
+    })) : [];
+    return { group, trigger, open, picker, options };
+  }
+
   function postParts(post) {
     if (!post) return null;
 
@@ -827,6 +848,8 @@
       reply,
       postMenuButton,
       dismissButton: post.querySelector(SELECTORS.postDismissButton),
+      reactionGroup: post.querySelector(SELECTORS.postReactionGroup),
+      reactionButton: post.querySelector(SELECTORS.postReactionButton),
     };
   }
 
